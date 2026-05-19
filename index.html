@@ -1197,7 +1197,7 @@ window.cloudSave = async function() {
   if(syncTimeout) clearTimeout(syncTimeout);
   syncTimeout = setTimeout(async () => {
     try {
-      const dataToSave = JSON.parse(JSON.stringify(D));
+      const dataToSave = JSON.parse(JSON.stringify(window.D));
       await setDoc(doc(db, 'users', currentUser.uid), { data: dataToSave, updatedAt: new Date().toISOString() });
       if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
     } catch(e) {
@@ -1236,32 +1236,28 @@ onAuthStateChanged(auth, async (user) => {
       const snap = await getDoc(doc(db, 'users', user.uid));
       if(snap.exists() && snap.data().data) {
         const cloud = snap.data().data;
-        D = {...D, ...cloud};
-        D.projects = migrateProjects(D.projects);
-        if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];
-        if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
-        if(!D.weekNotes)D.weekNotes={};if(!D.paychecks)D.paychecks=[];if(!D.gcData)D.gcData={};
-        if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
+        // Merge into the global D object in place so regular script references stay valid
+        Object.assign(window.D, cloud);
+        window.D.projects = window.migrateProjects(window.D.projects);
+        if(!window.D.bodyLog)window.D.bodyLog=[];if(!window.D.gymExercises)window.D.gymExercises=[];if(!window.D.gymWorkouts)window.D.gymWorkouts=[];
+        if(!window.D.jobs)window.D.jobs=[];if(!window.D.semSettings)window.D.semSettings=null;if(!window.D.bgTheme)window.D.bgTheme=null;
+        if(!window.D.weekNotes)window.D.weekNotes={};if(!window.D.paychecks)window.D.paychecks=[];if(!window.D.gcData)window.D.gcData={};
+        if(!window.D.exams)window.D.exams=[];if(!window.D.notes)window.D.notes=[];if(!window.D.studyHistory)window.D.studyHistory={};
       } else {
         // First time — migrate localStorage data to cloud
         const local = localStorage.getItem('UT7');
-        if(local){ try{ const ld=JSON.parse(local); D={...D,...ld}; await window.cloudSave(); }catch(e){} }
+        if(local){ try{ const ld=JSON.parse(local); Object.assign(window.D, ld); await window.cloudSave(); }catch(e){} }
       }
     } catch(e) { console.error('Load error:', e); }
 
     // Restore settings
-    if(D.student){ document.getElementById('studentName').value=D.student.name||''; document.getElementById('semester').value=D.student.semester||''; }
-    if(D.bgTheme){ document.body.style.background=D.bgTheme; document.body.style.backgroundAttachment='fixed'; }
-    if(D.semSettings){ const ss=document.getElementById('semStart'),sw=document.getElementById('semWeeks'); if(ss)ss.value=D.semSettings.start||''; if(sw)sw.value=D.semSettings.weeks||12; }
-    const bi=document.getElementById('budgetInput'); if(bi)bi.value=D.budget||'';
+    if(window.D.student){ document.getElementById('studentName').value=window.D.student.name||''; document.getElementById('semester').value=window.D.student.semester||''; }
+    if(window.D.bgTheme){ document.body.style.background=window.D.bgTheme; document.body.style.backgroundAttachment='fixed'; }
+    if(window.D.semSettings){ const ss=document.getElementById('semStart'),sw=document.getElementById('semWeeks'); if(ss)ss.value=window.D.semSettings.start||''; if(sw)sw.value=window.D.semSettings.weeks||12; }
+    const bi=document.getElementById('budgetInput'); if(bi)bi.value=window.D.budget||'';
 
-    // Render everything
-    renderBgOptions();renderSemProgress();renderWeeklyReview();
-    renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
-    renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
-    renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
-    renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
-    refreshSwCourses();fillGymExSelect();
+    // Render everything via exposed function
+    if(window._refreshAll) window._refreshAll();
 
   } else {
     currentUser = null;
@@ -1272,6 +1268,8 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+</script>
+<script>
 // ══════════════════════════════════════════════
 //  DATA
 // ══════════════════════════════════════════════
@@ -1286,6 +1284,17 @@ let D={
   studyHistory:{},
   bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
   semSettings:null,bgTheme:null
+};
+// Expose D and render functions to window so Firebase module can access them
+window.D = D;
+window.migrateProjects = function(arr){return(arr||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[],members:Array.isArray(p.members)?p.members:[],log:Array.isArray(p.log)?p.log:[]}));};
+window._refreshAll = function(){
+  renderBgOptions();renderSemProgress();renderWeeklyReview();
+  renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
+  renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
+  renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
+  renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
+  refreshSwCourses();fillGymExSelect();
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
