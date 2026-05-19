@@ -409,22 +409,68 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   .add-member-row{grid-template-columns:1fr;gap:6px;}
   .job-kanban{grid-template-columns:1fr 1fr;}
 }
+
+/* ── LOGIN SCREEN ── */
+#loginScreen{position:fixed;inset:0;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.login-card{background:#fff;border-radius:24px;padding:40px 36px;width:100%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+.login-logo{width:72px;height:72px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+.login-card h1{color:#1e1b4b;font-size:1.8rem;margin-bottom:6px;}
+.login-card p{color:#64748b;font-size:.92rem;margin-bottom:32px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 20px;border:2px solid #e2e8f0;border-radius:12px;background:#fff;cursor:pointer;font-size:1rem;font-weight:600;color:#1e1b4b;transition:all .2s;}
+.google-btn:hover{background:#f8fafc;border-color:#6366f1;transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.15);}
+.google-btn img{width:22px;height:22px;}
+.login-error{margin-top:14px;color:#ef4444;font-size:.85rem;min-height:20px;}
+.login-loading{margin-top:14px;color:#6366f1;font-size:.85rem;}
+/* ── USER BAR ── */
+.user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px solid #e2e8f0;}
+.user-menu{position:absolute;top:100%;right:0;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:8px;min-width:200px;z-index:100;margin-top:6px;}
+.user-menu-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:.88rem;color:#1e1b4b;transition:background .2s;}
+.user-menu-item:hover{background:#f1f5f9;}
+.user-menu-name{font-weight:600;font-size:.9rem;color:#1e1b4b;padding:8px 14px 4px;}
+.user-menu-email{font-size:.75rem;color:#64748b;padding:0 14px 8px;border-bottom:1px solid #e2e8f0;margin-bottom:4px;}
+.sync-status{font-size:.72rem;padding:3px 8px;border-radius:8px;font-weight:600;}
+.sync-ok{background:#f0fdf4;color:#10b981;}
+.sync-saving{background:#fffbeb;color:#f59e0b;}
+.sync-error{background:#fef2f2;color:#ef4444;}
 </style>
 </head>
 <body>
-<div class="container">
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🎓</div>
+    <h1>UniTracker</h1>
+    <p>Your University Life Companion.<br>Sign in to sync your data across all devices.</p>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <img src="https://www.google.com/favicon.ico" alt="Google">
+      Continue with Google
+    </button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<div class="container" style="display:none">
 <header>
   <div class="logo">
     <div class="logo-icon">🎓</div>
     <div><h1>UniTracker</h1><p>Your University Life Companion</p></div>
   </div>
-  <div class="user-info">
+  <div class="user-info" style="align-items:center">
     <input type="text" id="studentName" placeholder="Your Name">
     <input type="text" id="semester" placeholder="e.g. Semester 2, 2025">
+    <span id="syncStatus" class="sync-status sync-ok" style="display:none">✓ Synced</span>
+    <div style="position:relative">
+      <img id="userAvatar" class="user-avatar" src="" alt="User" style="display:none" onclick="toggleUserMenu()">
+      <div class="user-menu" id="userMenu" style="display:none">
+        <div class="user-menu-name" id="userMenuName"></div>
+        <div class="user-menu-email" id="userMenuEmail"></div>
+        <div class="user-menu-item" onclick="signOut()">🚪 Sign Out</div>
+      </div>
+    </div>
   </div>
 </header>
 <div id="reminderBanner" style="display:none"></div>
-<nav>
+<nav style="display:none">
   <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
   <button class="nav-btn" data-tab="courses">📚 Courses</button>
   <button class="nav-btn" data-tab="assignments">📝 Assignments</button>
@@ -1082,7 +1128,150 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   </div>
 </div>
 
-<script>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA8hf_MochYnYCVPs7RQd4y7SNIhGIW1Qs",
+  authDomain: "unitracker-d6d51.firebaseapp.com",
+  projectId: "unitracker-d6d51",
+  storageBucket: "unitracker-d6d51.firebasestorage.app",
+  messagingSenderId: "114619936930",
+  appId: "1:114619936930:web:2cd617964a61c48b9be7fb",
+  measurementId: "G-QBDYG3WDPR"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+let currentUser = null;
+let syncTimeout = null;
+let unsubscribeSnapshot = null;
+
+// ── AUTH ──
+window.signInWithGoogle = async function() {
+  const btn = document.querySelector('.google-btn');
+  const err = document.getElementById('loginError');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  err.textContent = '';
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    err.textContent = '❌ ' + (e.message || 'Sign in failed');
+    btn.disabled = false;
+    btn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="Google" width="22"> Continue with Google';
+  }
+};
+
+window.signOut = async function() {
+  if(!confirm('Sign out of UniTracker?')) return;
+  if(unsubscribeSnapshot) unsubscribeSnapshot();
+  await fbSignOut(auth);
+  document.getElementById('userMenu').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.querySelector('.container').style.display='none';
+  document.querySelector('nav').style.display='none';
+};
+
+window.toggleUserMenu = function() {
+  const m = document.getElementById('userMenu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+};
+document.addEventListener('click', e => {
+  const menu = document.getElementById('userMenu');
+  const avatar = document.getElementById('userAvatar');
+  if(menu && avatar && !menu.contains(e.target) && e.target !== avatar) {
+    menu.style.display = 'none';
+  }
+});
+
+// ── CLOUD SAVE ──
+window.cloudSave = async function() {
+  if(!currentUser) return;
+  const status = document.getElementById('syncStatus');
+  if(status){ status.className='sync-status sync-saving'; status.textContent='⏳ Saving…'; status.style.display='inline-block'; }
+  if(syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(async () => {
+    try {
+      const dataToSave = JSON.parse(JSON.stringify(D));
+      await setDoc(doc(db, 'users', currentUser.uid), { data: dataToSave, updatedAt: new Date().toISOString() });
+      if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
+    } catch(e) {
+      console.error('Cloud save error:', e);
+      if(status){ status.className='sync-status sync-error'; status.textContent='⚠ Sync failed'; }
+    }
+  }, 1500);
+};
+
+// ── AUTH STATE ──
+onAuthStateChanged(auth, async (user) => {
+  const loginScreen = document.getElementById('loginScreen');
+  const container = document.querySelector('.container');
+  const nav = document.querySelector('nav');
+  const reminderBanner = document.getElementById('reminderBanner');
+
+  if(user) {
+    currentUser = user;
+    loginScreen.style.display = 'none';
+    container.style.display = 'block';
+    nav.style.display = 'flex';
+    if(reminderBanner) reminderBanner.style.display = 'block';
+
+    // Update avatar
+    const avatar = document.getElementById('userAvatar');
+    if(avatar && user.photoURL){ avatar.src = user.photoURL; avatar.style.display = 'block'; }
+    const nameEl = document.getElementById('userMenuName');
+    const emailEl = document.getElementById('userMenuEmail');
+    if(nameEl) nameEl.textContent = user.displayName || 'User';
+    if(emailEl) emailEl.textContent = user.email || '';
+    const status = document.getElementById('syncStatus');
+    if(status) status.style.display = 'inline-block';
+
+    // Load data from Firestore
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if(snap.exists() && snap.data().data) {
+        const cloud = snap.data().data;
+        D = {...D, ...cloud};
+        D.projects = migrateProjects(D.projects);
+        if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];
+        if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
+        if(!D.weekNotes)D.weekNotes={};if(!D.paychecks)D.paychecks=[];if(!D.gcData)D.gcData={};
+        if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
+      } else {
+        // First time — migrate localStorage data to cloud
+        const local = localStorage.getItem('UT7');
+        if(local){ try{ const ld=JSON.parse(local); D={...D,...ld}; await window.cloudSave(); }catch(e){} }
+      }
+    } catch(e) { console.error('Load error:', e); }
+
+    // Restore settings
+    if(D.student){ document.getElementById('studentName').value=D.student.name||''; document.getElementById('semester').value=D.student.semester||''; }
+    if(D.bgTheme){ document.body.style.background=D.bgTheme; document.body.style.backgroundAttachment='fixed'; }
+    if(D.semSettings){ const ss=document.getElementById('semStart'),sw=document.getElementById('semWeeks'); if(ss)ss.value=D.semSettings.start||''; if(sw)sw.value=D.semSettings.weeks||12; }
+    const bi=document.getElementById('budgetInput'); if(bi)bi.value=D.budget||'';
+
+    // Render everything
+    renderBgOptions();renderSemProgress();renderWeeklyReview();
+    renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
+    renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
+    renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
+    renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
+    refreshSwCourses();fillGymExSelect();
+
+  } else {
+    currentUser = null;
+    loginScreen.style.display = 'flex';
+    container.style.display = 'none';
+    nav.style.display = 'none';
+    if(reminderBanner) reminderBanner.style.display = 'none';
+  }
+});
+
 // ══════════════════════════════════════════════
 //  DATA
 // ══════════════════════════════════════════════
@@ -1106,7 +1295,7 @@ const DAYS=['monday','tuesday','wednesday','thursday','friday','saturday','sunda
 const DAYS_S=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 let noteColor='#fff',currentGCKey='scratch',selectedHeatYear=new Date().getFullYear();
 
-function save(){D.student.name=el('studentName').value;D.student.semester=el('semester').value;localStorage.setItem('UT7',JSON.stringify(D));}
+function save(){D.student.name=el('studentName').value;D.student.semester=el('semester').value;localStorage.setItem('UT7',JSON.stringify(D));if(window.cloudSave)window.cloudSave();}
 function load(){
   const s=localStorage.getItem('UT7');
   if(s){
@@ -2364,26 +2553,13 @@ if('serviceWorker' in navigator){
   });
 }
 
-// ══ INIT ══
+// ══ INIT (non-auth setup only) ══
 el('studentName').addEventListener('change',save);
 el('semester').addEventListener('change',save);
 el('eDate').valueAsDate=new Date();
 el('pcDate').valueAsDate=new Date();
-load();
-// Migrate data
-if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
-// Restore background
-if(D.bgTheme){document.body.style.background=D.bgTheme;document.body.style.backgroundAttachment='fixed';}
-// Restore sem settings inputs
-if(D.semSettings){if(el('semStart'))el('semStart').value=D.semSettings.start||'';if(el('semWeeks'))el('semWeeks').value=D.semSettings.weeks||12;}
 if(el('bmDate'))el('bmDate').valueAsDate=new Date();
 if(el('glDate'))el('glDate').valueAsDate=new Date();
-renderBgOptions();renderSemProgress();renderWeeklyReview();
-renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
-renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
-renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
-renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
-refreshSwCourses();fillGymExSelect();
 </script>
 </body>
 </html>
