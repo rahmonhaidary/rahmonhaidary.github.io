@@ -1,8 +1,16 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniTracker</title>
+<meta name="description" content="Your University Life Companion">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="UniTracker">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
@@ -2345,6 +2353,15 @@ function saveWeekNotes(){
   if(!D.weekNotes[cid])D.weekNotes[cid]={};
   WEEK_SECTIONS.forEach((s,i)=>{const t=el(`wk_sec_${i}`);if(t){if(!D.weekNotes[cid][week])D.weekNotes[cid][week]={};D.weekNotes[cid][week][s.toLowerCase()]=t.value;}});
   save();closeModal('weekNotesModal');
+}
+
+// ══ SERVICE WORKER ══
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(()=>console.log('UniTracker: Service Worker registered'))
+      .catch(e=>console.log('SW error:',e));
+  });
 }
 
 // ══ INIT ══
