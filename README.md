@@ -3,14 +3,52 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniTracker</title>
+<link rel="manifest" id="manifestLink">
+<meta name="theme-color" content="#6366f1">
+<script>
+// Inline manifest for single-file PWA
+const manifest={name:'UniTracker',short_name:'UniTracker',description:'Your University Life Companion',start_url:'.',display:'standalone',background_color:'#667eea',theme_color:'#6366f1',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%236366f1"/><text y=".9em" font-size="80" x="10">🎓</text></svg>',sizes:'any',type:'image/svg+xml'}]};
+const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+document.getElementById('manifestLink').href=URL.createObjectURL(blob);
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --primary:#6366f1;--primary-dark:#4f46e5;--secondary:#10b981;
   --warning:#f59e0b;--danger:#ef4444;--dark:#1e1b4b;
   --gray:#64748b;--card-bg:#fff;--shadow:0 4px 6px -1px rgba(0,0,0,.1);
+  --body-bg-1:#667eea;--body-bg-2:#764ba2;
+  --input-bg:#fff;--input-border:#e2e8f0;--table-alt:#f8fafc;
+  --note-border:#e2e8f0;--log-bg:#f8fafc;--filter-bg:#fff;
+  --sched-free:#f8fafc;--sched-free-border:#e2e8f0;
 }
-body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;}
+body.dark-mode{
+  --dark:#e2e8f0;--gray:#94a3b8;--card-bg:#1e2030;--shadow:0 4px 6px -1px rgba(0,0,0,.4);
+  --body-bg-1:#0f0c29;--body-bg-2:#302b63;
+  --input-bg:#2a2d3e;--input-border:#3a3f55;--table-alt:#252838;
+  --note-border:#3a3f55;--log-bg:#252838;--filter-bg:#2a2d3e;
+  --sched-free:#252838;--sched-free-border:#3a3f55;
+}
+body.dark-mode .user-info input,
+body.dark-mode .form-group input,body.dark-mode .form-group select,body.dark-mode .form-group textarea,
+body.dark-mode .assessment-table input,body.dark-mode .add-subtask-row input,
+body.dark-mode .add-member-row input,body.dark-mode .add-member-row select,
+body.dark-mode .log-input-row textarea,body.dark-mode .status-select,
+body.dark-mode .custom-row input,body.dark-mode #budgetInput,
+body.dark-mode .gc-tab,body.dark-mode .inner-tab,body.dark-mode .filter-btn,
+body.dark-mode .heatmap-year-btn{background:var(--input-bg);color:var(--dark);border-color:var(--input-border);}
+body.dark-mode th{background:var(--table-alt);color:var(--dark);}
+body.dark-mode td{border-color:var(--input-border);}
+body.dark-mode .assign-item,body.dark-mode .log-item,body.dark-mode .exp-item,
+body.dark-mode .subtask-item,body.dark-mode .member-chip,body.dark-mode .log-content,
+body.dark-mode .standard-row,body.dark-mode .prod-insight,body.dark-mode .standards-card,
+body.dark-mode .whatif-result,body.dark-mode .gc-hero-card.gc-current,
+body.dark-mode .note-card{background:var(--table-alt);border-color:var(--input-border);}
+body.dark-mode .log-bg{background:var(--log-bg);}
+body.dark-mode .day-col.free-day{background:var(--sched-free);border-color:var(--sched-free-border);}
+body.dark-mode .note-card{border-color:var(--note-border);}
+body.dark-mode select option{background:#1e2030;color:#e2e8f0;}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,var(--body-bg-1),var(--body-bg-2));min-height:100vh;padding:20px;transition:background .3s;}
 .container{max-width:1400px;margin:0 auto;}
 header{background:var(--card-bg);border-radius:20px;padding:20px 28px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 .logo{display:flex;align-items:center;gap:12px;}
@@ -335,6 +373,55 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   .charts-grid,.productivity-grid{grid-template-columns:1fr;}
   .add-member-row{grid-template-columns:1fr;gap:6px;}
 }
+/* DARK MODE TOGGLE */
+.dark-toggle{background:none;border:2px solid rgba(255,255,255,.3);color:#fff;border-radius:22px;padding:6px 14px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:6px;transition:all .3s;white-space:nowrap;}
+.dark-toggle:hover{background:rgba(255,255,255,.15);}
+body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
+/* PWA INSTALL */
+#pwaInstallBtn{display:none;background:linear-gradient(135deg,var(--secondary),#059669);color:#fff;border:none;border-radius:22px;padding:6px 14px;cursor:pointer;font-size:.82rem;white-space:nowrap;}
+/* ATTENDANCE */
+.attend-card{background:var(--card-bg);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;}
+.attend-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.attend-header h3{color:var(--dark);font-size:1rem;font-weight:700;}
+.attend-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.att-stat{text-align:center;padding:8px 14px;border-radius:9px;font-size:.78rem;}
+.att-present{background:#f0fdf4;color:var(--secondary);}
+.att-absent{background:#fef2f2;color:var(--danger);}
+.att-late{background:#fffbeb;color:var(--warning);}
+.att-rate{background:#eef2ff;color:var(--primary);}
+.att-stat strong{display:block;font-size:1.3rem;font-weight:700;}
+.att-warning{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:.82rem;color:var(--danger);margin-bottom:10px;}
+.attend-log{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.att-entry{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:14px;font-size:.75rem;font-weight:500;}
+.att-P{background:#dcfce7;color:#166534;}
+.att-A{background:#fee2e2;color:#991b1b;}
+.att-L{background:#fef9c3;color:#713f12;}
+.att-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.att-btn{padding:6px 13px;border:none;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s;}
+.att-btn-P{background:#dcfce7;color:#166534;}
+.att-btn-P:hover{background:#bbf7d0;}
+.att-btn-A{background:#fee2e2;color:#991b1b;}
+.att-btn-A:hover{background:#fecaca;}
+.att-btn-L{background:#fef9c3;color:#713f12;}
+.att-btn-L:hover{background:#fef08a;}
+.att-btn-del{background:#f1f5f9;color:var(--gray);font-size:.75rem;padding:5px 9px;}
+.att-btn-del:hover{background:#fecaca;color:var(--danger);}
+.att-threshold-warn{color:var(--warning);font-weight:600;}
+/* TAGS */
+.tag-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.tag-chip{padding:4px 12px;border-radius:14px;font-size:.78rem;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:4px;}
+.tag-chip.active{border-color:var(--dark);transform:scale(1.07);}
+.tag-chip-del{background:none;border:none;cursor:pointer;font-size:.7rem;opacity:.6;margin-left:2px;}
+.tag-chip-del:hover{opacity:1;}
+.note-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+.note-tag{padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:600;}
+.tag-input-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+.tag-input-row input{flex:1;min-width:120px;padding:7px 11px;border:2px solid var(--input-border);border-radius:7px;font-size:.84rem;background:var(--input-bg);color:var(--dark);}
+.tag-input-row input:focus{outline:none;border-color:var(--primary);}
+.tag-palette{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.tp-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+.tp-swatch.active{border-color:#1e293b;transform:scale(1.2);}
+.note-tag-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -347,6 +434,8 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   <div class="user-info">
     <input type="text" id="studentName" placeholder="Your Name">
     <input type="text" id="semester" placeholder="e.g. Semester 2, 2025">
+    <button class="dark-toggle" id="darkToggle" onclick="toggleDark()">🌙 Dark</button>
+    <button id="pwaInstallBtn" onclick="pwaInstall()">📲 Install App</button>
   </div>
 </header>
 <div id="reminderBanner" style="display:none"></div>
@@ -361,6 +450,7 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   <button class="nav-btn" data-tab="timer">⏱️ Timer</button>
   <button class="nav-btn" data-tab="notes">🗒️ Notes</button>
   <button class="nav-btn" data-tab="budget">💰 Budget</button>
+  <button class="nav-btn" data-tab="attendance">🎓 Attendance</button>
 </nav>
 
 <!-- DASHBOARD -->
@@ -571,7 +661,13 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
 <!-- NOTES -->
 <div id="notes" class="tab-content">
   <div class="card">
-    <div class="card-header"><h2>🗒️ Quick Notes</h2><button class="btn btn-primary" onclick="openModal('noteModal')">+ New Note</button></div>
+    <div class="card-header"><h2>🗒️ Quick Notes</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="openModal('tagManagerModal')">🏷️ Tags</button>
+        <button class="btn btn-primary" onclick="openModal('noteModal')">+ New Note</button>
+      </div>
+    </div>
+    <div class="tag-bar" id="noteTagBar"></div>
     <div class="notepad-grid" id="noteGrid"><div class="empty"><div class="ei">🗒️</div><p>No notes yet</p></div></div>
   </div>
 </div>
@@ -596,6 +692,21 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
       </div>
     </div>
     <div id="expenseList"><div class="empty"><div class="ei">💸</div><p>No expenses yet</p></div></div>
+  </div>
+</div>
+
+<!-- ATTENDANCE -->
+<div id="attendance" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>🎓 Course Attendance</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:.85rem;color:var(--gray)">Warning threshold:</label>
+        <input type="number" id="attThreshold" value="80" min="0" max="100" style="width:68px;padding:7px;border:2px solid var(--input-border);border-radius:8px;font-size:.88rem;background:var(--input-bg);color:var(--dark)" onchange="renderAttendance()">
+        <span style="font-size:.85rem;color:var(--gray)">%</span>
+      </div>
+    </div>
+    <div id="attendanceList"><div class="empty"><div class="ei">🎓</div><p>Add courses first, then log attendance here.</p></div></div>
   </div>
 </div>
 
@@ -750,9 +861,25 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
           <div class="nc" style="background:#ede9fe" data-color="#ede9fe" onclick="pickNoteColor(this,'#ede9fe')"></div>
         </div>
       </div>
+      <div class="form-group"><label>Tags</label>
+        <div class="note-tag-select" id="noteTagSelect"></div>
+      </div>
       <div class="form-group"><label>Link to Course (optional)</label><select id="nCourse"><option value="">None</option></select></div>
       <button type="submit" class="btn btn-primary" style="width:100%">Save Note</button>
     </form>
+  </div>
+</div>
+
+<div class="modal" id="tagManagerModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>🏷️ Manage Tags</h2><button class="close-btn" onclick="closeModal('tagManagerModal')">&times;</button></div>
+    <p style="color:var(--gray);font-size:.86rem;margin-bottom:14px">Create colour-coded tags to organise your notes.</p>
+    <div class="tag-input-row">
+      <input type="text" id="newTagName" placeholder="Tag name…" maxlength="24">
+      <button class="btn btn-primary btn-sm" onclick="addTag()">+ Add</button>
+    </div>
+    <div class="tag-palette" id="tagPalette"></div>
+    <div id="tagList" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -798,7 +925,10 @@ let D={
   exams:[],notes:[],
   dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
   standards:{daily:0,weekly:0,credits:0,reminderDays:2},
-  studyHistory:{}
+  studyHistory:{},
+  attendance:{},
+  tags:[],
+  darkMode:false
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
@@ -818,6 +948,9 @@ function load(){
     if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
     if(!D.dayTypes)D.dayTypes={monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'};
     if(!D.standards)D.standards={daily:0,weekly:0,credits:0,reminderDays:2};
+    if(!D.attendance)D.attendance={};
+    if(!D.tags)D.tags=[];
+    if(D.darkMode)document.body.classList.add('dark-mode');
     el('studentName').value=D.student.name||'';el('semester').value=D.student.semester||'';el('budgetInput').value=D.budget||'';
   }
 }
@@ -840,6 +973,8 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='schedule')renderSchedule();
   if(t==='notes')renderNotes();
   if(t==='assignments'){renderAssignments();renderProjects();}
+  if(t==='attendance')renderAttendance();
+  if(t==='notes'){renderNotes();renderNoteTagBar();}
 }));
 document.querySelectorAll('.inner-tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.inner-tab').forEach(x=>x.classList.remove('active'));
@@ -1417,19 +1552,37 @@ function renderStandards(){
 function pickNoteColor(elmt,c){document.querySelectorAll('.nc').forEach(x=>x.classList.remove('active'));elmt.classList.add('active');noteColor=c;}
 el('noteForm').addEventListener('submit',e=>{
   e.preventDefault();
-  D.notes.push({id:uid(),title:el('nTitle').value.trim(),body:el('nBody').value,color:noteColor,courseId:el('nCourse').value||null,createdAt:new Date().toISOString()});
-  save();renderNotes();closeModal('noteModal');e.target.reset();
+  const selectedTags=[...document.querySelectorAll('.note-tag-select .tag-chip.active')].map(x=>x.dataset.tagId);
+  D.notes.push({id:uid(),title:el('nTitle').value.trim(),body:el('nBody').value,color:noteColor,courseId:el('nCourse').value||null,tags:selectedTags,createdAt:new Date().toISOString()});
+  save();renderNotes();renderNoteTagBar();closeModal('noteModal');e.target.reset();
   document.querySelectorAll('.nc').forEach((x,i)=>{if(i===0)x.classList.add('active');else x.classList.remove('active');});noteColor='#fff';
 });
+let activeNoteTag=null;
+function renderNoteTagBar(){
+  const bar=el('noteTagBar');if(!bar)return;
+  const allTag=`<span class="tag-chip${activeNoteTag===null?' active':''}" style="background:#e2e8f0;color:#475569" onclick="filterByTag(null)">All Notes</span>`;
+  const tagChips=D.tags.map(t=>`<span class="tag-chip${activeNoteTag===t.id?' active':''}" style="background:${t.color}33;color:${t.color}" data-tag-id="${t.id}" onclick="filterByTag('${t.id}')">${esc(t.name)}</span>`).join('');
+  bar.innerHTML=allTag+tagChips;
+}
+function filterByTag(tid){activeNoteTag=tid;renderNoteTagBar();renderNotes();}
+function renderNoteTagSelect(){
+  const c=el('noteTagSelect');if(!c)return;
+  if(!D.tags.length){c.innerHTML='<span style="color:var(--gray);font-size:.82rem">No tags yet — create some in 🏷️ Tags</span>';return;}
+  c.innerHTML=D.tags.map(t=>`<span class="tag-chip" style="background:${t.color}33;color:${t.color}" data-tag-id="${t.id}" onclick="this.classList.toggle('active')">${esc(t.name)}</span>`).join('');
+}
 function renderNotes(){
   const c=el('noteGrid');
-  if(!D.notes.length){c.innerHTML='<div class="empty"><div class="ei">🗒️</div><p>No notes yet</p></div>';return;}
-  c.innerHTML=[...D.notes].reverse().map(n=>{
+  let list=[...D.notes].reverse();
+  if(activeNoteTag!==null)list=list.filter(n=>n.tags&&n.tags.includes(activeNoteTag));
+  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">🗒️</div><p>'+(activeNoteTag!==null?'No notes with this tag':'No notes yet')+'</p></div>';return;}
+  c.innerHTML=list.map(n=>{
     const course=n.courseId?D.courses.find(co=>co.id==n.courseId):null;
+    const noteTags=(n.tags||[]).map(tid=>{const t=D.tags.find(x=>x.id===tid);return t?`<span class="note-tag" style="background:${t.color}33;color:${t.color}">${esc(t.name)}</span>`:''}).join('');
     return`<div class="note-card" style="background:${n.color||'#fff'}">
       <button class="note-del" onclick="deleteNote(${n.id})">🗑</button>
       <h4>${esc(n.title)}</h4>
       ${course?`<span style="font-size:.72rem;background:${SOLID[D.courses.indexOf(course)%SOLID.length]}22;color:${SOLID[D.courses.indexOf(course)%SOLID.length]};padding:2px 8px;border-radius:7px;display:inline-block;margin-bottom:6px">${course.code}</span>`:''}
+      ${noteTags?`<div class="note-tags">${noteTags}</div>`:''}
       <p>${esc(n.body)}</p>
       <div class="note-date">${new Date(n.createdAt).toLocaleDateString()} ${new Date(n.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
@@ -1545,15 +1698,125 @@ function renderYearHeatmap(){
 }
 function selectHY(yr){selectedHeatYear=yr;renderYearHeatmap();}
 
+// ══ DARK MODE ══
+function toggleDark(){
+  D.darkMode=!D.darkMode;document.body.classList.toggle('dark-mode',D.darkMode);
+  el('darkToggle').textContent=D.darkMode?'☀️ Light':'🌙 Dark';save();
+}
+
+// ══ TAGS ══
+const TAG_COLORS=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316','#8b5cf6','#06b6d4'];
+let selectedTagColor=TAG_COLORS[0];
+function renderTagPalette(){
+  const p=el('tagPalette');if(!p)return;
+  p.innerHTML=TAG_COLORS.map(c=>`<div class="tp-swatch${c===selectedTagColor?' active':''}" style="background:${c}" onclick="selectTagColor('${c}')"></div>`).join('');
+}
+function selectTagColor(c){selectedTagColor=c;renderTagPalette();}
+function addTag(){
+  const name=el('newTagName').value.trim();if(!name)return;
+  D.tags.push({id:uid(),name,color:selectedTagColor});
+  el('newTagName').value='';save();renderTagList();renderNoteTagBar();renderNoteTagSelect();
+}
+function deleteTag(id){
+  D.tags=D.tags.filter(t=>t.id!==id);
+  D.notes.forEach(n=>{if(n.tags)n.tags=n.tags.filter(tid=>tid!==id);});
+  if(activeNoteTag===id)activeNoteTag=null;
+  save();renderTagList();renderNoteTagBar();renderNotes();renderNoteTagSelect();
+}
+function renderTagList(){
+  const c=el('tagList');if(!c)return;
+  if(!D.tags.length){c.innerHTML='<p style="color:var(--gray);font-size:.84rem;text-align:center;padding:12px">No tags yet — type a name and pick a colour above.</p>';return;}
+  c.innerHTML=D.tags.map(t=>`<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--table-alt);border-radius:9px;margin-bottom:6px">
+    <span style="width:14px;height:14px;background:${t.color};border-radius:50%;display:inline-block"></span>
+    <span style="flex:1;font-size:.9rem;color:var(--dark)">${esc(t.name)}</span>
+    <button class="att-btn att-btn-del" onclick="deleteTag(${t.id})">✕ Remove</button>
+  </div>`).join('');
+}
+
+// ══ ATTENDANCE ══
+function logAttendance(courseId,status){
+  const dateStr=new Date().toISOString().split('T')[0];
+  if(!D.attendance[courseId])D.attendance[courseId]=[];
+  D.attendance[courseId].push({date:dateStr,status});
+  save();renderAttendance();
+}
+function removeLastAttendance(courseId){
+  if(!D.attendance[courseId]||!D.attendance[courseId].length)return;
+  if(!confirm('Remove last attendance entry?'))return;
+  D.attendance[courseId].pop();save();renderAttendance();
+}
+function renderAttendance(){
+  const c=el('attendanceList');if(!c)return;
+  if(!D.courses.length){c.innerHTML='<div class="empty"><div class="ei">🎓</div><p>Add courses first, then log attendance here.</p></div>';return;}
+  const threshold=parseFloat(el('attThreshold')?.value)||80;
+  c.innerHTML=D.courses.map((co,i)=>{
+    const log=D.attendance[co.id]||[];
+    const P=log.filter(x=>x.status==='P').length;
+    const A=log.filter(x=>x.status==='A').length;
+    const L=log.filter(x=>x.status==='L').length;
+    const total=log.length;const rate=total>0?Math.round((P+L*0.5)/total*100):100;
+    const warn=total>0&&rate<threshold;
+    const lastEntries=log.slice(-12).reverse();
+    return`<div class="attend-card">
+      <div class="attend-header">
+        <h3 style="color:${SOLID[i%SOLID.length]}">${esc(co.name)} <span style="font-size:.77rem;opacity:.75">${co.code}</span></h3>
+        <div class="att-btns">
+          <button class="att-btn att-btn-P" onclick="logAttendance(${co.id},'P')">✅ Present</button>
+          <button class="att-btn att-btn-L" onclick="logAttendance(${co.id},'L')">⏰ Late</button>
+          <button class="att-btn att-btn-A" onclick="logAttendance(${co.id},'A')">❌ Absent</button>
+          <button class="att-btn att-btn-del" onclick="removeLastAttendance(${co.id})">↩ Undo</button>
+        </div>
+      </div>
+      ${warn?`<div class="att-warning">⚠️ Attendance at <strong>${rate}%</strong> — below the ${threshold}% threshold!</div>`:''}
+      <div class="attend-stats">
+        <div class="att-stat att-present"><strong>${P}</strong>Present</div>
+        <div class="att-stat att-late"><strong>${L}</strong>Late</div>
+        <div class="att-stat att-absent"><strong>${A}</strong>Absent</div>
+        <div class="att-stat att-rate"><strong class="${warn?'att-threshold-warn':''}">${total>0?rate+'%':'—'}</strong>Rate</div>
+      </div>
+      ${lastEntries.length?`<div style="font-size:.77rem;color:var(--gray);margin-bottom:5px">Recent (newest first):</div>
+      <div class="attend-log">${lastEntries.map(e=>`<span class="att-entry att-${e.status}" title="${e.date}">${e.status==='P'?'✅':e.status==='L'?'⏰':'❌'} ${e.date.slice(5)}</span>`).join('')}</div>`:'<p style="font-size:.82rem;color:var(--gray)">No attendance logged yet for today.</p>'}
+    </div>`;
+  }).join('');
+}
+
+// ══ PWA ══
+let pwaPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;el('pwaInstallBtn').style.display='inline-block';});
+window.addEventListener('appinstalled',()=>{el('pwaInstallBtn').style.display='none';pwaPrompt=null;});
+function pwaInstall(){if(pwaPrompt){pwaPrompt.prompt();pwaPrompt.userChoice.then(()=>{pwaPrompt=null;el('pwaInstallBtn').style.display='none';});}}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    const swCode=`const CACHE='unitracker-v1';const ASSETS=['/'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>{const fresh=fetch(e.request).then(r=>{if(r&&r.status===200){const rc=r.clone();caches.open(CACHE).then(c=>c.put(e.request,rc));}return r;}).catch(()=>cached);return cached||fresh;}));});`;
+    const blob=new Blob([swCode],{type:'application/javascript'});
+    const swUrl=URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).catch(()=>{});
+  });
+}
+
 // ══ INIT ══
 el('studentName').addEventListener('change',save);
 el('semester').addEventListener('change',save);
 el('eDate').valueAsDate=new Date();
 el('pcDate').valueAsDate=new Date();
 load();
+if(D.darkMode)el('darkToggle').textContent='☀️ Light';
 renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
 renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
-renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
+renderDashboard();renderNotes();renderNoteTagBar();renderStandards();showTimer();checkReminders();
+// Tag manager modal hooks
+el('tagManagerModal').addEventListener('click',e=>{if(e.target===el('tagManagerModal'))closeModal('tagManagerModal');});
+document.querySelector('[data-tab="notes"]')?.addEventListener('click',()=>{renderNoteTagBar();});
+// Open tag manager: render palette and list
+const origOpenModal=openModal;
+window.openModal=function(id){
+  origOpenModal(id);
+  if(id==='tagManagerModal'){renderTagPalette();renderTagList();}
+  if(id==='noteModal'){renderNoteTagSelect();}
+};
 </script>
 </body>
 </html>
