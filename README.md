@@ -3,52 +3,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniTracker</title>
-<link rel="manifest" id="manifestLink">
-<meta name="theme-color" content="#6366f1">
-<script>
-// Inline manifest for single-file PWA
-const manifest={name:'UniTracker',short_name:'UniTracker',description:'Your University Life Companion',start_url:'.',display:'standalone',background_color:'#667eea',theme_color:'#6366f1',icons:[{src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="%236366f1"/><text y=".9em" font-size="80" x="10">🎓</text></svg>',sizes:'any',type:'image/svg+xml'}]};
-const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
-document.getElementById('manifestLink').href=URL.createObjectURL(blob);
-</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
   --primary:#6366f1;--primary-dark:#4f46e5;--secondary:#10b981;
   --warning:#f59e0b;--danger:#ef4444;--dark:#1e1b4b;
   --gray:#64748b;--card-bg:#fff;--shadow:0 4px 6px -1px rgba(0,0,0,.1);
-  --body-bg-1:#667eea;--body-bg-2:#764ba2;
-  --input-bg:#fff;--input-border:#e2e8f0;--table-alt:#f8fafc;
-  --note-border:#e2e8f0;--log-bg:#f8fafc;--filter-bg:#fff;
-  --sched-free:#f8fafc;--sched-free-border:#e2e8f0;
 }
-body.dark-mode{
-  --dark:#e2e8f0;--gray:#94a3b8;--card-bg:#1e2030;--shadow:0 4px 6px -1px rgba(0,0,0,.4);
-  --body-bg-1:#0f0c29;--body-bg-2:#302b63;
-  --input-bg:#2a2d3e;--input-border:#3a3f55;--table-alt:#252838;
-  --note-border:#3a3f55;--log-bg:#252838;--filter-bg:#2a2d3e;
-  --sched-free:#252838;--sched-free-border:#3a3f55;
-}
-body.dark-mode .user-info input,
-body.dark-mode .form-group input,body.dark-mode .form-group select,body.dark-mode .form-group textarea,
-body.dark-mode .assessment-table input,body.dark-mode .add-subtask-row input,
-body.dark-mode .add-member-row input,body.dark-mode .add-member-row select,
-body.dark-mode .log-input-row textarea,body.dark-mode .status-select,
-body.dark-mode .custom-row input,body.dark-mode #budgetInput,
-body.dark-mode .gc-tab,body.dark-mode .inner-tab,body.dark-mode .filter-btn,
-body.dark-mode .heatmap-year-btn{background:var(--input-bg);color:var(--dark);border-color:var(--input-border);}
-body.dark-mode th{background:var(--table-alt);color:var(--dark);}
-body.dark-mode td{border-color:var(--input-border);}
-body.dark-mode .assign-item,body.dark-mode .log-item,body.dark-mode .exp-item,
-body.dark-mode .subtask-item,body.dark-mode .member-chip,body.dark-mode .log-content,
-body.dark-mode .standard-row,body.dark-mode .prod-insight,body.dark-mode .standards-card,
-body.dark-mode .whatif-result,body.dark-mode .gc-hero-card.gc-current,
-body.dark-mode .note-card{background:var(--table-alt);border-color:var(--input-border);}
-body.dark-mode .log-bg{background:var(--log-bg);}
-body.dark-mode .day-col.free-day{background:var(--sched-free);border-color:var(--sched-free-border);}
-body.dark-mode .note-card{border-color:var(--note-border);}
-body.dark-mode select option{background:#1e2030;color:#e2e8f0;}
-body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,var(--body-bg-1),var(--body-bg-2));min-height:100vh;padding:20px;transition:background .3s;}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;}
 .container{max-width:1400px;margin:0 auto;}
 header{background:var(--card-bg);border-radius:20px;padding:20px 28px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 .logo{display:flex;align-items:center;gap:12px;}
@@ -366,62 +328,79 @@ nav{background:var(--card-bg);border-radius:13px;padding:7px;margin-bottom:20px;
 table{width:100%;border-collapse:collapse;}
 th,td{padding:12px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:.88rem;}
 th{background:#f8fafc;color:var(--dark);font-weight:600;}
+/* SEMESTER PROGRESS */
+.sem-progress-card{background:linear-gradient(135deg,var(--primary),#8b5cf6);border-radius:14px;padding:20px;color:#fff;margin-bottom:18px;}
+.sem-progress-card h3{opacity:.9;font-size:.85rem;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.sem-week-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.sem-week-label{font-size:2rem;font-weight:700;}
+.sem-week-sub{font-size:.83rem;opacity:.8;}
+.sem-bar-bg{background:rgba(255,255,255,.25);border-radius:10px;height:10px;overflow:hidden;}
+.sem-bar-fill{background:#fff;border-radius:10px;height:100%;transition:width .8s;}
+.sem-settings-link{font-size:.75rem;opacity:.75;cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
+/* BODY MEASUREMENTS */
+.body-metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px;}
+.body-metric-card{background:#f8fafc;border-radius:11px;padding:14px;text-align:center;border:2px solid #e2e8f0;}
+.body-metric-card .bm-val{font-size:1.5rem;font-weight:700;color:var(--primary);}
+.body-metric-card .bm-label{font-size:.72rem;color:var(--gray);margin-top:3px;}
+.body-metric-card .bm-change{font-size:.7rem;margin-top:4px;font-weight:600;}
+.bm-up{color:var(--danger);}.bm-down{color:var(--secondary);}
+.body-chart-wrap{height:180px;position:relative;margin-bottom:6px;}
+.body-chart-wrap canvas{width:100%!important;height:100%!important;}
+/* JOB APPLICATIONS */
+.job-kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:10px;}
+.job-col{background:#f8fafc;border-radius:12px;padding:14px;min-height:120px;}
+.job-col-header{font-size:.82rem;font-weight:700;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.job-col-count{background:var(--primary);color:#fff;border-radius:10px;padding:1px 7px;font-size:.72rem;}
+.job-card{background:#fff;border-radius:9px;padding:12px;margin-bottom:8px;box-shadow:0 2px 4px rgba(0,0,0,.07);cursor:pointer;border-left:4px solid #e2e8f0;transition:all .2s;}
+.job-card:hover{transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,0,0,.12);}
+.job-card h4{font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:3px;}
+.job-card .jc-company{font-size:.76rem;color:var(--gray);}
+.job-card .jc-date{font-size:.68rem;color:var(--gray);margin-top:5px;}
+.job-status-applied{border-left-color:#6366f1;}
+.job-status-interview{border-left-color:#f59e0b;}
+.job-status-offer{border-left-color:#10b981;}
+.job-status-rejected{border-left-color:#ef4444;}
+.job-status-saved{border-left-color:#94a3b8;}
+/* GYM TRACKER */
+.gym-exercise-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.gym-ex-card{background:#fff;border-radius:13px;padding:18px;box-shadow:var(--shadow);border-top:4px solid var(--primary);}
+.gym-ex-card h4{color:var(--dark);font-size:.95rem;font-weight:600;margin-bottom:4px;}
+.gym-ex-meta{font-size:.75rem;color:var(--gray);margin-bottom:10px;}
+.gym-set-row{display:flex;gap:8px;align-items:center;padding:7px;background:#f8fafc;border-radius:7px;margin-bottom:5px;font-size:.83rem;}
+.gym-set-num{font-weight:700;color:var(--primary);min-width:24px;}
+.gym-set-detail{flex:1;color:var(--dark);}
+.gym-pb{font-size:.7rem;background:#eef2ff;color:var(--primary);padding:1px 6px;border-radius:6px;font-weight:600;}
+.gym-chart-wrap{margin-top:10px;}
+/* WEEKLY REVIEW */
+.review-section{background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:14px;border:2px solid #e2e8f0;}
+.review-section h4{font-size:.9rem;font-weight:700;color:var(--dark);margin-bottom:12px;}
+.review-stat{display:flex;justify-content:space-between;align-items:center;padding:8px;background:#fff;border-radius:8px;margin-bottom:6px;}
+.review-stat .rs-label{font-size:.83rem;color:var(--gray);}
+.review-stat .rs-val{font-size:.9rem;font-weight:700;color:var(--dark);}
+/* STOPWATCH */
+.stopwatch-display{font-size:3.2rem;font-weight:700;font-family:monospace;color:var(--dark);text-align:center;margin:14px 0;letter-spacing:2px;}
+.stopwatch-laps{max-height:180px;overflow-y:auto;margin-top:10px;}
+.lap-item{display:flex;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #f1f5f9;font-size:.83rem;}
+.lap-item:last-child{border:none;}
+.lap-num{color:var(--gray);}
+.lap-time{font-weight:600;font-family:monospace;}
+/* BACKGROUND COLOR PICKER */
+.bg-option{display:inline-block;width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .2s;margin:4px;}
+.bg-option.active{border-color:var(--dark);transform:scale(1.15);}
+/* COURSE WEEK SECTIONS */
+.week-section-tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap;}
+.wst-btn{padding:5px 12px;border:2px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-size:.78rem;color:var(--gray);transition:all .2s;}
+.wst-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.week-section-content{background:#f8fafc;border-radius:9px;padding:12px;min-height:60px;}
+.week-section-content textarea{width:100%;border:none;background:transparent;resize:vertical;font-family:inherit;font-size:.87rem;color:var(--dark);outline:none;min-height:80px;}
 @media(max-width:768px){
   .schedule-grid{grid-template-columns:1fr;}
   .timer-display{font-size:2.8rem;}
   header{flex-direction:column;text-align:center;}
   .charts-grid,.productivity-grid{grid-template-columns:1fr;}
   .add-member-row{grid-template-columns:1fr;gap:6px;}
+  .job-kanban{grid-template-columns:1fr 1fr;}
 }
-/* DARK MODE TOGGLE */
-.dark-toggle{background:none;border:2px solid rgba(255,255,255,.3);color:#fff;border-radius:22px;padding:6px 14px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:6px;transition:all .3s;white-space:nowrap;}
-.dark-toggle:hover{background:rgba(255,255,255,.15);}
-body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
-/* PWA INSTALL */
-#pwaInstallBtn{display:none;background:linear-gradient(135deg,var(--secondary),#059669);color:#fff;border:none;border-radius:22px;padding:6px 14px;cursor:pointer;font-size:.82rem;white-space:nowrap;}
-/* ATTENDANCE */
-.attend-card{background:var(--card-bg);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;}
-.attend-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
-.attend-header h3{color:var(--dark);font-size:1rem;font-weight:700;}
-.attend-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.att-stat{text-align:center;padding:8px 14px;border-radius:9px;font-size:.78rem;}
-.att-present{background:#f0fdf4;color:var(--secondary);}
-.att-absent{background:#fef2f2;color:var(--danger);}
-.att-late{background:#fffbeb;color:var(--warning);}
-.att-rate{background:#eef2ff;color:var(--primary);}
-.att-stat strong{display:block;font-size:1.3rem;font-weight:700;}
-.att-warning{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:.82rem;color:var(--danger);margin-bottom:10px;}
-.attend-log{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
-.att-entry{display:flex;align-items:center;gap:4px;padding:4px 9px;border-radius:14px;font-size:.75rem;font-weight:500;}
-.att-P{background:#dcfce7;color:#166534;}
-.att-A{background:#fee2e2;color:#991b1b;}
-.att-L{background:#fef9c3;color:#713f12;}
-.att-btns{display:flex;gap:6px;flex-wrap:wrap;}
-.att-btn{padding:6px 13px;border:none;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s;}
-.att-btn-P{background:#dcfce7;color:#166534;}
-.att-btn-P:hover{background:#bbf7d0;}
-.att-btn-A{background:#fee2e2;color:#991b1b;}
-.att-btn-A:hover{background:#fecaca;}
-.att-btn-L{background:#fef9c3;color:#713f12;}
-.att-btn-L:hover{background:#fef08a;}
-.att-btn-del{background:#f1f5f9;color:var(--gray);font-size:.75rem;padding:5px 9px;}
-.att-btn-del:hover{background:#fecaca;color:var(--danger);}
-.att-threshold-warn{color:var(--warning);font-weight:600;}
-/* TAGS */
-.tag-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
-.tag-chip{padding:4px 12px;border-radius:14px;font-size:.78rem;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:4px;}
-.tag-chip.active{border-color:var(--dark);transform:scale(1.07);}
-.tag-chip-del{background:none;border:none;cursor:pointer;font-size:.7rem;opacity:.6;margin-left:2px;}
-.tag-chip-del:hover{opacity:1;}
-.note-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
-.note-tag{padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:600;}
-.tag-input-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
-.tag-input-row input{flex:1;min-width:120px;padding:7px 11px;border:2px solid var(--input-border);border-radius:7px;font-size:.84rem;background:var(--input-bg);color:var(--dark);}
-.tag-input-row input:focus{outline:none;border-color:var(--primary);}
-.tag-palette{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
-.tp-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s;}
-.tp-swatch.active{border-color:#1e293b;transform:scale(1.2);}
-.note-tag-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -434,8 +413,6 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
   <div class="user-info">
     <input type="text" id="studentName" placeholder="Your Name">
     <input type="text" id="semester" placeholder="e.g. Semester 2, 2025">
-    <button class="dark-toggle" id="darkToggle" onclick="toggleDark()">🌙 Dark</button>
-    <button id="pwaInstallBtn" onclick="pwaInstall()">📲 Install App</button>
   </div>
 </header>
 <div id="reminderBanner" style="display:none"></div>
@@ -450,11 +427,16 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
   <button class="nav-btn" data-tab="timer">⏱️ Timer</button>
   <button class="nav-btn" data-tab="notes">🗒️ Notes</button>
   <button class="nav-btn" data-tab="budget">💰 Budget</button>
-  <button class="nav-btn" data-tab="attendance">🎓 Attendance</button>
+  <button class="nav-btn" data-tab="body">⚖️ Body</button>
+  <button class="nav-btn" data-tab="gym">🏋️ Gym</button>
+  <button class="nav-btn" data-tab="jobs">💼 Jobs</button>
+  <button class="nav-btn" data-tab="settings">⚙️ Settings</button>
 </nav>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="tab-content active">
+  <div id="semProgressWrap"></div>
+  <div id="weeklyReviewWrap"></div>
   <div class="stat-grid">
     <div class="stat-card s-gpa"><h3>Current GPA</h3><div class="val" id="dashGPA">0.00</div><div class="sub">Out of 4.0</div></div>
     <div class="stat-card s-courses"><h3>Active Courses</h3><div class="val" id="dashCourses">0</div><div class="sub" id="dashCredits">0 Credits</div></div>
@@ -489,7 +471,16 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
 <div id="courses" class="tab-content">
   <div class="card">
     <div class="card-header"><h2>📚 My Courses</h2><button class="btn btn-primary" onclick="openCourseModal()">+ Add Course</button></div>
-    <div class="course-grid" id="courseList"><div class="empty"><div class="ei">📚</div><p>No courses yet</p></div></div>
+    <div class="inner-tabs" style="margin-bottom:14px">
+      <button class="inner-tab active" data-panel="panel-active-courses">📚 Active</button>
+      <button class="inner-tab" data-panel="panel-archived-courses">📦 Archived</button>
+    </div>
+    <div class="inner-panel active" id="panel-active-courses">
+      <div class="course-grid" id="courseList"><div class="empty"><div class="ei">📚</div><p>No courses yet</p></div></div>
+    </div>
+    <div class="inner-panel" id="panel-archived-courses">
+      <div class="course-grid" id="archivedCourseList"><div class="empty"><div class="ei">📦</div><p>No archived courses</p></div></div>
+    </div>
   </div>
 </div>
 
@@ -645,14 +636,31 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
       </div>
     </div>
   </div>
-  <div class="standards-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <h3>🎯 Study Standards</h3>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>⏱ Stopwatch</h2></div>
+    <div style="text-align:center">
+      <div class="stopwatch-display" id="swDisplay">00:00.0</div>
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-success" id="swStart">▶ Start</button>
+        <button class="btn btn-secondary" id="swLap">🏁 Lap</button>
+        <button class="btn btn-danger" id="swReset">🔄 Reset</button>
+      </div>
+      <div class="form-row" style="max-width:460px;margin:0 auto 10px">
+        <div class="form-group"><label>Subject:</label><input type="text" id="swSubject" placeholder="Topic…"></div>
+        <div class="form-group"><label>Course:</label><select id="swCourse"><option value="">General</option></select></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="swSave" style="margin-bottom:10px">💾 Save to Study Log</button>
+    </div>
+    <div class="stopwatch-laps" id="swLaps"></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header">
+      <h2>🎯 Study Standards</h2>
       <button class="btn btn-primary btn-sm" onclick="openModal('standardsModal')">⚙️ Set Standards</button>
     </div>
     <div id="standardsList"><p style="color:var(--gray);font-size:.87rem">No standards set yet. Click "Set Standards" above.</p></div>
   </div>
-  <div class="card">
+  <div class="card" style="margin-top:18px">
     <div class="card-header"><h2>📋 Study Log</h2><button class="btn btn-secondary btn-sm" onclick="clearLog()">Clear</button></div>
     <div id="studyLog"><div class="empty"><div class="ei">📖</div><p>No sessions yet</p></div></div>
   </div>
@@ -661,13 +669,11 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
 <!-- NOTES -->
 <div id="notes" class="tab-content">
   <div class="card">
-    <div class="card-header"><h2>🗒️ Quick Notes</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-secondary btn-sm" onclick="openModal('tagManagerModal')">🏷️ Tags</button>
-        <button class="btn btn-primary" onclick="openModal('noteModal')">+ New Note</button>
-      </div>
+    <div class="card-header"><h2>🗒️ Quick Notes</h2><button class="btn btn-primary" onclick="openModal('noteModal')">+ New Note</button></div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input type="text" id="noteSearch" placeholder="🔍 Search notes…" oninput="renderNotes()" style="flex:1;min-width:180px;padding:9px 13px;border:2px solid #e2e8f0;border-radius:9px;font-size:.9rem">
+      <select id="noteFilterCourse" onchange="renderNotes()" style="padding:9px 13px;border:2px solid #e2e8f0;border-radius:9px;font-size:.9rem;background:#fff"><option value="">All Courses</option></select>
     </div>
-    <div class="tag-bar" id="noteTagBar"></div>
     <div class="notepad-grid" id="noteGrid"><div class="empty"><div class="ei">🗒️</div><p>No notes yet</p></div></div>
   </div>
 </div>
@@ -695,24 +701,193 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
   </div>
 </div>
 
-<!-- ATTENDANCE -->
-<div id="attendance" class="tab-content">
+<!-- BODY MEASUREMENTS -->
+<div id="body" class="tab-content">
   <div class="card">
-    <div class="card-header">
-      <h2>🎓 Course Attendance</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <label style="font-size:.85rem;color:var(--gray)">Warning threshold:</label>
-        <input type="number" id="attThreshold" value="80" min="0" max="100" style="width:68px;padding:7px;border:2px solid var(--input-border);border-radius:8px;font-size:.88rem;background:var(--input-bg);color:var(--dark)" onchange="renderAttendance()">
-        <span style="font-size:.85rem;color:var(--gray)">%</span>
+    <div class="card-header"><h2>⚖️ Weight & Body Measurements</h2><button class="btn btn-primary" onclick="openModal('bodyModal')">+ Log Entry</button></div>
+    <div class="body-metric-grid" id="bodyMetrics"></div>
+    <div class="charts-grid" style="margin-bottom:0">
+      <div class="card" style="padding:16px"><h3 style="color:var(--dark);font-size:.95rem;margin-bottom:10px">📈 Weight Over Time</h3><div class="body-chart-wrap"><canvas id="weightChart"></canvas></div></div>
+      <div class="card" style="padding:16px"><h3 style="color:var(--dark);font-size:.95rem;margin-bottom:10px">📏 Measurements Over Time</h3><div class="body-chart-wrap"><canvas id="measureChart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-header"><h2>📋 History</h2></div><div id="bodyHistory"><div class="empty"><div class="ei">⚖️</div><p>No entries yet</p></div></div></div>
+</div>
+
+<!-- GYM TRACKER -->
+<div id="gym" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>🏋️ Gym Tracker</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="openModal('gymLogModal')">+ Log Workout</button>
+        <button class="btn btn-secondary" onclick="openModal('gymExModal')">+ Add Exercise</button>
       </div>
     </div>
-    <div id="attendanceList"><div class="empty"><div class="ei">🎓</div><p>Add courses first, then log attendance here.</p></div></div>
+    <div class="inner-tabs">
+      <button class="inner-tab active" data-panel="gym-panel-log">📋 Workout Log</button>
+      <button class="inner-tab" data-panel="gym-panel-exercises">🏆 Personal Bests</button>
+      <button class="inner-tab" data-panel="gym-panel-charts">📈 Progress Charts</button>
+    </div>
+    <div class="inner-panel active" id="gym-panel-log"><div id="gymLog"><div class="empty"><div class="ei">🏋️</div><p>No workouts logged yet</p></div></div></div>
+    <div class="inner-panel" id="gym-panel-exercises"><div class="gym-exercise-grid" id="gymExercises"><div class="empty"><div class="ei">💪</div><p>Add exercises to track PRs</p></div></div></div>
+    <div class="inner-panel" id="gym-panel-charts"><div class="charts-grid" id="gymCharts"><div class="empty"><div class="ei">📈</div><p>Log workouts to see charts</p></div></div></div>
   </div>
 </div>
 
-</div><!-- /container -->
+<!-- JOB APPLICATIONS -->
+<div id="jobs" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>💼 Job Applications</h2><button class="btn btn-primary" onclick="openModal('jobModal')">+ Add Application</button></div>
+    <div class="stat-grid" style="margin-bottom:18px">
+      <div class="stat-card" style="border-left:4px solid #94a3b8"><h3>Saved</h3><div class="val" id="jobStatSaved" style="color:#94a3b8">0</div></div>
+      <div class="stat-card" style="border-left:4px solid #6366f1"><h3>Applied</h3><div class="val" id="jobStatApplied" style="color:#6366f1">0</div></div>
+      <div class="stat-card" style="border-left:4px solid #f59e0b"><h3>Interview</h3><div class="val" id="jobStatInterview" style="color:#f59e0b">0</div></div>
+      <div class="stat-card" style="border-left:4px solid #10b981"><h3>Offer</h3><div class="val" id="jobStatOffer" style="color:#10b981">0</div></div>
+      <div class="stat-card" style="border-left:4px solid #ef4444"><h3>Rejected</h3><div class="val" id="jobStatRejected" style="color:#ef4444">0</div></div>
+    </div>
+    <div class="job-kanban" id="jobKanban"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="tab-content">
+  <div class="card" style="border:2px solid #10b981">
+    <div class="card-header"><h2>💾 Data Backup &amp; Restore</h2></div>
+    <p style="color:var(--gray);font-size:.87rem;margin-bottom:16px">Export all your data as a JSON file to back it up or transfer to another device. Import to restore.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-success" onclick="exportData()">⬇️ Export / Download Backup</button>
+      <label class="btn btn-primary" style="cursor:pointer">⬆️ Import / Restore Backup<input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none"></label>
+      <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+    </div>
+    <div id="importStatus" style="margin-top:12px;font-size:.87rem"></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>🎨 Background Theme</h2></div>
+    <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Choose your app background gradient.</p>
+    <div id="bgOptions" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-bottom:12px"></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <label style="font-size:.85rem;color:var(--dark);font-weight:500">Custom colour:</label>
+      <input type="color" id="bgCustomColor" value="#667eea" style="width:44px;height:36px;border:2px solid #e2e8f0;border-radius:8px;cursor:pointer">
+      <button class="btn btn-primary btn-sm" onclick="applyCustomBg()">Apply</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2>📅 Semester Progress Settings</h2></div>
+    <div class="form-row" style="max-width:500px">
+      <div class="form-group"><label>Semester Start Date</label><input type="date" id="semStart"></div>
+      <div class="form-group"><label>Total Weeks</label><input type="number" id="semWeeks" min="1" max="52" value="12" placeholder="12"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveSemSettings()">Save Settings</button>
+  </div>
+</div>
 
 <!-- ═══ MODALS ═══ -->
+
+<!-- BODY MODAL -->
+<div class="modal" id="bodyModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>Log Body Measurements</h2><button class="close-btn" onclick="closeModal('bodyModal')">&times;</button></div>
+    <form id="bodyForm">
+      <div class="form-group"><label>Date</label><input type="date" id="bmDate" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="bmWeight" step="0.1" min="20" max="300" placeholder="70.5"></div>
+        <div class="form-group"><label>Height (cm)</label><input type="number" id="bmHeight" step="0.5" min="100" max="250" placeholder="175"></div>
+      </div>
+        <div class="form-group"><label>Body Fat %</label><input type="number" id="bmBodyFat" step="0.1" min="1" max="60" placeholder="20.0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Chest (cm)</label><input type="number" id="bmChest" step="0.5" placeholder="95"></div>
+        <div class="form-group"><label>Waist (cm)</label><input type="number" id="bmWaist" step="0.5" placeholder="80"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Hips (cm)</label><input type="number" id="bmHips" step="0.5" placeholder="95"></div>
+        <div class="form-group"><label>Arms (cm)</label><input type="number" id="bmArms" step="0.5" placeholder="35"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Thighs (cm)</label><input type="number" id="bmThighs" step="0.5" placeholder="55"></div>
+        <div class="form-group"><label>Neck (cm)</label><input type="number" id="bmNeck" step="0.5" placeholder="38"></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="bmNotes" rows="2" placeholder="How are you feeling?"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Save Entry</button>
+    </form>
+  </div>
+</div>
+
+<!-- GYM EXERCISE MODAL -->
+<div class="modal" id="gymExModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>Add Exercise to Track</h2><button class="close-btn" onclick="closeModal('gymExModal')">&times;</button></div>
+    <form id="gymExForm">
+      <div class="form-group"><label>Exercise Name</label><input type="text" id="geName" required placeholder="e.g. Bench Press"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Category</label>
+          <select id="geCat">
+            <option value="chest">💪 Chest</option><option value="back">🔙 Back</option><option value="legs">🦵 Legs</option>
+            <option value="shoulders">🏋️ Shoulders</option><option value="arms">💪 Arms</option><option value="core">🎯 Core</option>
+            <option value="cardio">❤️ Cardio</option><option value="other">📌 Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Type</label>
+          <select id="geType"><option value="strength">Strength (weight×reps)</option><option value="cardio">Cardio (time/dist)</option></select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Add Exercise</button>
+    </form>
+  </div>
+</div>
+
+<!-- GYM LOG MODAL -->
+<div class="modal" id="gymLogModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2>Log Workout</h2><button class="close-btn" onclick="closeModal('gymLogModal')">&times;</button></div>
+    <form id="gymLogForm">
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="glDate" required></div>
+        <div class="form-group"><label>Exercise</label><select id="glExercise"><option value="">— Select —</option></select></div>
+      </div>
+      <div id="glSetFields">
+        <div class="form-row">
+          <div class="form-group"><label>Sets</label><input type="number" id="glSets" min="1" max="20" value="3" placeholder="3"></div>
+          <div class="form-group"><label>Reps</label><input type="number" id="glReps" min="1" max="100" placeholder="10"></div>
+          <div class="form-group"><label>Weight (kg)</label><input type="number" id="glWeight" step="0.5" min="0" placeholder="60"></div>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="glNotes" rows="2" placeholder="How did it feel?"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Log Set</button>
+    </form>
+  </div>
+</div>
+
+<!-- JOB MODAL -->
+<div class="modal" id="jobModal">
+  <div class="modal-content">
+    <div class="modal-header"><h2 id="jobModalTitle">Add Application</h2><button class="close-btn" onclick="closeModal('jobModal')">&times;</button></div>
+    <form id="jobForm">
+      <input type="hidden" id="jEditId">
+      <div class="form-group"><label>Job Title</label><input type="text" id="jTitle" required placeholder="e.g. Software Engineer Intern"></div>
+      <div class="form-group"><label>Company</label><input type="text" id="jCompany" required placeholder="Google, Atlassian…"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Status</label>
+          <select id="jStatus">
+            <option value="saved">📌 Saved</option>
+            <option value="applied">📤 Applied</option>
+            <option value="interview">🎤 Interview</option>
+            <option value="offer">🎉 Offer</option>
+            <option value="rejected">❌ Rejected</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Date Applied</label><input type="date" id="jDate"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Location</label><input type="text" id="jLocation" placeholder="Sydney / Remote"></div>
+        <div class="form-group"><label>Salary (optional)</label><input type="text" id="jSalary" placeholder="$80k / $35/hr"></div>
+      </div>
+      <div class="form-group"><label>Job URL</label><input type="text" id="jUrl" placeholder="https://…"></div>
+      <div class="form-group"><label>Notes</label><textarea id="jNotes" rows="3" placeholder="Recruiter contact, next steps…"></textarea></div>
+      <button type="submit" class="btn btn-primary" style="width:100%">Save Application</button>
+    </form>
+  </div>
+</div>
 <div class="modal" id="courseModal">
   <div class="modal-content">
     <div class="modal-header"><h2 id="courseModalTitle">Add Course</h2><button class="close-btn" onclick="closeCourseModal()">&times;</button></div>
@@ -741,8 +916,9 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
 
 <div class="modal" id="assignModal">
   <div class="modal-content">
-    <div class="modal-header"><h2>Add Assignment</h2><button class="close-btn" onclick="closeModal('assignModal')">&times;</button></div>
+    <div class="modal-header"><h2 id="assignModalTitle">Add Assignment</h2><button class="close-btn" onclick="closeModal('assignModal')">&times;</button></div>
     <form id="assignForm">
+      <input type="hidden" id="aEditId">
       <div class="form-group"><label>Title</label><input type="text" id="aTitle" required placeholder="Research Paper"></div>
       <div class="form-group"><label>Course</label><select id="aCourse"><option value="">Select course</option></select></div>
       <div class="form-row">
@@ -754,7 +930,7 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
         <div class="form-group"><label>Weight (%)</label><input type="number" id="aWeight" min="0" max="100" placeholder="20"></div>
       </div>
       <div class="form-group"><label>Notes</label><textarea id="aNotes" rows="3" placeholder="Details…"></textarea></div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Add Assignment</button>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="assignSubmitBtn">Add Assignment</button>
     </form>
   </div>
 </div>
@@ -784,8 +960,9 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
 
 <div class="modal" id="examModal">
   <div class="modal-content">
-    <div class="modal-header"><h2>Add Exam</h2><button class="close-btn" onclick="closeModal('examModal')">&times;</button></div>
+    <div class="modal-header"><h2 id="examModalTitle">Add Exam</h2><button class="close-btn" onclick="closeModal('examModal')">&times;</button></div>
     <form id="examForm">
+      <input type="hidden" id="exEditId">
       <div class="form-group"><label>Exam Name</label><input type="text" id="exName" required placeholder="Final Exam — CS201"></div>
       <div class="form-group"><label>Course</label><select id="exCourse"><option value="">Not linked</option></select></div>
       <div class="form-row">
@@ -794,7 +971,7 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
       </div>
       <div class="form-group"><label>Location / Room</label><input type="text" id="exLoc" placeholder="Room 101"></div>
       <div class="form-group"><label>Notes</label><textarea id="exNotes" rows="2" placeholder="Covers chapters 1–8…"></textarea></div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Add Exam</button>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="examSubmitBtn">Add Exam</button>
     </form>
   </div>
 </div>
@@ -861,25 +1038,9 @@ body.dark-mode .dark-toggle{border-color:rgba(255,255,255,.2);}
           <div class="nc" style="background:#ede9fe" data-color="#ede9fe" onclick="pickNoteColor(this,'#ede9fe')"></div>
         </div>
       </div>
-      <div class="form-group"><label>Tags</label>
-        <div class="note-tag-select" id="noteTagSelect"></div>
-      </div>
       <div class="form-group"><label>Link to Course (optional)</label><select id="nCourse"><option value="">None</option></select></div>
       <button type="submit" class="btn btn-primary" style="width:100%">Save Note</button>
     </form>
-  </div>
-</div>
-
-<div class="modal" id="tagManagerModal">
-  <div class="modal-content">
-    <div class="modal-header"><h2>🏷️ Manage Tags</h2><button class="close-btn" onclick="closeModal('tagManagerModal')">&times;</button></div>
-    <p style="color:var(--gray);font-size:.86rem;margin-bottom:14px">Create colour-coded tags to organise your notes.</p>
-    <div class="tag-input-row">
-      <input type="text" id="newTagName" placeholder="Tag name…" maxlength="24">
-      <button class="btn btn-primary btn-sm" onclick="addTag()">+ Add</button>
-    </div>
-    <div class="tag-palette" id="tagPalette"></div>
-    <div id="tagList" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -926,9 +1087,8 @@ let D={
   dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
   standards:{daily:0,weekly:0,credits:0,reminderDays:2},
   studyHistory:{},
-  attendance:{},
-  tags:[],
-  darkMode:false
+  bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
+  semSettings:null,bgTheme:null
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
@@ -948,9 +1108,7 @@ function load(){
     if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
     if(!D.dayTypes)D.dayTypes={monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'};
     if(!D.standards)D.standards={daily:0,weekly:0,credits:0,reminderDays:2};
-    if(!D.attendance)D.attendance={};
-    if(!D.tags)D.tags=[];
-    if(D.darkMode)document.body.classList.add('dark-mode');
+    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
     el('studentName').value=D.student.name||'';el('semester').value=D.student.semester||'';el('budgetInput').value=D.budget||'';
   }
 }
@@ -967,19 +1125,25 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   b.classList.add('active');el(b.dataset.tab).classList.add('active');
   const t=b.dataset.tab;
   if(t==='dashboard')renderDashboard();
-  if(t==='timer'){refreshTimerCourses();renderStandards();}
+  if(t==='timer'){refreshTimerCourses();refreshSwCourses();renderStandards();}
   if(t==='gradecalc')initGC();
   if(t==='exams')renderExams();
   if(t==='schedule')renderSchedule();
-  if(t==='notes')renderNotes();
+  if(t==='notes'){renderNotes();}
   if(t==='assignments'){renderAssignments();renderProjects();}
-  if(t==='attendance')renderAttendance();
-  if(t==='notes'){renderNotes();renderNoteTagBar();}
+  if(t==='body')setTimeout(()=>renderBody(),50);
+  if(t==='gym'){renderGymLog();renderGymExercises();renderGymCharts();fillGymExSelect();}
+  if(t==='jobs')renderJobs();
+  if(t==='settings'){renderBgOptions();}
 }));
 document.querySelectorAll('.inner-tab').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.inner-tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.inner-panel').forEach(x=>x.classList.remove('active'));
+  const parent=b.closest('.card,.tab-content');
+  if(parent){
+    parent.querySelectorAll('.inner-tab').forEach(x=>x.classList.remove('active'));
+    parent.querySelectorAll('.inner-panel').forEach(x=>x.classList.remove('active'));
+  }
   b.classList.add('active');el(b.dataset.panel).classList.add('active');
+  if(b.dataset.panel==='gym-panel-charts')renderGymCharts();
 }));
 document.querySelectorAll('.gc-tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.gc-tab').forEach(x=>x.classList.remove('active'));
@@ -993,6 +1157,7 @@ document.querySelectorAll('.gc-tab').forEach(b=>b.addEventListener('click',()=>{
 function openModal(id){
   el(id).classList.add('active');
   if(['assignModal','schedModal','examModal','noteModal','projectModal'].includes(id))fillCourseSelects();
+  if(id==='gymLogModal')fillGymExSelect();
 }
 function closeModal(id){el(id).classList.remove('active');}
 document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');}));
@@ -1062,29 +1227,82 @@ function deleteCourse(id){
   save();renderCourses();renderAssignments();renderProjects();renderSchedule();updateGPA();renderDashboard();
 }
 function renderCourses(){
-  const c=el('courseList');
-  if(!D.courses.length){c.innerHTML='<div class="empty"><div class="ei">📚</div><p>No courses yet</p></div>';return;}
-  c.innerHTML=D.courses.map((co,i)=>{
+  if(!D.archivedCourses)D.archivedCourses=[];
+  const c=el('courseList');const ac=el('archivedCourseList');
+  const active=D.courses.filter(co=>!co.archived);
+  const archived=D.courses.filter(co=>co.archived);
+  if(!active.length){c.innerHTML='<div class="empty"><div class="ei">📚</div><p>No active courses. Add one above!</p></div>';}
+  else{c.innerHTML=active.map((co,i)=>{
     const gl=co.grade?gradeLetter(parseFloat(co.grade)):'-';
     return`<div class="course-card" style="background:${COLORS[i%COLORS.length]}">
       <h3>${esc(co.name)}</h3><div class="code">${co.code}</div><div class="grade-badge">${gl}</div>
       <div class="details"><span>👤 ${co.instructor||'TBA'}</span><span>📊 ${co.credits} Cr</span></div>
       <div class="actions">
         <button class="cc-btn" onclick="editCourse(${co.id})">✏️ Edit</button>
+        <button class="cc-btn" onclick="archiveCourse(${co.id})">📦 Archive</button>
         <button class="cc-btn" onclick="deleteCourse(${co.id})">🗑️</button>
         <button class="cc-btn" onclick="openGCForCourse(${co.id})">🧮 Calc</button>
+        <button class="cc-btn" onclick="showCourseWeeks(${co.id})">📅 Weeks</button>
       </div>
     </div>`;
-  }).join('');
+  }).join('');}
+  if(ac){
+    if(!archived.length){ac.innerHTML='<div class="empty"><div class="ei">📦</div><p>No archived courses yet</p></div>';}
+    else{ac.innerHTML=archived.map((co,i)=>{
+      const gl=co.grade?gradeLetter(parseFloat(co.grade)):'-';
+      return`<div class="course-card" style="background:${COLORS[i%COLORS.length]};opacity:.8">
+        <h3>${esc(co.name)}</h3><div class="code">${co.code}</div><div class="grade-badge">${gl}</div>
+        <div class="details"><span>👤 ${co.instructor||'TBA'}</span><span>📊 ${co.credits} Cr</span></div>
+        <div style="font-size:.72rem;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:6px">📦 Archived</div>
+        <div class="actions">
+          <button class="cc-btn" onclick="unarchiveCourse(${co.id})">♻️ Restore</button>
+          <button class="cc-btn" onclick="deleteCourse(${co.id})">🗑️</button>
+          <button class="cc-btn" onclick="openGCForCourse(${co.id})">🧮 Calc</button>
+        </div>
+      </div>`;
+    }).join('');}
+  }
 }
+function archiveCourse(id){const c=D.courses.find(x=>x.id===id);if(c){c.archived=true;save();renderCourses();updateGPA();renderDashboard();}}
+function unarchiveCourse(id){const c=D.courses.find(x=>x.id===id);if(c){c.archived=false;save();renderCourses();updateGPA();renderDashboard();}}
 function gradeLetter(p){if(p>=4.0)return'A';if(p>=3.7)return'A-';if(p>=3.3)return'B+';if(p>=3.0)return'B';if(p>=2.7)return'B-';if(p>=2.3)return'C+';if(p>=2.0)return'C';if(p>=1.7)return'C-';if(p>=1.3)return'D+';if(p>=1.0)return'D';return'F';}
+function showCourseWeeks(courseId){
+  const course=D.courses.find(c=>c.id===courseId);if(!course)return;
+  const weeks=D.semSettings?.weeks||12;
+  let modal=el('weekPickerModal');
+  if(!modal){
+    modal=document.createElement('div');modal.className='modal';modal.id='weekPickerModal';
+    modal.innerHTML=`<div class="modal-content"><div class="modal-header"><h2 id="wpTitle">Select Week</h2><button class="close-btn" onclick="closeModal('weekPickerModal')">&times;</button></div><div id="wpBody" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;padding:8px 0"></div></div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('active');});
+  }
+  el('wpTitle').textContent=`${course.name} — Select Week`;
+  el('wpBody').innerHTML=Array.from({length:weeks},(_,i)=>i+1).map(w=>{
+    const hasNotes=D.weekNotes[courseId]?.[w]&&Object.values(D.weekNotes[courseId][w]).some(v=>v?.trim());
+    return`<button class="btn ${hasNotes?'btn-success':'btn-secondary'}" style="width:100%;font-size:.85rem" onclick="closeModal('weekPickerModal');openWeekModal(${courseId},${w})">Week ${w}${hasNotes?' ✓':''}</button>`;
+  }).join('');
+  modal.classList.add('active');
+}
 
 // ══ ASSIGNMENTS ══
 el('assignForm').addEventListener('submit',e=>{
   e.preventDefault();const cid=el('aCourse').value;
-  D.assignments.push({id:uid(),title:el('aTitle').value.trim(),courseId:cid?parseInt(cid):null,dueDate:el('aDue').value,priority:el('aPriority').value,type:el('aType').value,weight:parseFloat(el('aWeight').value)||0,notes:el('aNotes').value,completed:false});
+  const eid=el('aEditId').value;
+  const data={title:el('aTitle').value.trim(),courseId:cid?parseInt(cid):null,dueDate:el('aDue').value,priority:el('aPriority').value,type:el('aType').value,weight:parseFloat(el('aWeight').value)||0,notes:el('aNotes').value};
+  if(eid){const idx=D.assignments.findIndex(a=>String(a.id)===eid);if(idx>-1)D.assignments[idx]={...D.assignments[idx],...data};}
+  else D.assignments.push({id:uid(),...data,completed:false});
   save();renderAssignments();renderDashboard();checkReminders();closeModal('assignModal');e.target.reset();
+  el('aEditId').value='';el('assignModalTitle').textContent='Add Assignment';el('assignSubmitBtn').textContent='Add Assignment';
 });
+function editAssign(id){
+  const a=D.assignments.find(x=>x.id===id);if(!a)return;
+  fillCourseSelects();
+  el('assignModalTitle').textContent='Edit Assignment';el('assignSubmitBtn').textContent='Save Changes';
+  el('aEditId').value=String(a.id);el('aTitle').value=a.title;el('aCourse').value=a.courseId||'';
+  el('aDue').value=a.dueDate;el('aPriority').value=a.priority;el('aType').value=a.type||'assignment';
+  el('aWeight').value=a.weight||'';el('aNotes').value=a.notes||'';
+  openModal('assignModal');
+}
 function renderAssignments(filter='all'){
   const container=el('assignmentList');
   let list=[...D.assignments];
@@ -1108,6 +1326,7 @@ function renderAssignments(filter='all'){
       </div>
       <span class="pri pri-${a.priority}">${a.priority}</span>
       <span class="due-badge ${dClass}">${dLabel}</span>
+      <button class="btn btn-secondary btn-sm" onclick="editAssign(${a.id})">✏️</button>
       <button class="btn btn-danger btn-sm" onclick="deleteAssign(${a.id})">🗑️</button>
     </div>`;
   }).join('');
@@ -1291,9 +1510,22 @@ function deleteProject(id){if(!confirm('Delete this project?'))return;D.projects
 // ══ EXAMS ══
 el('examForm').addEventListener('submit',e=>{
   e.preventDefault();
-  D.exams.push({id:uid(),name:el('exName').value.trim(),courseId:el('exCourse').value||null,date:el('exDate').value,time:el('exTime').value,location:el('exLoc').value,notes:el('exNotes').value});
+  const eid=el('exEditId').value;
+  const data={name:el('exName').value.trim(),courseId:el('exCourse').value||null,date:el('exDate').value,time:el('exTime').value,location:el('exLoc').value,notes:el('exNotes').value};
+  if(eid){const idx=D.exams.findIndex(x=>String(x.id)===eid);if(idx>-1)D.exams[idx]={...D.exams[idx],...data};}
+  else D.exams.push({id:uid(),...data});
   save();renderExams();checkReminders();closeModal('examModal');e.target.reset();
+  el('exEditId').value='';el('examModalTitle').textContent='Add Exam';el('examSubmitBtn').textContent='Add Exam';
 });
+function editExam(id){
+  const ex=D.exams.find(x=>x.id===id);if(!ex)return;
+  fillCourseSelects();
+  el('examModalTitle').textContent='Edit Exam';el('examSubmitBtn').textContent='Save Changes';
+  el('exEditId').value=String(ex.id);el('exName').value=ex.name;el('exCourse').value=ex.courseId||'';
+  el('exDate').value=ex.date;el('exTime').value=ex.time||'';el('exLoc').value=ex.location||'';
+  el('exNotes').value=ex.notes||'';
+  openModal('examModal');
+}
 function renderExams(){
   const c=el('examGrid');const now=new Date();
   if(!D.exams.length){c.innerHTML='<div class="empty"><div class="ei">📅</div><p>No exams yet</p></div>';return;}
@@ -1304,6 +1536,7 @@ function renderExams(){
     const cls=past?'ec-done':diff<=3?'ec-urgent':diff<=14?'ec-soon':'ec-later';
     return`<div class="exam-card ${cls}">
       <button class="ec-del" onclick="deleteExam(${ex.id})">✕</button>
+      <button class="ec-del" style="right:36px" onclick="editExam(${ex.id})">✏️</button>
       <h3>${esc(ex.name)}</h3>
       <div class="ec-course">${course?'📚 '+course.name:''}${ex.location?' • 📍 '+ex.location:''}</div>
       <div class="ec-days">${past?'✓':Math.abs(diff)}</div>
@@ -1374,7 +1607,7 @@ function fmtTime(t){if(!t)return'';const[h,m]=t.split(':');const hr=parseInt(h);
 
 // ══ GPA ══
 function updateGPA(){
-  const tbody=document.querySelector('#gpaTable tbody');const graded=D.courses.filter(c=>c.grade);
+  const tbody=document.querySelector('#gpaTable tbody');const graded=D.courses.filter(c=>c.grade&&!c.archived);
   if(!graded.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--gray)">No graded courses yet</td></tr>';el('calcGPA').textContent='0.00';el('totalCr').textContent='0';return;}
   let tp=0,tc=0;
   tbody.innerHTML=graded.map(c=>{const p=parseFloat(c.grade);tp+=p*c.credits;tc+=c.credits;return`<tr><td>${c.name}</td><td>${c.credits}</td><td>${gradeLetter(p)}</td><td>${p.toFixed(1)}</td></tr>`;}).join('');
@@ -1552,37 +1785,29 @@ function renderStandards(){
 function pickNoteColor(elmt,c){document.querySelectorAll('.nc').forEach(x=>x.classList.remove('active'));elmt.classList.add('active');noteColor=c;}
 el('noteForm').addEventListener('submit',e=>{
   e.preventDefault();
-  const selectedTags=[...document.querySelectorAll('.note-tag-select .tag-chip.active')].map(x=>x.dataset.tagId);
-  D.notes.push({id:uid(),title:el('nTitle').value.trim(),body:el('nBody').value,color:noteColor,courseId:el('nCourse').value||null,tags:selectedTags,createdAt:new Date().toISOString()});
-  save();renderNotes();renderNoteTagBar();closeModal('noteModal');e.target.reset();
+  D.notes.push({id:uid(),title:el('nTitle').value.trim(),body:el('nBody').value,color:noteColor,courseId:el('nCourse').value||null,createdAt:new Date().toISOString()});
+  save();renderNotes();closeModal('noteModal');e.target.reset();
   document.querySelectorAll('.nc').forEach((x,i)=>{if(i===0)x.classList.add('active');else x.classList.remove('active');});noteColor='#fff';
 });
-let activeNoteTag=null;
-function renderNoteTagBar(){
-  const bar=el('noteTagBar');if(!bar)return;
-  const allTag=`<span class="tag-chip${activeNoteTag===null?' active':''}" style="background:#e2e8f0;color:#475569" onclick="filterByTag(null)">All Notes</span>`;
-  const tagChips=D.tags.map(t=>`<span class="tag-chip${activeNoteTag===t.id?' active':''}" style="background:${t.color}33;color:${t.color}" data-tag-id="${t.id}" onclick="filterByTag('${t.id}')">${esc(t.name)}</span>`).join('');
-  bar.innerHTML=allTag+tagChips;
-}
-function filterByTag(tid){activeNoteTag=tid;renderNoteTagBar();renderNotes();}
-function renderNoteTagSelect(){
-  const c=el('noteTagSelect');if(!c)return;
-  if(!D.tags.length){c.innerHTML='<span style="color:var(--gray);font-size:.82rem">No tags yet — create some in 🏷️ Tags</span>';return;}
-  c.innerHTML=D.tags.map(t=>`<span class="tag-chip" style="background:${t.color}33;color:${t.color}" data-tag-id="${t.id}" onclick="this.classList.toggle('active')">${esc(t.name)}</span>`).join('');
-}
 function renderNotes(){
   const c=el('noteGrid');
-  let list=[...D.notes].reverse();
-  if(activeNoteTag!==null)list=list.filter(n=>n.tags&&n.tags.includes(activeNoteTag));
-  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">🗒️</div><p>'+(activeNoteTag!==null?'No notes with this tag':'No notes yet')+'</p></div>';return;}
+  const nfc=el('noteFilterCourse');
+  if(nfc){const v=nfc.value;nfc.innerHTML='<option value="">All Courses</option>'+D.courses.map(co=>`<option value="${co.id}"${v==co.id?' selected':''}>${esc(co.name)}</option>`).join('');}
+  if(!D.notes.length){c.innerHTML='<div class="empty"><div class="ei">🗒️</div><p>No notes yet</p></div>';return;}
+  const q=(el('noteSearch')?.value||'').toLowerCase();
+  const cf=String(el('noteFilterCourse')?.value||'');
+  let list=[...D.notes].reverse().filter(n=>{
+    const matchQ=!q||n.title.toLowerCase().includes(q)||(n.body||'').toLowerCase().includes(q);
+    const matchC=!cf||String(n.courseId||'')===cf;
+    return matchQ&&matchC;
+  });
+  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No notes match your search</p></div>';return;}
   c.innerHTML=list.map(n=>{
     const course=n.courseId?D.courses.find(co=>co.id==n.courseId):null;
-    const noteTags=(n.tags||[]).map(tid=>{const t=D.tags.find(x=>x.id===tid);return t?`<span class="note-tag" style="background:${t.color}33;color:${t.color}">${esc(t.name)}</span>`:''}).join('');
     return`<div class="note-card" style="background:${n.color||'#fff'}">
       <button class="note-del" onclick="deleteNote(${n.id})">🗑</button>
       <h4>${esc(n.title)}</h4>
       ${course?`<span style="font-size:.72rem;background:${SOLID[D.courses.indexOf(course)%SOLID.length]}22;color:${SOLID[D.courses.indexOf(course)%SOLID.length]};padding:2px 8px;border-radius:7px;display:inline-block;margin-bottom:6px">${course.code}</span>`:''}
-      ${noteTags?`<div class="note-tags">${noteTags}</div>`:''}
       <p>${esc(n.body)}</p>
       <div class="note-date">${new Date(n.createdAt).toLocaleDateString()} ${new Date(n.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
@@ -1602,14 +1827,15 @@ function delExp(id){D.expenses=D.expenses.filter(e=>e.id!==id);save();renderExpe
 
 // ══ DASHBOARD ══
 function renderDashboard(){
-  const graded=D.courses.filter(c=>c.grade);let tp=0,tc=0;graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});
+  const graded=D.courses.filter(c=>c.grade&&!c.archived);let tp=0,tc=0;graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});
   const gpa=tc>0?(tp/tc).toFixed(2):'0.00';el('dashGPA').textContent=gpa;
-  el('dashCourses').textContent=D.courses.length;el('dashCredits').textContent=D.courses.reduce((s,c)=>s+c.credits,0)+' Credits';
+  const activeCourses=D.courses.filter(c=>!c.archived);
+  el('dashCourses').textContent=activeCourses.length;el('dashCredits').textContent=activeCourses.reduce((s,c)=>s+c.credits,0)+' Credits';
   const pending=D.assignments.filter(a=>!a.completed);el('dashTasks').textContent=pending.length;el('dashUrgent').textContent=pending.filter(a=>getDueClass(a.dueDate,false)==='urgent').length+' Due Soon';
   const now=new Date(),wa=new Date(now);wa.setDate(wa.getDate()-7);
   const wm=D.studyLog.filter(l=>new Date(l.date)>=wa).reduce((s,l)=>s+l.duration,0);
   el('dashStudy').textContent=`${Math.floor(wm/60)}h ${wm%60}m`;el('dashSessions').textContent=D.studyLog.filter(l=>new Date(l.date)>=wa).length+' sessions';
-  renderUpcoming();renderWeeklyChart();renderGradeChart();renderProductivity();
+  renderUpcoming();renderWeeklyChart();renderGradeChart();renderProductivity();renderWeeklyReview();renderSemProgress();
 }
 function renderUpcoming(){
   const c=el('upcomingDeadlines');
@@ -1698,103 +1924,427 @@ function renderYearHeatmap(){
 }
 function selectHY(yr){selectedHeatYear=yr;renderYearHeatmap();}
 
-// ══ DARK MODE ══
-function toggleDark(){
-  D.darkMode=!D.darkMode;document.body.classList.toggle('dark-mode',D.darkMode);
-  el('darkToggle').textContent=D.darkMode?'☀️ Light':'🌙 Dark';save();
+// ══ EXPORT / IMPORT ══
+function exportData(){
+  const json=JSON.stringify(D,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().split('T')[0];
+  a.href=url;a.download=`UniTracker_backup_${date}.json`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  const s=el('importStatus');if(s){s.style.color='var(--secondary)';s.textContent='✅ Backup downloaded successfully!';}
+}
+function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  const s=el('importStatus');
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const imported=JSON.parse(e.target.result);
+      // Validate it looks like UniTracker data
+      if(!imported.courses&&!imported.assignments&&!imported.student){throw new Error('Not a valid UniTracker backup file');}
+      if(!confirm('This will REPLACE all your current data with the backup. Are you sure?'))return;
+      D={...D,...imported};
+      // Migrate missing fields
+      if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];
+      if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
+      if(!D.weekNotes)D.weekNotes={};if(!D.paychecks)D.paychecks=[];if(!D.gcData)D.gcData={};
+      if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
+      save();
+      // Re-render everything
+      el('studentName').value=D.student?.name||'';el('semester').value=D.student?.semester||'';
+      if(D.bgTheme){document.body.style.background=D.bgTheme;document.body.style.backgroundAttachment='fixed';}
+      if(D.semSettings){if(el('semStart'))el('semStart').value=D.semSettings.start||'';if(el('semWeeks'))el('semWeeks').value=D.semSettings.weeks||12;}
+      renderBgOptions();renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
+      renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
+      renderDashboard();renderNotes();renderStandards();renderBody();renderGymLog();renderGymExercises();renderJobs();
+      if(s){s.style.color='var(--secondary)';s.textContent=`✅ Import successful! Restored ${D.courses?.length||0} courses, ${D.assignments?.length||0} assignments, ${D.notes?.length||0} notes.`;}
+    }catch(err){
+      if(s){s.style.color='var(--danger)';s.textContent='❌ Import failed: '+err.message;}
+    }
+  };
+  reader.readAsText(file);
+  event.target.value=''; // reset file input
+}
+function clearAllData(){
+  if(!confirm('⚠️ This will permanently delete ALL your UniTracker data. This cannot be undone!\n\nAre you absolutely sure?'))return;
+  if(!confirm('Last chance — click OK to permanently clear everything.'))return;
+  localStorage.removeItem('UT7');location.reload();
 }
 
-// ══ TAGS ══
-const TAG_COLORS=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316','#8b5cf6','#06b6d4'];
-let selectedTagColor=TAG_COLORS[0];
-function renderTagPalette(){
-  const p=el('tagPalette');if(!p)return;
-  p.innerHTML=TAG_COLORS.map(c=>`<div class="tp-swatch${c===selectedTagColor?' active':''}" style="background:${c}" onclick="selectTagColor('${c}')"></div>`).join('');
-}
-function selectTagColor(c){selectedTagColor=c;renderTagPalette();}
-function addTag(){
-  const name=el('newTagName').value.trim();if(!name)return;
-  D.tags.push({id:uid(),name,color:selectedTagColor});
-  el('newTagName').value='';save();renderTagList();renderNoteTagBar();renderNoteTagSelect();
-}
-function deleteTag(id){
-  D.tags=D.tags.filter(t=>t.id!==id);
-  D.notes.forEach(n=>{if(n.tags)n.tags=n.tags.filter(tid=>tid!==id);});
-  if(activeNoteTag===id)activeNoteTag=null;
-  save();renderTagList();renderNoteTagBar();renderNotes();renderNoteTagSelect();
-}
-function renderTagList(){
-  const c=el('tagList');if(!c)return;
-  if(!D.tags.length){c.innerHTML='<p style="color:var(--gray);font-size:.84rem;text-align:center;padding:12px">No tags yet — type a name and pick a colour above.</p>';return;}
-  c.innerHTML=D.tags.map(t=>`<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--table-alt);border-radius:9px;margin-bottom:6px">
-    <span style="width:14px;height:14px;background:${t.color};border-radius:50%;display:inline-block"></span>
-    <span style="flex:1;font-size:.9rem;color:var(--dark)">${esc(t.name)}</span>
-    <button class="att-btn att-btn-del" onclick="deleteTag(${t.id})">✕ Remove</button>
-  </div>`).join('');
-}
-
-// ══ ATTENDANCE ══
-function logAttendance(courseId,status){
+// ══ STOPWATCH ══
+let swMs=0,swRunning=false,swInterval=null,swLaps=[],swLastLap=0;
+function swFmt(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000),ds=Math.floor((ms%1000)/100);return(h>0?pad(h)+':':'')+pad(m)+':'+pad(s)+'.'+ds;}
+el('swStart').addEventListener('click',()=>{
+  if(swRunning){clearInterval(swInterval);swRunning=false;el('swStart').textContent='▶ Resume';el('swStart').className='btn btn-success';}
+  else{const t0=Date.now()-swMs;swInterval=setInterval(()=>{swMs=Date.now()-t0;el('swDisplay').textContent=swFmt(swMs);},50);swRunning=true;el('swStart').textContent='⏸ Pause';el('swStart').className='btn btn-warning';}
+});
+el('swLap').addEventListener('click',()=>{
+  if(!swRunning&&swMs===0)return;
+  const lapTime=swMs-swLastLap;swLastLap=swMs;swLaps.push({num:swLaps.length+1,lap:lapTime,total:swMs});
+  el('swLaps').innerHTML=swLaps.slice().reverse().map(l=>`<div class="lap-item"><span class="lap-num">Lap ${l.num}</span><span style="color:var(--gray);font-size:.78rem">${swFmt(l.lap)}</span><span class="lap-time">${swFmt(l.total)}</span></div>`).join('');
+});
+el('swReset').addEventListener('click',()=>{
+  clearInterval(swInterval);swRunning=false;swMs=0;swLaps=[];swLastLap=0;
+  el('swDisplay').textContent='00:00.0';el('swLaps').innerHTML='';el('swStart').textContent='▶ Start';el('swStart').className='btn btn-success';
+});
+el('swSave').addEventListener('click',()=>{
+  if(swMs<1000){alert('Run the stopwatch first!');return;}
+  const dur=Math.max(1,Math.round(swMs/60000));
   const dateStr=new Date().toISOString().split('T')[0];
-  if(!D.attendance[courseId])D.attendance[courseId]=[];
-  D.attendance[courseId].push({date:dateStr,status});
-  save();renderAttendance();
+  const sub=el('swSubject').value||'Stopwatch Session';
+  const cid=el('swCourse').value?parseInt(el('swCourse').value):null;
+  D.studyLog.push({id:uid(),subject:sub,duration:dur,courseId:cid,date:new Date().toISOString()});
+  if(!D.studyHistory[dateStr])D.studyHistory[dateStr]=0;D.studyHistory[dateStr]+=dur;
+  save();renderLog();renderStandards();checkReminders();
+  alert(`✅ Saved ${dur} minutes to study log!`);
+});
+function refreshSwCourses(){
+  const s=el('swCourse');if(!s)return;const v=s.value;
+  s.innerHTML='<option value="">General</option>'+D.courses.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(v)s.value=v;
 }
-function removeLastAttendance(courseId){
-  if(!D.attendance[courseId]||!D.attendance[courseId].length)return;
-  if(!confirm('Remove last attendance entry?'))return;
-  D.attendance[courseId].pop();save();renderAttendance();
+
+// ══ BODY MEASUREMENTS ══
+el('bodyForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const entry={id:uid(),date:el('bmDate').value,weight:parseFloat(el('bmWeight').value)||null,height:parseFloat(el('bmHeight')?.value)||null,bodyFat:parseFloat(el('bmBodyFat').value)||null,chest:parseFloat(el('bmChest').value)||null,waist:parseFloat(el('bmWaist').value)||null,hips:parseFloat(el('bmHips').value)||null,arms:parseFloat(el('bmArms').value)||null,thighs:parseFloat(el('bmThighs').value)||null,neck:parseFloat(el('bmNeck').value)||null,notes:el('bmNotes').value};
+  if(!D.bodyLog)D.bodyLog=[];D.bodyLog.push(entry);D.bodyLog.sort((a,b)=>a.date.localeCompare(b.date));
+  save();renderBody();closeModal('bodyModal');e.target.reset();el('bmDate').valueAsDate=new Date();
+});
+function renderBody(){
+  if(!D.bodyLog)D.bodyLog=[];
+  const entries=D.bodyLog;
+  const latest=entries[entries.length-1];const prev=entries[entries.length-2];
+  // Metric cards
+  const metrics=[{key:'weight',label:'Weight',unit:'kg',icon:'⚖️'},{key:'bodyFat',label:'Body Fat',unit:'%',icon:'🔬'},{key:'chest',label:'Chest',unit:'cm',icon:'📏'},{key:'waist',label:'Waist',unit:'cm',icon:'📏'},{key:'arms',label:'Arms',unit:'cm',icon:'💪'},{key:'thighs',label:'Thighs',unit:'cm',icon:'🦵'}];
+  const mc=el('bodyMetrics');
+  if(!latest){mc.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ei">⚖️</div><p>Log your first entry to see metrics</p></div>';el('bodyHistory').innerHTML='<div class="empty"><div class="ei">⚖️</div><p>No entries yet</p></div>';renderBodyCharts([]);return;}
+  mc.innerHTML=metrics.map(m=>{
+    const val=latest[m.key];if(val==null)return'';
+    const pv=prev?prev[m.key]:null;const diff=pv!=null?Math.round((val-pv)*10)/10:null;
+    const cls=diff===null?'':(m.key==='weight'||m.key==='waist'||m.key==='bodyFat')?(diff<0?'bm-down':'bm-up'):(diff>0?'bm-up':'bm-down');
+    return`<div class="body-metric-card"><div class="bm-val">${val}${m.unit}</div><div class="bm-label">${m.icon} ${m.label}</div>${diff!==null?`<div class="bm-change ${cls}">${diff>0?'+':''}${diff}${m.unit}</div>`:''}</div>`;
+  }).join('');
+  // History
+  const hc=el('bodyHistory');
+  hc.innerHTML=entries.slice().reverse().map(e=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:9px;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+    <div><div style="font-weight:600">${new Date(e.date).toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</div>
+    <div style="font-size:.78rem;color:var(--gray);margin-top:3px">${[e.weight?e.weight+'kg':null,e.bodyFat?e.bodyFat+'% BF':null,e.waist?'Waist '+e.waist+'cm':null,e.arms?'Arms '+e.arms+'cm':null].filter(Boolean).join(' • ')}</div>
+    ${e.notes?`<div style="font-size:.76rem;color:var(--gray);margin-top:2px;font-style:italic">"${esc(e.notes)}"</div>`:''}</div>
+    <button class="btn btn-danger btn-sm" onclick="deleteBodyEntry(${e.id})">🗑️</button>
+  </div>`).join('');
+  renderBodyCharts(entries);
 }
-function renderAttendance(){
-  const c=el('attendanceList');if(!c)return;
-  if(!D.courses.length){c.innerHTML='<div class="empty"><div class="ei">🎓</div><p>Add courses first, then log attendance here.</p></div>';return;}
-  const threshold=parseFloat(el('attThreshold')?.value)||80;
-  c.innerHTML=D.courses.map((co,i)=>{
-    const log=D.attendance[co.id]||[];
-    const P=log.filter(x=>x.status==='P').length;
-    const A=log.filter(x=>x.status==='A').length;
-    const L=log.filter(x=>x.status==='L').length;
-    const total=log.length;const rate=total>0?Math.round((P+L*0.5)/total*100):100;
-    const warn=total>0&&rate<threshold;
-    const lastEntries=log.slice(-12).reverse();
-    return`<div class="attend-card">
-      <div class="attend-header">
-        <h3 style="color:${SOLID[i%SOLID.length]}">${esc(co.name)} <span style="font-size:.77rem;opacity:.75">${co.code}</span></h3>
-        <div class="att-btns">
-          <button class="att-btn att-btn-P" onclick="logAttendance(${co.id},'P')">✅ Present</button>
-          <button class="att-btn att-btn-L" onclick="logAttendance(${co.id},'L')">⏰ Late</button>
-          <button class="att-btn att-btn-A" onclick="logAttendance(${co.id},'A')">❌ Absent</button>
-          <button class="att-btn att-btn-del" onclick="removeLastAttendance(${co.id})">↩ Undo</button>
-        </div>
-      </div>
-      ${warn?`<div class="att-warning">⚠️ Attendance at <strong>${rate}%</strong> — below the ${threshold}% threshold!</div>`:''}
-      <div class="attend-stats">
-        <div class="att-stat att-present"><strong>${P}</strong>Present</div>
-        <div class="att-stat att-late"><strong>${L}</strong>Late</div>
-        <div class="att-stat att-absent"><strong>${A}</strong>Absent</div>
-        <div class="att-stat att-rate"><strong class="${warn?'att-threshold-warn':''}">${total>0?rate+'%':'—'}</strong>Rate</div>
-      </div>
-      ${lastEntries.length?`<div style="font-size:.77rem;color:var(--gray);margin-bottom:5px">Recent (newest first):</div>
-      <div class="attend-log">${lastEntries.map(e=>`<span class="att-entry att-${e.status}" title="${e.date}">${e.status==='P'?'✅':e.status==='L'?'⏰':'❌'} ${e.date.slice(5)}</span>`).join('')}</div>`:'<p style="font-size:.82rem;color:var(--gray)">No attendance logged yet for today.</p>'}
+function deleteBodyEntry(id){D.bodyLog=D.bodyLog.filter(e=>e.id!==id);save();renderBody();}
+function renderBodyCharts(entries){
+  // Weight chart using SVG bar-style with inline canvas simulation
+  const wc=el('weightChart'),mc2=el('measureChart');
+  if(!wc||!mc2)return;
+  if(entries.length<2){
+    const ctx1=wc.getContext('2d');ctx1.clearRect(0,0,wc.width,wc.height);ctx1.fillStyle='#94a3b8';ctx1.font='14px sans-serif';ctx1.textAlign='center';ctx1.fillText('Need 2+ entries',wc.width/2,wc.height/2);
+    const ctx2=mc2.getContext('2d');ctx2.clearRect(0,0,mc2.width,mc2.height);ctx2.fillStyle='#94a3b8';ctx2.font='14px sans-serif';ctx2.textAlign='center';ctx2.fillText('Need 2+ entries',mc2.width/2,mc2.height/2);return;
+  }
+  drawLineChart(wc,entries.filter(e=>e.weight!=null).map(e=>({label:e.date.slice(5),val:e.weight})),'#6366f1','kg');
+  const mFields=[{key:'chest',color:'#10b981',label:'Chest'},{key:'waist',color:'#ef4444',label:'Waist'},{key:'arms',color:'#f59e0b',label:'Arms'},{key:'thighs',color:'#8b5cf6',label:'Thighs'}];
+  drawMultiLineChart(mc2,entries,mFields);
+}
+function drawLineChart(canvas,data,color,unit){
+  if(!data.length)return;
+  const W=canvas.offsetWidth||300,H=canvas.offsetHeight||160;canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
+  const pad=30,vals=data.map(d=>d.val),mn=Math.min(...vals)*.98,mx=Math.max(...vals)*1.02,range=mx-mn||1;
+  const x=(i)=>pad+(W-pad*2)*i/(data.length-1);const y=(v)=>H-pad-(H-pad*2)*(v-mn)/range;
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  [0,.25,.5,.75,1].forEach(t=>{const yv=H-pad-(H-pad*2)*t;ctx.beginPath();ctx.moveTo(pad,yv);ctx.lineTo(W-pad,yv);ctx.stroke();ctx.fillStyle='#94a3b8';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((mn+range*t).toFixed(1),pad-4,yv+3);});
+  ctx.setLineDash([]);
+  // gradient fill
+  const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,color+'33');grad.addColorStop(1,color+'00');
+  ctx.beginPath();ctx.moveTo(x(0),y(data[0].val));data.forEach((d,i)=>{if(i>0)ctx.lineTo(x(i),y(d.val));});ctx.lineTo(x(data.length-1),H-pad);ctx.lineTo(x(0),H-pad);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.moveTo(x(0),y(data[0].val));data.forEach((d,i)=>{if(i>0)ctx.lineTo(x(i),y(d.val));});ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();
+  data.forEach((d,i)=>{ctx.beginPath();ctx.arc(x(i),y(d.val),3.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
+  // x labels
+  ctx.fillStyle='#94a3b8';ctx.font='9px sans-serif';ctx.textAlign='center';
+  const step=Math.ceil(data.length/6);data.forEach((d,i)=>{if(i%step===0||i===data.length-1)ctx.fillText(d.label,x(i),H-5);});
+}
+function drawMultiLineChart(canvas,entries,fields){
+  const W=canvas.offsetWidth||300,H=canvas.offsetHeight||160;canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
+  const pad=30;
+  const allVals=fields.flatMap(f=>entries.map(e=>e[f.key]).filter(v=>v!=null));
+  if(!allVals.length)return;
+  const mn=Math.min(...allVals)*.98,mx=Math.max(...allVals)*1.02,range=mx-mn||1;
+  const x=(i)=>pad+(W-pad*2)*i/(entries.length-1);const y=(v)=>H-pad-(H-pad*2)*(v-mn)/range;
+  ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  [0,.5,1].forEach(t=>{const yv=H-pad-(H-pad*2)*t;ctx.beginPath();ctx.moveTo(pad,yv);ctx.lineTo(W-pad,yv);ctx.stroke();ctx.fillStyle='#94a3b8';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((mn+range*t).toFixed(0),pad-4,yv+3);});
+  ctx.setLineDash([]);
+  fields.forEach(f=>{
+    const pts=entries.map((e,i)=>({i,v:e[f.key]})).filter(p=>p.v!=null);if(pts.length<2)return;
+    ctx.beginPath();ctx.moveTo(x(pts[0].i),y(pts[0].v));pts.slice(1).forEach(p=>ctx.lineTo(x(p.i),y(p.v)));
+    ctx.strokeStyle=f.color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(x(p.i),y(p.v),3,0,Math.PI*2);ctx.fillStyle=f.color;ctx.fill();});
+  });
+  // legend
+  ctx.font='9px sans-serif';let lx=pad;
+  fields.forEach(f=>{ctx.fillStyle=f.color;ctx.fillRect(lx,H-12,10,6);ctx.fillStyle='#64748b';ctx.textAlign='left';ctx.fillText(f.label,lx+13,H-6);lx+=50;});
+  // x labels
+  ctx.fillStyle='#94a3b8';ctx.textAlign='center';
+  const step=Math.ceil(entries.length/6);entries.forEach((e,i)=>{if(i%step===0||i===entries.length-1)ctx.fillText(e.date.slice(5),x(i),H-15);});
+}
+
+// ══ GYM ══
+el('gymExForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!D.gymExercises)D.gymExercises=[];
+  D.gymExercises.push({id:uid(),name:el('geName').value.trim(),category:el('geCat').value,type:el('geType').value,sets:[]});
+  save();renderGymExercises();renderGymCharts();closeModal('gymExModal');e.target.reset();
+  // Switch to Personal Bests tab so user sees the new exercise
+  const exTab=document.querySelector('[data-panel="gym-panel-exercises"]');if(exTab)exTab.click();
+});
+el('gymLogForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.gymExercises)D.gymExercises=[];
+  const exId=parseInt(el('glExercise').value);const ex=D.gymExercises.find(x=>x.id===exId);if(!ex){alert('Select an exercise');return;}
+  const entry={id:uid(),date:el('glDate').value,exerciseId:exId,sets:parseInt(el('glSets').value)||1,reps:parseInt(el('glReps').value)||null,weight:parseFloat(el('glWeight').value)||null,notes:el('glNotes').value};
+  D.gymWorkouts.push(entry);
+  if(!ex.sets)ex.sets=[];ex.sets.push({date:entry.date,sets:entry.sets,reps:entry.reps,weight:entry.weight});
+  save();renderGymLog();renderGymExercises();renderGymCharts();closeModal('gymLogModal');e.target.reset();el('glDate').valueAsDate=new Date();
+  // Switch to workout log tab so user sees the new entry
+  const logTab=document.querySelector('[data-panel="gym-panel-log"]');if(logTab)logTab.click();
+});
+function renderGymLog(){
+  if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.gymExercises)D.gymExercises=[];
+  const c=el('gymLog');
+  if(!D.gymWorkouts.length){c.innerHTML='<div class="empty"><div class="ei">🏋️</div><p>No workouts logged yet</p></div>';return;}
+  const sorted=[...D.gymWorkouts].sort((a,b)=>b.date.localeCompare(a.date));
+  c.innerHTML=sorted.map(w=>{
+    const ex=D.gymExercises.find(x=>x.id===w.exerciseId);
+    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:9px;margin-bottom:8px;flex-wrap:wrap;gap:8px;border-left:4px solid var(--primary)">
+      <div><div style="font-weight:600">${ex?esc(ex.name):'Unknown'} <span style="font-size:.72rem;background:#eef2ff;color:var(--primary);padding:1px 7px;border-radius:8px">${ex?ex.category:''}</span></div>
+      <div style="font-size:.78rem;color:var(--gray);margin-top:3px">${w.sets} sets${w.reps?' × '+w.reps+' reps':''}${w.weight?' @ '+w.weight+'kg':''}</div>
+      ${w.notes?`<div style="font-size:.74rem;color:var(--gray);font-style:italic">${esc(w.notes)}</div>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.76rem;color:var(--gray)">${new Date(w.date).toLocaleDateString()}</span><button class="btn btn-danger btn-sm" onclick="delGymWorkout(${w.id})">🗑️</button></div>
     </div>`;
   }).join('');
 }
+function delGymWorkout(id){D.gymWorkouts=D.gymWorkouts.filter(w=>w.id!==id);save();renderGymLog();renderGymCharts();}
+function renderGymExercises(){
+  if(!D.gymExercises)D.gymExercises=[];
+  const c=el('gymExercises');
+  if(!D.gymExercises.length){c.innerHTML='<div class="empty"><div class="ei">💪</div><p>Add exercises to track PRs</p></div>';return;}
+  c.innerHTML=D.gymExercises.map(ex=>{
+    const sets=(ex.sets||[]).filter(s=>s.weight!=null);const pb=sets.length?Math.max(...sets.map(s=>s.weight)):null;
+    const recent=sets.slice(-3);
+    return`<div class="gym-ex-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div><h4>${esc(ex.name)}</h4><div class="gym-ex-meta">${ex.category} • ${ex.type}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="delGymEx(${ex.id})">🗑️</button>
+      </div>
+      ${pb?`<div style="margin-bottom:8px"><span style="font-size:.78rem;color:var(--gray)">🏆 Personal Best: </span><strong style="color:var(--primary)">${pb}kg</strong></div>`:''}
+      ${recent.length?recent.map(s=>`<div class="gym-set-row"><span class="gym-set-detail">${s.date}: ${s.sets}×${s.reps||'—'} ${s.weight?'@ '+s.weight+'kg':''}</span></div>`).join(''):'<p style="color:var(--gray);font-size:.8rem">No sets logged</p>'}
+    </div>`;
+  }).join('');
+}
+function delGymEx(id){if(!confirm('Delete exercise and all its data?'))return;D.gymExercises=D.gymExercises.filter(e=>e.id!==id);D.gymWorkouts=(D.gymWorkouts||[]).filter(w=>w.exerciseId!==id);save();renderGymExercises();renderGymLog();renderGymCharts();}
+function renderGymCharts(){
+  if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];
+  const c=el('gymCharts');
+  const tracked=D.gymExercises.filter(ex=>(D.gymWorkouts.filter(w=>w.exerciseId===ex.id&&w.weight!=null).length>=2));
+  if(!tracked.length){c.innerHTML='<div class="empty"><div class="ei">📈</div><p>Log 2+ weighted workouts for the same exercise to see charts</p></div>';return;}
+  c.innerHTML=tracked.slice(0,6).map(ex=>{
+    const pts=D.gymWorkouts.filter(w=>w.exerciseId===ex.id&&w.weight!=null).sort((a,b)=>a.date.localeCompare(b.date));
+    return`<div class="card" style="padding:16px"><h4 style="color:var(--dark);font-size:.9rem;margin-bottom:10px">💪 ${esc(ex.name)}</h4><div style="height:150px;position:relative"><canvas id="gymChart_${ex.id}"></canvas></div></div>`;
+  }).join('');
+  setTimeout(()=>{
+    tracked.slice(0,6).forEach(ex=>{
+      const canvas=el(`gymChart_${ex.id}`);if(!canvas)return;
+      const pts=D.gymWorkouts.filter(w=>w.exerciseId===ex.id&&w.weight!=null).sort((a,b)=>a.date.localeCompare(b.date)).map(w=>({label:w.date.slice(5),val:w.weight}));
+      drawLineChart(canvas,pts,'#10b981','kg');
+    });
+  },50);
+}
+function fillGymExSelect(){
+  const s=el('glExercise');if(!D.gymExercises)D.gymExercises=[];
+  s.innerHTML='<option value="">— Select exercise —</option>'+D.gymExercises.map(ex=>`<option value="${ex.id}">${ex.name}</option>`).join('');
+}
 
-// ══ PWA ══
-let pwaPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;el('pwaInstallBtn').style.display='inline-block';});
-window.addEventListener('appinstalled',()=>{el('pwaInstallBtn').style.display='none';pwaPrompt=null;});
-function pwaInstall(){if(pwaPrompt){pwaPrompt.prompt();pwaPrompt.userChoice.then(()=>{pwaPrompt=null;el('pwaInstallBtn').style.display='none';});}}
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    const swCode=`const CACHE='unitracker-v1';const ASSETS=['/'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>{const fresh=fetch(e.request).then(r=>{if(r&&r.status===200){const rc=r.clone();caches.open(CACHE).then(c=>c.put(e.request,rc));}return r;}).catch(()=>cached);return cached||fresh;}));});`;
-    const blob=new Blob([swCode],{type:'application/javascript'});
-    const swUrl=URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(()=>{});
-  });
+// ══ JOB APPLICATIONS ══
+el('jobForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!D.jobs)D.jobs=[];
+  const eid=el('jEditId').value;
+  const data={title:el('jTitle').value.trim(),company:el('jCompany').value.trim(),status:el('jStatus').value,date:el('jDate').value,location:el('jLocation').value,salary:el('jSalary').value,url:el('jUrl').value,notes:el('jNotes').value};
+  if(eid){const idx=D.jobs.findIndex(j=>String(j.id)===eid);if(idx>-1)D.jobs[idx]={...D.jobs[idx],...data};}
+  else D.jobs.push({id:uid(),...data});
+  save();renderJobs();closeModal('jobModal');e.target.reset();el('jEditId').value='';
+});
+function renderJobs(){
+  if(!D.jobs)D.jobs=[];
+  const statuses=['saved','applied','interview','offer','rejected'];
+  const labels={saved:'📌 Saved',applied:'📤 Applied',interview:'🎤 Interview',offer:'🎉 Offer',rejected:'❌ Rejected'};
+  ['jobStatSaved','jobStatApplied','jobStatInterview','jobStatOffer','jobStatRejected'].forEach((id,i)=>{const s=statuses[i];const cnt=D.jobs.filter(j=>j.status===s).length;const e=el(id);if(e)e.textContent=cnt;});
+  const kb=el('jobKanban');if(!kb)return;
+  kb.innerHTML=statuses.map(s=>{
+    const jobs=D.jobs.filter(j=>j.status===s);
+    return`<div class="job-col">
+      <div class="job-col-header">${labels[s]}<span class="job-col-count">${jobs.length}</span></div>
+      ${jobs.length?jobs.map(j=>`<div class="job-card job-status-${j.status}" onclick="editJob(${j.id})">
+        <h4>${esc(j.title)}</h4><div class="jc-company">🏢 ${esc(j.company)}</div>
+        ${j.location?`<div style="font-size:.68rem;color:var(--gray)">📍 ${esc(j.location)}</div>`:''}
+        ${j.salary?`<div style="font-size:.68rem;color:var(--secondary);font-weight:600">💰 ${esc(j.salary)}</div>`:''}
+        <div class="jc-date">${j.date?new Date(j.date).toLocaleDateString():''}</div>
+        <div style="display:flex;gap:5px;margin-top:6px">
+          ${j.url?`<a href="${j.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-secondary btn-sm" style="font-size:.68rem;padding:3px 7px">🔗 Link</a>`:''}
+          <button class="btn btn-danger btn-sm" style="font-size:.68rem;padding:3px 7px" onclick="event.stopPropagation();deleteJob(${j.id})">🗑️</button>
+        </div>
+      </div>`).join(''):`<div style="color:var(--gray);font-size:.8rem;text-align:center;padding:10px">Empty</div>`}
+    </div>`;
+  }).join('');
+}
+function editJob(id){
+  if(!D.jobs)return;const j=D.jobs.find(x=>x.id===id);if(!j)return;
+  el('jobModalTitle').textContent='Edit Application';el('jEditId').value=String(j.id);
+  el('jTitle').value=j.title;el('jCompany').value=j.company;el('jStatus').value=j.status;
+  el('jDate').value=j.date||'';el('jLocation').value=j.location||'';el('jSalary').value=j.salary||'';
+  el('jUrl').value=j.url||'';el('jNotes').value=j.notes||'';
+  openModal('jobModal');
+}
+function deleteJob(id){D.jobs=(D.jobs||[]).filter(j=>j.id!==id);save();renderJobs();}
+
+// ══ WEEKLY REVIEW ══
+function renderWeeklyReview(){
+  const wrap=el('weeklyReviewWrap');if(!wrap)return;
+  const now=new Date();const dayOfWeek=now.getDay();const monday=new Date(now);monday.setDate(now.getDate()-(dayOfWeek===0?6:dayOfWeek-1));
+  const weekStart=monday.toISOString().split('T')[0];const weekEnd=new Date(now).toISOString().split('T')[0];
+  // Study this week
+  const wkMs=new Date(monday);const studyMins=D.studyLog.filter(l=>new Date(l.date)>=wkMs).reduce((s,l)=>s+l.duration,0);
+  // Assignments completed this week
+  const aComp=D.assignments.filter(a=>a.completed).length;const aPend=D.assignments.filter(a=>!a.completed).length;
+  const aUrgent=D.assignments.filter(a=>!a.completed&&getDueClass(a.dueDate,false)==='urgent').length;
+  // Exams coming up
+  const examsUrgent=D.exams.filter(e=>{const d=Math.ceil((new Date(e.date)-now)/864e5);return d>=0&&d<=14;}).length;
+  // Budget this week
+  const wkInc=D.paychecks.filter(p=>new Date(p.payDate)>=wkMs).reduce((s,p)=>s+(p.net||0),0);
+  const wkExp=D.expenses.filter(e=>new Date(e.date)>=wkMs).reduce((s,e)=>s+e.amount,0);
+  // GPA
+  const graded=D.courses.filter(c=>c.grade);let tp=0,tc=0;graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});const gpa=tc>0?(tp/tc).toFixed(2):'N/A';
+  // Sessions
+  const sessCount=D.studyLog.filter(l=>new Date(l.date)>=wkMs).length;
+  wrap.innerHTML=`<div class="card" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #bae6fd;margin-bottom:18px">
+    <div class="card-header"><h2 style="color:#0369a1">📋 Weekly Review</h2><span style="font-size:.82rem;color:#0369a1;font-weight:500">Week of ${monday.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+      <div class="review-section">
+        <h4>📚 Study Progress</h4>
+        <div class="review-stat"><span class="rs-label">Study Time</span><span class="rs-val" style="color:#6366f1">${Math.floor(studyMins/60)}h ${studyMins%60}m</span></div>
+        <div class="review-stat"><span class="rs-label">Sessions</span><span class="rs-val">${sessCount}</span></div>
+        <div class="review-stat"><span class="rs-label">GPA</span><span class="rs-val" style="color:#10b981">${gpa}</span></div>
+      </div>
+      <div class="review-section">
+        <h4>📝 Assignments</h4>
+        <div class="review-stat"><span class="rs-label">Completed</span><span class="rs-val" style="color:#10b981">${aComp}</span></div>
+        <div class="review-stat"><span class="rs-label">Pending</span><span class="rs-val" style="color:#f59e0b">${aPend}</span></div>
+        <div class="review-stat"><span class="rs-label">Urgent (≤2 days)</span><span class="rs-val" style="color:${aUrgent>0?'#ef4444':'#10b981'}">${aUrgent}</span></div>
+      </div>
+      <div class="review-section">
+        <h4>🗓️ Upcoming</h4>
+        <div class="review-stat"><span class="rs-label">Exams in 2 weeks</span><span class="rs-val" style="color:${examsUrgent>0?'#ef4444':'#10b981'}">${examsUrgent}</span></div>
+        <div class="review-stat"><span class="rs-label">Active Courses</span><span class="rs-val">${D.courses.length}</span></div>
+        <div class="review-stat"><span class="rs-label">Active Projects</span><span class="rs-val">${D.projects.filter(p=>p.status!=='completed').length}</span></div>
+      </div>
+      <div class="review-section">
+        <h4>💰 Finances (This Week)</h4>
+        <div class="review-stat"><span class="rs-label">Income</span><span class="rs-val" style="color:#10b981">$${wkInc.toFixed(2)}</span></div>
+        <div class="review-stat"><span class="rs-label">Expenses</span><span class="rs-val" style="color:#ef4444">$${wkExp.toFixed(2)}</span></div>
+        <div class="review-stat"><span class="rs-label">Net</span><span class="rs-val" style="color:${wkInc-wkExp>=0?'#10b981':'#ef4444'}">$${(wkInc-wkExp).toFixed(2)}</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ══ SEMESTER PROGRESS ══
+function renderSemProgress(){
+  const wrap=el('semProgressWrap');if(!wrap)return;
+  const start=D.semSettings?.start;const weeks=D.semSettings?.weeks||12;
+  if(!start){wrap.innerHTML=`<div class="sem-progress-card"><h3>📅 Semester Progress</h3><p style="opacity:.8;font-size:.85rem">Set your semester start date in <span class="sem-settings-link" onclick="document.querySelector('[data-tab=settings]').click()">Settings</span> to enable this.</p></div>`;return;}
+  const startDate=new Date(start);const now=new Date();const totalDays=weeks*7;const elapsed=Math.max(0,Math.floor((now-startDate)/864e5));const pct=Math.min(100,Math.round(elapsed/totalDays*100));
+  const weekNum=Math.min(weeks,Math.ceil(elapsed/7));const daysLeft=Math.max(0,totalDays-elapsed);
+  wrap.innerHTML=`<div class="sem-progress-card">
+    <h3>📅 Semester Progress</h3>
+    <div class="sem-week-row">
+      <div><div class="sem-week-label">Week ${weekNum}<span style="font-size:1rem;font-weight:400"> / ${weeks}</span></div><div class="sem-week-sub">${pct}% complete • ${daysLeft} days remaining</div></div>
+      <div style="text-align:right"><div style="font-size:1.4rem;font-weight:700">${pct}%</div><div style="font-size:.75rem;opacity:.8">${new Date(start).toLocaleDateString('en-AU',{day:'numeric',month:'short'})} → ${new Date(startDate.getTime()+totalDays*864e5).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</div></div>
+    </div>
+    <div class="sem-bar-bg"><div class="sem-bar-fill" style="width:${pct}%"></div></div>
+    <span class="sem-settings-link" onclick="document.querySelector('[data-tab=settings]').click()">⚙️ Configure</span>
+  </div>`;
+}
+function saveSemSettings(){
+  if(!D.semSettings)D.semSettings={};
+  D.semSettings.start=el('semStart').value;D.semSettings.weeks=parseInt(el('semWeeks').value)||12;
+  save();renderSemProgress();
+}
+
+// ══ BACKGROUND ══
+const BG_OPTIONS=[
+  {label:'Purple Dream',value:'linear-gradient(135deg,#667eea,#764ba2)'},
+  {label:'Ocean',value:'linear-gradient(135deg,#1a73e8,#0d47a1)'},
+  {label:'Emerald',value:'linear-gradient(135deg,#11998e,#38ef7d)'},
+  {label:'Sunset',value:'linear-gradient(135deg,#f9a825,#e53935)'},
+  {label:'Night',value:'linear-gradient(135deg,#0f0c29,#302b63)'},
+  {label:'Rose',value:'linear-gradient(135deg,#f093fb,#f5576c)'},
+  {label:'Slate',value:'linear-gradient(135deg,#1e293b,#334155)'},
+  {label:'Teal',value:'linear-gradient(135deg,#00b09b,#96c93d)'},
+  {label:'Peach',value:'linear-gradient(135deg,#f7971e,#ffd200)'},
+  {label:'Lavender',value:'linear-gradient(135deg,#a18cd1,#fbc2eb)'},
+];
+function renderBgOptions(){
+  const c=el('bgOptions');if(!c)return;
+  c.innerHTML=BG_OPTIONS.map((bg,i)=>`<div class="bg-option ${(D.bgTheme||BG_OPTIONS[0].value)===bg.value?'active':''}" style="background:${bg.value}" title="${bg.label}" onclick="applyBg('${bg.value}',this)"></div>`).join('');
+}
+function applyBg(gradient,target){
+  document.body.style.background=gradient;document.body.style.backgroundAttachment='fixed';
+  D.bgTheme=gradient;save();
+  document.querySelectorAll('.bg-option').forEach(o=>o.classList.remove('active'));
+  if(target)target.classList.add('active');
+}
+function applyCustomBg(){
+  const c=el('bgCustomColor').value;const gradient=`linear-gradient(135deg,${c},${adjustColor(c,-40)})`;
+  applyBg(gradient,null);renderBgOptions();
+}
+function adjustColor(hex,amt){const n=parseInt(hex.slice(1),16);const r=Math.min(255,Math.max(0,((n>>16)&255)+amt));const g=Math.min(255,Math.max(0,((n>>8)&255)+amt));const b=Math.min(255,Math.max(0,(n&255)+amt));return'#'+(1<<24|r<<16|g<<8|b).toString(16).slice(1);}
+
+// ══ COURSE WEEK NOTES ══
+const WEEK_SECTIONS=['Notes','Lecture','Tutorial','Other'];
+function openWeekModal(courseId,week){
+  if(!D.weekNotes[courseId])D.weekNotes[courseId]={};
+  if(!D.weekNotes[courseId][week])D.weekNotes[courseId][week]={notes:'',lecture:'',tutorial:'',other:''};
+  const course=D.courses.find(c=>c.id===courseId);
+  let modal=el('weekNotesModal');
+  if(!modal){
+    modal=document.createElement('div');modal.className='modal';modal.id='weekNotesModal';
+    modal.innerHTML=`<div class="modal-content"><div class="modal-header"><h2 id="wnTitle"></h2><button class="close-btn" onclick="closeModal('weekNotesModal')">&times;</button></div><div id="wnBody"></div><button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveWeekNotes()">Save Notes</button></div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('active');});
+  }
+  modal._cid=courseId;modal._week=week;
+  el('wnTitle').textContent=`${course?course.name:''} — Week ${week}`;
+  const data=D.weekNotes[courseId][week];
+  el('wnBody').innerHTML=`<div class="week-section-tabs">${WEEK_SECTIONS.map((s,i)=>`<button class="wst-btn ${i===0?'active':''}" onclick="switchWkSection(this,'wk_sec_${i}')">${s}</button>`).join('')}</div>`+WEEK_SECTIONS.map((s,i)=>`<div class="week-section-content ${i===0?'':''}">
+    <textarea id="wk_sec_${i}" placeholder="Add ${s} notes here…" style="display:${i===0?'block':'none'}">${esc(data[s.toLowerCase()]||'')}</textarea></div>`).join('');
+  modal.classList.add('active');
+}
+function switchWkSection(btn,secId){
+  document.querySelectorAll('.wst-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  document.querySelectorAll('#wnBody textarea').forEach(t=>t.style.display='none');
+  const t=el(secId);if(t)t.style.display='block';
+}
+function saveWeekNotes(){
+  const modal=el('weekNotesModal');if(!modal||!modal._cid)return;
+  const cid=modal._cid,week=modal._week;
+  if(!D.weekNotes[cid])D.weekNotes[cid]={};
+  WEEK_SECTIONS.forEach((s,i)=>{const t=el(`wk_sec_${i}`);if(t){if(!D.weekNotes[cid][week])D.weekNotes[cid][week]={};D.weekNotes[cid][week][s.toLowerCase()]=t.value;}});
+  save();closeModal('weekNotesModal');
 }
 
 // ══ INIT ══
@@ -1803,20 +2353,20 @@ el('semester').addEventListener('change',save);
 el('eDate').valueAsDate=new Date();
 el('pcDate').valueAsDate=new Date();
 load();
-if(D.darkMode)el('darkToggle').textContent='☀️ Light';
+// Migrate data
+if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
+// Restore background
+if(D.bgTheme){document.body.style.background=D.bgTheme;document.body.style.backgroundAttachment='fixed';}
+// Restore sem settings inputs
+if(D.semSettings){if(el('semStart'))el('semStart').value=D.semSettings.start||'';if(el('semWeeks'))el('semWeeks').value=D.semSettings.weeks||12;}
+if(el('bmDate'))el('bmDate').valueAsDate=new Date();
+if(el('glDate'))el('glDate').valueAsDate=new Date();
+renderBgOptions();renderSemProgress();renderWeeklyReview();
 renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
 renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
-renderDashboard();renderNotes();renderNoteTagBar();renderStandards();showTimer();checkReminders();
-// Tag manager modal hooks
-el('tagManagerModal').addEventListener('click',e=>{if(e.target===el('tagManagerModal'))closeModal('tagManagerModal');});
-document.querySelector('[data-tab="notes"]')?.addEventListener('click',()=>{renderNoteTagBar();});
-// Open tag manager: render palette and list
-const origOpenModal=openModal;
-window.openModal=function(id){
-  origOpenModal(id);
-  if(id==='tagManagerModal'){renderTagPalette();renderTagList();}
-  if(id==='noteModal'){renderNoteTagSelect();}
-};
+renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
+renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
+refreshSwCourses();fillGymExSelect();
 </script>
 </body>
 </html>
