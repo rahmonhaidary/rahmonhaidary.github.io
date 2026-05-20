@@ -643,6 +643,9 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
       Continue with Google
     </button>
     <div class="login-error" id="loginError"></div>
+    <div id="loginHelp" style="margin-top:12px;font-size:.75rem;color:#94a3b8;display:none">
+      📱 You'll be redirected to Google to sign in, then brought back automatically.
+    </div>
   </div>
 </div>
 
@@ -655,7 +658,7 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
   <div class="user-info" style="align-items:center">
     <input type="text" id="studentName" placeholder="Your Name">
     <input type="text" id="semester" placeholder="e.g. Semester 2, 2025">
-    <span id="syncStatus" class="sync-status sync-ok" style="display:none">✓ Synced</span>
+    <span id="syncStatus" class="sync-status sync-ok" style="display:none;cursor:pointer" onclick="window.syncFromCloud&&window.syncFromCloud(window.currentUser?.uid)" title="Tap to sync">✓ Synced</span>
     <div style="position:relative">
       <img id="userAvatar" class="user-avatar" src="" alt="User" style="display:none" onclick="toggleUserMenu()">
       <div class="user-menu" id="userMenu" style="display:none">
@@ -1387,7 +1390,7 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, enableNetwork, disableNetwork } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1403,6 +1406,8 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
+// Ensure auth persists across PWA restarts and page reloads
+setPersistence(auth, browserLocalPersistence).catch(e => console.log('Persistence error:', e));
 let currentUser = null;
 let syncTimeout = null;
 let unsubscribeSnapshot = null;
@@ -1414,18 +1419,28 @@ window.signInWithGoogle = async function() {
   const err = document.getElementById('loginError');
   btn.disabled = true; btn.textContent = 'Signing in…';
   err.textContent = '';
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const helpEl = document.getElementById('loginHelp');
+  if(isIOS && helpEl) helpEl.style.display = 'block';
   try {
     const provider = new GoogleAuthProvider();
-    // Use redirect on mobile/PWA (popup blocked), popup on desktop
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if(isMobile || isStandalone) {
+    provider.setCustomParameters({ prompt: 'select_account' });
+    if(isIOS && isStandalone) {
+      // iPhone PWA: open auth in new tab, use redirect
+      // Store intent and use redirect
+      sessionStorage.setItem('authPending', '1');
+      await signInWithRedirect(auth, provider);
+    } else if(isIOS) {
+      // iPhone Safari (not standalone): use redirect
       await signInWithRedirect(auth, provider);
     } else {
+      // Desktop/Android: use popup
       await signInWithPopup(auth, provider);
     }
   } catch(e) {
-    err.textContent = '❌ ' + (e.message || 'Sign in failed');
+    console.error('Sign in error:', e);
+    err.textContent = '❌ ' + (e.code || e.message || 'Sign in failed');
     btn.disabled = false;
     btn.innerHTML = '<img src="https://www.google.com/favicon.ico" alt="Google" width="22"> Continue with Google';
   }
@@ -1454,6 +1469,37 @@ document.addEventListener('click', e => {
   }
 });
 
+// ── SYNC FROM CLOUD ──
+async function syncFromCloud(uid) {
+  try {
+    const status = document.getElementById('syncStatus');
+    if(status){ status.className='sync-status sync-saving'; status.textContent='⏳ Syncing…'; }
+    const snap = await getDoc(doc(db, 'users', uid));
+    if(!snap.exists()) return;
+    const cloud = snap.data().data;
+    const cloudTime = snap.data().updatedAt;
+    if(!cloud) return;
+    // Only update if cloud is newer than our last save
+    if(window._lastSaveTime && cloudTime && cloudTime <= window._lastSaveTime) {
+      if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
+      return;
+    }
+    Object.assign(window.D, cloud);
+    if(!window.D.bodyLog)window.D.bodyLog=[];
+    if(!window.D.gymExercises)window.D.gymExercises=[];
+    if(!window.D.gymWorkouts)window.D.gymWorkouts=[];
+    if(!window.D.jobs)window.D.jobs=[];
+    if(!window.D.topics)window.D.topics={};
+    if(!window.D.attendance)window.D.attendance={};
+    if(window._refreshAll) window._refreshAll();
+    if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
+    console.log('Synced from cloud, updated:', cloudTime);
+  } catch(e) {
+    console.log('Sync error:', e.code);
+  }
+}
+window.syncFromCloud = syncFromCloud;
+
 // ── CLOUD SAVE ──
 window.cloudSave = async function() {
   const user = currentUser || window.currentUser;
@@ -1477,7 +1523,21 @@ window.cloudSave = async function() {
 
 // ── AUTH STATE ──
 // Handle redirect result on mobile
-getRedirectResult(auth).catch(e => console.log('Redirect result error:', e));
+getRedirectResult(auth).then(result => {
+  if(result && result.user) {
+    console.log('Redirect sign-in successful:', result.user.email);
+    sessionStorage.removeItem('authPending');
+  }
+}).catch(e => {
+  console.error('Redirect result error:', e.code, e.message);
+  // Show error on login screen if visible
+  const err = document.getElementById('loginError');
+  const btn = document.querySelector('.google-btn');
+  if(err && document.getElementById('loginScreen').style.display !== 'none') {
+    err.textContent = '❌ ' + (e.code || 'Sign in failed. Try again.');
+    if(btn){ btn.disabled=false; btn.innerHTML='<img src="https://www.google.com/favicon.ico" alt="Google" width="22"> Continue with Google'; }
+  }
+});
 
 onAuthStateChanged(auth, async (user) => {
   const loginScreen = document.getElementById('loginScreen');
@@ -1553,7 +1613,7 @@ onAuthStateChanged(auth, async (user) => {
 
     // Track online/offline
     window.addEventListener('online', () => {
-      enableNetwork(db).then(() => { if(window.cloudSave) window.cloudSave(); });
+      enableNetwork(db).then(() => { syncFromCloud(user.uid); });
       const status = document.getElementById('syncStatus');
       if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Online'; }
     });
@@ -1562,6 +1622,15 @@ onAuthStateChanged(auth, async (user) => {
       const status = document.getElementById('syncStatus');
       if(status){ status.className='sync-status sync-error'; status.textContent='⚡ Offline'; }
     });
+
+    // Sync when app comes back into focus (switching tabs, reopening PWA)
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible') {
+        syncFromCloud(user.uid);
+      }
+    });
+    window.addEventListener('focus', () => syncFromCloud(user.uid));
+    window.addEventListener('pageshow', () => syncFromCloud(user.uid));
 
   } else {
     currentUser = null;
