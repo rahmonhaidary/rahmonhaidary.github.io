@@ -861,7 +861,7 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
     <div class="card-header">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:34px;height:34px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🤖</div>
-        <div><h2 style="margin:0">UniTracker AI</h2><p style="margin:0;font-size:.73rem;color:var(--gray)">Powered by Mistral • Knows your data</p></div>
+        <div><h2 style="margin:0">UniTracker AI</h2><p style="margin:0;font-size:.73rem;color:var(--gray)">Powered by NVIDIA Nemotron • Knows your data</p></div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="clearDashAi()">🗑 Clear</button>
     </div>
@@ -4077,7 +4077,7 @@ async function askAi(msg){
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+OR_KEY,'HTTP-Referer':'https://rahmonhaidary.github.io','X-Title':'UniTracker'},
-        body: JSON.stringify({model:'mistralai/mistral-7b-instruct:free', messages, max_tokens:1000, temperature:0.7})
+        body: JSON.stringify({model:'nvidia/nemotron-3-super', messages, max_tokens:1000, temperature:0.7})
       });
       const data = await response.json();
       if(!response.ok) throw new Error(data.error?.message||'API error '+response.status);
@@ -4141,7 +4141,7 @@ async function askDashAi(msg){
     ];
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OR_KEY,'HTTP-Referer':'https://rahmonhaidary.github.io','X-Title':'UniTracker'},
-      body:JSON.stringify({model:'mistralai/mistral-7b-instruct:free',messages:messages2,max_tokens:600,temperature:0.7})
+      body:JSON.stringify({model:'nvidia/nemotron-3-super',messages:messages2,max_tokens:600,temperature:0.7})
     });
     const data = await response.json();
     if(!response.ok) throw new Error(data.error?.message||'API error');
