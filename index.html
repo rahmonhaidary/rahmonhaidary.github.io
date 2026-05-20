@@ -3120,7 +3120,25 @@ function importData(event){
 function clearAllData(){
   if(!confirm('⚠️ This will permanently delete ALL your UniTracker data. This cannot be undone!\n\nAre you absolutely sure?'))return;
   if(!confirm('Last chance — click OK to permanently clear everything.'))return;
-  localStorage.removeItem('UT7');location.reload();
+  localStorage.removeItem('UT7');
+  if(window.currentUser && window.cloudSave){
+    const empty={
+      student:{name:'',semester:''},
+      courses:[],assignments:[],projects:[],schedule:[],
+      expenses:[],paychecks:[],studyLog:[],
+      weekNotes:{},budget:0,gcData:{},
+      exams:[],notes:[],
+      dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
+      standards:{daily:0,weekly:0,credits:0,reminderDays:2},
+      studyHistory:{},
+      bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
+      semSettings:null,bgTheme:null,topics:{},attendance:{},darkMode:false
+    };
+    Object.assign(window.D, empty);
+    window.cloudSave().then(()=>location.reload());
+  } else {
+    location.reload();
+  }
 }
 
 // ══ STOPWATCH ══
