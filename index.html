@@ -2229,7 +2229,10 @@ function renderPdSection(name,id){
         <div style="display:flex;flex-direction:column;gap:8px">
           <input type="text" id="pdNewTask" placeholder="Task name…">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <select id="pdTaskAssignee" style="flex:1;min-width:120px"><option value="">Unassigned</option>${members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
+            ${members.length ?
+              `<select id="pdTaskAssignee" style="flex:1;min-width:120px"><option value="">Unassigned</option>${members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>` :
+              `<input type="text" id="pdTaskAssigneeText" placeholder="Assignee name (optional)…" style="flex:1;min-width:120px">`
+            }
             <select id="pdTaskPriority" style="flex:1;min-width:100px"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
             <input type="date" id="pdTaskDue" style="flex:1;min-width:120px">
             <button class="btn btn-primary" onclick="addProjectTask()">+ Add Task</button>
@@ -2374,13 +2377,27 @@ function addProjectTask(){
   const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
   const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
   const name=el('pdNewTask').value.trim();if(!name)return;
-  const assigneeId=el('pdTaskAssignee').value?parseInt(el('pdTaskAssignee').value):null;
   const priority=el('pdTaskPriority').value||'medium';
   const dueDate=el('pdTaskDue').value||null;
   if(!p.subtasks)p.subtasks=[];
+  // Handle both member select and free-text assignee
+  let assigneeId=null, assigneeName=null;
+  const assignSelect=el('pdTaskAssignee');
+  const assignText=el('pdTaskAssigneeText');
+  if(assignSelect&&assignSelect.value){
+    assigneeId=parseInt(assignSelect.value);
+  } else if(assignText&&assignText.value.trim()){
+    // Auto-create member from text input
+    assigneeName=assignText.value.trim();
+    if(!p.members)p.members=[];
+    let member=p.members.find(m=>m.name.toLowerCase()===assigneeName.toLowerCase());
+    if(!member){member={id:uid(),name:assigneeName,role:'',email:''};p.members.push(member);}
+    assigneeId=member.id;
+    if(assignText)assignText.value='';
+  }
   p.subtasks.push({id:uid(),name,assigneeId,priority,dueDate,completed:false,kanbanCol:'todo'});
   el('pdNewTask').value='';
-  addProjectLogEntry(p,'Task added: '+name);
+  addProjectLogEntry(p,'Task added: '+name+(assigneeName?' → '+assigneeName:''));
   save();renderPdSection('tasks',p.id);renderPdSection('overview',p.id);renderProjects();
 }
 function deleteProjectTask(pid,tid,fromDetail){
@@ -3722,41 +3739,157 @@ function cycleAttendance(courseId, week){
   save(); renderAttendance();
 }
 
-// ══ JOB PIPELINE TREE ══
+// ══ JOB PIPELINE SANKEY ══
 function renderJobPipeline(){
   const c = el('jobPipeline'); if(!c) return;
-  if(!D.jobs||!D.jobs.length){c.innerHTML='<div class="empty"><div class="ei">🌿</div><p>Add job applications to see your pipeline</p></div>';return;}
-  const statuses=['saved','applied','interview','offer','rejected'];
-  const statusColors={saved:'#94a3b8',applied:'#6366f1',interview:'#f59e0b',offer:'#10b981',rejected:'#ef4444'};
-  const statusLabels={saved:'📌 Saved',applied:'📤 Applied',interview:'🎤 Interview',offer:'🎉 Offer',rejected:'❌ Rejected'};
-  // Build tree: each job flows through stages
-  let html=`<div class="pipeline-tree">`;
-  // Show as vertical flow with branches per stage
-  statuses.forEach((status,si)=>{
-    const jobs=D.jobs.filter(j=>j.status===status);
-    if(!jobs.length) return;
-    html+=`<div style="margin-bottom:24px">
-      <div style="text-align:center;margin-bottom:12px">
-        <span style="background:${statusColors[status]}22;color:${statusColors[status]};padding:6px 16px;border-radius:20px;font-weight:700;font-size:.85rem">${statusLabels[status]} (${jobs.length})</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">`;
-    jobs.forEach(j=>{
-      html+=`<div class="pipeline-node pn-${j.status}" onclick="editJob(${j.id})">
-        <div class="pn-company">${esc(j.company)}</div>
-        <div class="pn-title">${esc(j.title)}</div>
-        ${j.salary?`<div style="font-size:.68rem;color:#10b981;font-weight:600;margin-top:3px">💰 ${esc(j.salary)}</div>`:''}
-        ${j.date?`<div style="font-size:.65rem;color:var(--gray);margin-top:2px">${new Date(j.date).toLocaleDateString()}</div>`:''}
-      </div>`;
-    });
-    html+=`</div>`;
-    // Connector line between stages (except last)
-    if(si<statuses.length-1&&D.jobs.some(j=>j.status===statuses[si+1])){
-      html+=`<div style="display:flex;justify-content:center;margin-top:12px"><div style="width:2px;height:24px;background:#e2e8f0"></div></div>`;
-    }
-    html+=`</div>`;
-  });
-  html+=`</div>`;
-  c.innerHTML=html;
+  if(!D.jobs||!D.jobs.length){c.innerHTML='<div class="empty"><div class="ei">🌿</div><p>Add job applications to see your Sankey diagram</p></div>';return;}
+
+  const saved=D.jobs.filter(j=>j.status==='saved').length;
+  const applied=D.jobs.filter(j=>j.status==='applied').length;
+  const interview=D.jobs.filter(j=>j.status==='interview').length;
+  const offer=D.jobs.filter(j=>j.status==='offer').length;
+  const rejected=D.jobs.filter(j=>j.status==='rejected').length;
+  const total=D.jobs.length;
+
+  // Canvas-based Sankey diagram
+  c.innerHTML=`<div style="padding:10px 0">
+    <canvas id="sankeyCanvas" style="width:100%;border-radius:12px"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px">
+      ${[
+        {label:'Saved',count:saved,color:'#94a3b8'},
+        {label:'Applied',count:applied,color:'#6366f1'},
+        {label:'Interview',count:interview,color:'#f59e0b'},
+        {label:'Offer',count:offer,color:'#10b981'},
+        {label:'Rejected',count:rejected,color:'#ef4444'},
+      ].map(s=>`<div style="display:flex;align-items:center;gap:6px;font-size:.8rem">
+        <div style="width:12px;height:12px;border-radius:3px;background:${s.color}"></div>
+        <span style="font-weight:600;color:${s.color}">${s.label}</span>
+        <span style="color:var(--gray)">${s.count}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  setTimeout(()=>drawSankey(total,saved,applied,interview,offer,rejected),50);
+}
+
+function drawSankey(total,saved,applied,interview,offer,rejected){
+  const canvas=el('sankeyCanvas');if(!canvas)return;
+  const W=canvas.parentElement.offsetWidth||500;
+  const H=Math.max(260,W*0.45);
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  if(!total)return;
+
+  const PAD=60,NODE_W=18,GAP=8;
+  const colors={saved:'#94a3b8',applied:'#6366f1',interview:'#f59e0b',offer:'#10b981',rejected:'#ef4444'};
+
+  // Node heights proportional to count
+  const scale=(H-PAD*2-GAP*6)/total;
+  const minH=total>0?Math.max(8,scale):8;
+
+  // Layout: columns
+  // Col 0: Total applications (left)
+  // Col 1: Saved + Applied + (implicit rejected early)
+  // Col 2: Interview + Rejected(from applied)
+  // Col 3: Offer + Rejected(from interview)
+
+  const col0x=PAD;
+  const col1x=PAD+(W-PAD*2)*0.28;
+  const col2x=PAD+(W-PAD*2)*0.58;
+  const col3x=W-PAD-NODE_W;
+
+  // Helper: draw a node
+  function drawNode(x,y,h,color,label,count){
+    if(h<=0)return;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.roundRect(x,y,NODE_W,h,4);
+    ctx.fill();
+    // Label
+    ctx.fillStyle='#1e293b';
+    ctx.font=`bold ${Math.min(12,Math.max(9,h/2))}px sans-serif`;
+    ctx.textAlign='right';
+    ctx.fillText(label,x-6,y+h/2+4);
+    ctx.fillStyle=color;
+    ctx.font=`bold ${Math.min(13,Math.max(10,h/2))}px sans-serif`;
+    ctx.textAlign='left';
+    ctx.fillText(count,x+NODE_W+6,y+h/2+4);
+  }
+
+  // Helper: draw a curved flow between two nodes
+  function drawFlow(x1,y1,h1,x2,y2,h2,color,alpha=0.35){
+    if(h1<=0||h2<=0)return;
+    ctx.beginPath();
+    const mx=(x1+x2)/2;
+    ctx.moveTo(x1+NODE_W,y1);
+    ctx.bezierCurveTo(mx,y1,mx,y2,x2,y2);
+    ctx.lineTo(x2,y2+h2);
+    ctx.bezierCurveTo(mx,y2+h2,mx,y1+h1,x1+NODE_W,y1+h1);
+    ctx.closePath();
+    ctx.fillStyle=color+Math.round(alpha*255).toString(16).padStart(2,'0');
+    ctx.fill();
+  }
+
+  // Calculate heights
+  const totalH=total*scale;
+  const savedH=saved*scale;
+  const appliedH=applied*scale;
+  const interviewH=interview*scale;
+  const offerH=offer*scale;
+  const rejectedH=rejected*scale;
+
+  // Active (saved+applied) flow into col1
+  const activeH=(saved+applied)*scale;
+  const rejectedEarlyH=rejectedH>0?Math.min(rejectedH,total*scale*0.3):0;
+
+  // Col 0: total block
+  const col0y=(H-totalH)/2;
+
+  // Col 1: saved on top, applied below
+  const col1TotalH=activeH||1;
+  const col1y=(H-col1TotalH)/2;
+  const savedY=col1y;
+  const appliedY=col1y+savedH+GAP;
+
+  // Col 2: interview in middle, rejected below
+  const col2TotalH=interviewH+rejectedEarlyH+(interviewH&&rejectedEarlyH?GAP:0);
+  const col2y=(H-col2TotalH)/2;
+  const interviewY=col2y;
+  const rejCol2Y=col2y+interviewH+(interviewH?GAP:0);
+
+  // Col 3: offer top, rejected bottom
+  const col3TotalH=offerH+rejectedH+(offerH&&rejectedH?GAP*2:0);
+  const col3y=(H-col3TotalH)/2;
+  const offerY=col3y;
+  const rejCol3Y=col3y+offerH+(offerH?GAP*2:0);
+
+  // Draw flows (back to front)
+  // Total → saved
+  if(saved>0) drawFlow(col0x,col0y,savedH,col1x,savedY,savedH,colors.saved);
+  // Total → applied
+  if(applied>0) drawFlow(col0x,col0y+savedH,appliedH,col1x,appliedY,appliedH,colors.applied);
+  // Total → rejected (direct)
+  if(rejected>0&&interview===0&&offer===0) drawFlow(col0x,col0y+activeH,rejectedH,col3x,rejCol3Y,rejectedH,colors.rejected);
+  // Applied → interview
+  if(interview>0) drawFlow(col1x,appliedY,interviewH,col2x,interviewY,interviewH,colors.interview);
+  // Applied → rejected
+  if(rejected>0&&applied>0&&interview===0) drawFlow(col1x,appliedY+interviewH,rejectedEarlyH,col3x,rejCol3Y,rejectedH,colors.rejected);
+  if(rejected>0&&applied>0&&interview>0) drawFlow(col1x,appliedY+interviewH,rejectedEarlyH,col2x,rejCol2Y,rejectedEarlyH,colors.rejected);
+  // Interview → offer
+  if(offer>0) drawFlow(col2x,interviewY,offerH,col3x,offerY,offerH,colors.offer);
+  // Interview → rejected
+  if(rejected>0&&interview>0) drawFlow(col2x,rejCol2Y,Math.min(rejectedH,interviewH-offerH+GAP),col3x,rejCol3Y,rejectedH,colors.rejected);
+
+  // Draw nodes on top
+  if(total>0) drawNode(col0x,col0y,totalH,colors.applied,'Applications',total);
+  if(saved>0) drawNode(col1x,savedY,savedH,colors.saved,'Saved',saved);
+  if(applied>0) drawNode(col1x,appliedY,appliedH,colors.applied,'Applied',applied);
+  if(interview>0) drawNode(col2x,interviewY,interviewH,colors.interview,'Interview',interview);
+  if(rejected>0&&interview>0) drawNode(col2x,rejCol2Y,Math.max(8,rejectedEarlyH),colors.rejected,'','' );
+  if(offer>0) drawNode(col3x,offerY,offerH,colors.offer,'Offer 🎉',offer);
+  if(rejected>0) drawNode(col3x,rejCol3Y,rejectedH,colors.rejected,'Rejected',rejected);
 }
 
 // ══ UPDATE RENDERJOBS TO ALSO RENDER PIPELINE ══
@@ -3766,6 +3899,12 @@ window.renderJobs = function(){
   renderJobPipeline();
 };
 renderJobs = window.renderJobs;
+
+// Re-render Sankey when switching to pipeline tab (canvas needs correct width)
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('[data-panel="job-panel-pipeline"]');
+  if(btn) setTimeout(renderJobPipeline, 80);
+});
 
 // ══ UPDATE COURSE CARDS FOR TOPICS BUTTON ══
 // (handled in renderCourses which already has showCourseWeeks — add openTopicModal)
