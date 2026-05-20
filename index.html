@@ -579,6 +579,49 @@ input:checked + .toggle-slider:before{transform:translateX(22px);}
   .nav-btn{padding:6px 8px;font-size:.68rem;}
 }
 
+
+/* ── PROJECT MANAGER ── */
+.project-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;border-left:5px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.06);transition:transform .2s;}
+.project-card:hover{transform:translateY(-1px);}
+.project-detail-modal .modal-content{max-width:860px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;}
+.project-detail-header{padding:20px 24px;border-bottom:2px solid #e2e8f0;background:#f8fafc;}
+.project-detail-body{display:flex;flex:1;overflow:hidden;}
+.project-detail-sidebar{width:200px;flex-shrink:0;border-right:2px solid #e2e8f0;padding:16px 12px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.project-detail-content{flex:1;overflow-y:auto;padding:20px;}
+.pd-nav-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:.85rem;color:#64748b;transition:all .2s;border:none;background:none;width:100%;text-align:left;}
+.pd-nav-btn:hover{background:#eef2ff;color:var(--primary);}
+.pd-nav-btn.active{background:#eef2ff;color:var(--primary);font-weight:600;}
+.pd-section{display:none;}.pd-section.active{display:block;}
+.task-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8fafc;border-radius:10px;margin-bottom:6px;transition:background .2s;}
+.task-row:hover{background:#f1f5f9;}
+.task-row.done-task{opacity:.55;}
+.task-row.done-task .task-name{text-decoration:line-through;color:var(--gray);}
+.task-priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.member-card{display:flex;align-items:center;gap:12px;padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:8px;}
+.member-avatar{width:38px;height:38px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0;}
+.milestone-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:6px;border:2px solid #e2e8f0;}
+.milestone-item.done-ms{border-color:#10b981;background:#f0fdf4;}
+.milestone-item.overdue-ms{border-color:#ef4444;background:#fef2f2;}
+.log-entry{padding:8px 12px;border-left:3px solid var(--primary);margin-bottom:8px;background:#f8fafc;border-radius:0 8px 8px 0;font-size:.83rem;}
+.log-time{font-size:.72rem;color:var(--gray);}
+.kanban-board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;}
+.kanban-col{min-width:180px;background:#f8fafc;border-radius:12px;padding:12px;}
+.kanban-col-header{font-weight:700;font-size:.82rem;margin-bottom:10px;padding:6px 8px;border-radius:8px;text-align:center;}
+.kanban-task{background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:.8rem;cursor:pointer;border:1px solid #e2e8f0;transition:all .2s;}
+.kanban-task:hover{box-shadow:0 2px 8px rgba(0,0,0,.1);transform:translateY(-1px);}
+.progress-ring{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+body.dark-mode .project-card{background:#1e293b;}
+body.dark-mode .task-row{background:#334155;}
+body.dark-mode .member-card{background:#334155;}
+body.dark-mode .project-detail-header{background:#0f172a;border-color:#334155;}
+body.dark-mode .project-detail-sidebar{border-color:#334155;}
+body.dark-mode .kanban-col{background:#334155;}
+body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
+@media(max-width:768px){
+  .project-detail-body{flex-direction:column;}
+  .project-detail-sidebar{width:100%;border-right:none;border-bottom:2px solid #e2e8f0;flex-direction:row;flex-wrap:wrap;padding:8px;}
+  .pd-nav-btn{width:auto;padding:6px 10px;font-size:.75rem;}
+}
 </style>
 </head>
 <body>
@@ -710,6 +753,15 @@ input:checked + .toggle-slider:before{transform:translateX(22px);}
       <div id="assignmentList"></div>
     </div>
     <div class="inner-panel" id="panel-projects">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <select id="projectFilter" onchange="renderProjects()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:9px;font-size:.85rem;background:#fff">
+          <option value="all">All Projects</option>
+          <option value="planning">📋 Planning</option>
+          <option value="in-progress">🚧 In Progress</option>
+          <option value="on-hold">⏸ On Hold</option>
+          <option value="completed">✅ Completed</option>
+        </select>
+      </div>
       <div id="projectList"><div class="empty"><div class="ei">🗂️</div><p>No projects yet. Click "+ Project" above.</p></div></div>
     </div>
   </div>
@@ -1776,131 +1828,411 @@ el('projectForm').addEventListener('submit',e=>{
 function getProject(id){return D.projects.find(p=>p.id===id);}
 function renderProjects(){
   const container=el('projectList');
-  if(!D.projects.length){container.innerHTML='<div class="empty"><div class="ei">🗂️</div><p>No projects yet. Click "+ Project" above.</p></div>';return;}
-  container.innerHTML=D.projects.map(p=>{
+  const filter=(el('projectFilter')?.value)||'all';
+  let list=D.projects.filter(p=>filter==='all'||p.status===filter);
+  if(!list.length){container.innerHTML='<div class="empty"><div class="ei">🗂️</div><p>'+(D.projects.length?'No projects match filter':'No projects yet. Click "+ Project" above.')+'</p></div>';return;}
+  const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
+  const statusLabels={'planning':'📋 Planning','in-progress':'🚧 In Progress','on-hold':'⏸ On Hold','completed':'✅ Completed'};
+  container.innerHTML=list.map(p=>{
     const tasks=p.subtasks||[];const members=p.members||[];
-    const done=tasks.filter(t=>t.completed).length;
+    const done=tasks.filter(t=>t.completed||t.done).length;
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
     const daysLeft=p.dueDate?Math.ceil((new Date(p.dueDate)-new Date())/864e5):null;
-    const statusColors={active:'#6366f1',completed:'#10b981','on-hold':'#f59e0b',planning:'#94a3b8'};
-    return`<div class="card" style="margin-bottom:12px;border-left:4px solid ${statusColors[p.status]||'#6366f1'}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
-        <div>
-          <h3 style="font-size:1rem;margin-bottom:4px">${esc(p.name)}</h3>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <span style="font-size:.72rem;background:${statusColors[p.status]||'#6366f1'}22;color:${statusColors[p.status]||'#6366f1'};padding:2px 8px;border-radius:8px;font-weight:600">${p.status}</span>
-            ${daysLeft!==null?`<span style="font-size:.72rem;color:${daysLeft<3?'#ef4444':daysLeft<7?'#f59e0b':'var(--gray)'}">${daysLeft<0?'Overdue':daysLeft===0?'Due today':'Due in '+daysLeft+'d'}</span>`:''}
+    const col=statusColors[p.status]||'#6366f1';
+    const overdue=daysLeft!==null&&daysLeft<0&&p.status!=='completed';
+    return`<div class="project-card" style="border-left-color:${col}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+        <div style="flex:1;min-width:0">
+          <h3 style="font-size:1rem;margin-bottom:4px">${esc(p.title||p.name||'Untitled')}</h3>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:.72rem;background:${col}22;color:${col};padding:2px 8px;border-radius:8px;font-weight:600">${statusLabels[p.status]||p.status}</span>
+            <span style="font-size:.72rem;background:${p.priority==='high'?'#fee2e2':p.priority==='medium'?'#fef3c7':'#f0fdf4'};color:${p.priority==='high'?'#ef4444':p.priority==='medium'?'#d97706':'#10b981'};padding:2px 8px;border-radius:8px;font-weight:600">${p.priority||'medium'}</span>
+            ${daysLeft!==null?`<span style="font-size:.72rem;color:${overdue?'#ef4444':daysLeft<=3?'#f59e0b':'var(--gray)'}">${overdue?'⚠ Overdue '+Math.abs(daysLeft)+'d':daysLeft===0?'Due today':'Due in '+daysLeft+'d'}</span>`:''}
+            ${members.length?`<span style="font-size:.72rem;color:var(--gray)">👥 ${members.length} member${members.length!==1?'s':''}</span>`:''}
           </div>
         </div>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-secondary btn-sm" onclick="openProjectDetail(${p.id})">👥 Manage</button>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-primary btn-sm" onclick="openProjectDetail(${p.id})">🗂 Open</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id})">🗑️</button>
         </div>
       </div>
-      ${tasks.length?`<div style="margin-top:10px">
-        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--gray);margin-bottom:4px"><span>Tasks</span><span>${done}/${tasks.length} complete</span></div>
-        <div style="height:6px;background:#e2e8f0;border-radius:3px"><div style="height:100%;background:${statusColors[p.status]||'#6366f1'};border-radius:3px;width:${pct}%"></div></div>
+      ${p.desc?`<p style="font-size:.82rem;color:var(--gray);margin-bottom:10px;line-height:1.5">${esc(p.desc)}</p>`:''}
+      ${tasks.length?`<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray);margin-bottom:4px"><span>Progress</span><span>${done}/${tasks.length} tasks • ${pct}%</span></div>
+        <div style="height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden"><div style="height:100%;background:${col};border-radius:4px;width:${pct}%;transition:width .5s"></div></div>
       </div>`:''}
-      ${members.length?`<div style="margin-top:8px">${members.map(m=>`<span class="member-chip">👤 ${esc(m.name)}</span>`).join('')}</div>`:''}
+      ${members.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${members.slice(0,5).map(m=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${col};color:#fff;font-weight:700;font-size:.72rem;title='${esc(m.name)}'">${(m.name||'?')[0].toUpperCase()}</span>`).join('')}${members.length>5?`<span style="font-size:.72rem;color:var(--gray);padding:6px">+${members.length-5}</span>`:''}</div>`:''}
     </div>`;
   }).join('');
 }
 
 function openProjectDetail(id){
   const p=D.projects.find(x=>x.id===id);if(!p)return;
-  if(!p.members)p.members=[];if(!p.subtasks)p.subtasks=[];
+  if(!p.members)p.members=[];if(!p.subtasks)p.subtasks=[];if(!p.milestones)p.milestones=[];if(!p.log)p.log=[];
+  // Build or reuse modal
   let modal=el('projectDetailModal');
   if(!modal){
-    modal=document.createElement('div');modal.className='modal';modal.id='projectDetailModal';
-    modal.innerHTML=`<div class="modal-content" style="max-width:700px">
-      <div class="modal-header"><h2 id="pdTitle"></h2><button class="close-btn" onclick="closeModal('projectDetailModal')">&times;</button></div>
-      <div class="inner-tabs" style="margin-bottom:14px">
-        <button class="inner-tab active" data-panel="pd-panel-tasks">📋 Tasks</button>
-        <button class="inner-tab" data-panel="pd-panel-members">👥 Members</button>
-      </div>
-      <div class="inner-panel active" id="pd-panel-tasks">
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input type="text" id="pdNewTask" placeholder="New task…" style="flex:1">
-          <select id="pdTaskAssignee" style="max-width:140px"><option value="">Unassigned</option></select>
-          <button class="btn btn-primary btn-sm" onclick="addProjectTask()">+ Add</button>
+    modal=document.createElement('div');modal.className='modal project-detail-modal';modal.id='projectDetailModal';
+    modal.innerHTML=`<div class="modal-content">
+      <div class="project-detail-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div><h2 id="pdTitle" style="margin-bottom:4px"></h2><div id="pdMeta" style="font-size:.8rem;color:#64748b"></div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="pdStatusSelect" onchange="updateProjectStatus()" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:.82rem">
+              <option value="planning">📋 Planning</option>
+              <option value="in-progress">🚧 In Progress</option>
+              <option value="on-hold">⏸ On Hold</option>
+              <option value="completed">✅ Completed</option>
+            </select>
+            <button class="close-btn" onclick="closeModal('projectDetailModal')">&times;</button>
+          </div>
         </div>
-        <div id="pdTaskList"></div>
+        <div id="pdProgressBar" style="margin-top:12px"></div>
       </div>
-      <div class="inner-panel" id="pd-panel-members">
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input type="text" id="pdNewMember" placeholder="Member name…" style="flex:1">
-          <input type="text" id="pdNewRole" placeholder="Role (optional)" style="max-width:140px">
-          <button class="btn btn-primary btn-sm" onclick="addProjectMember()">+ Add</button>
+      <div class="project-detail-body">
+        <div class="project-detail-sidebar">
+          <button class="pd-nav-btn active" onclick="switchPdSection('overview',this)">📊 Overview</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('tasks',this)">✅ Tasks</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('kanban',this)">🗂 Kanban</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('members',this)">👥 Members</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('milestones',this)">🏁 Milestones</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('files',this)">📎 Notes & Links</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('log',this)">📋 Activity</button>
         </div>
-        <div id="pdMemberList"></div>
+        <div class="project-detail-content">
+          <div class="pd-section active" id="pd-overview"></div>
+          <div class="pd-section" id="pd-tasks"></div>
+          <div class="pd-section" id="pd-kanban"></div>
+          <div class="pd-section" id="pd-members"></div>
+          <div class="pd-section" id="pd-milestones"></div>
+          <div class="pd-section" id="pd-files"></div>
+          <div class="pd-section" id="pd-log"></div>
+        </div>
       </div>
     </div>`;
     document.body.appendChild(modal);
     modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('active');});
   }
   modal._pid=id;
-  el('pdTitle').textContent=p.name;
-  renderPDTasks(p);renderPDMembers(p);
+  renderProjectDetail(id);
   modal.classList.add('active');
 }
-function renderPDTasks(p){
-  const assigneeSelect=el('pdTaskAssignee');
-  assigneeSelect.innerHTML='<option value="">Unassigned</option>'+(p.members||[]).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
-  const tasks=p.subtasks||[];
-  el('pdTaskList').innerHTML=tasks.length?tasks.map(t=>{
-    const member=(p.members||[]).find(m=>m.id===t.assigneeId);
-    return`<div class="task-item${t.completed?' done':''}">
-      <input type="checkbox" ${t.completed?'checked':''} onchange="toggleProjectTask(${p.id},${t.id},this.checked)" style="width:16px;height:16px;cursor:pointer">
-      <span style="flex:1">${esc(t.name)}</span>
-      ${member?`<span class="task-assignee">${esc(member.name)}</span>`:''}
-      <button onclick="deleteProjectTask(${p.id},${t.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
-    </div>`;
-  }).join(''):'<p style="color:var(--gray);font-size:.85rem">No tasks yet</p>';
+
+function switchPdSection(name,btn){
+  document.querySelectorAll('.pd-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.pd-section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  el('pd-'+name).classList.add('active');
+  const modal=el('projectDetailModal');if(modal&&modal._pid)renderPdSection(name,modal._pid);
 }
-function renderPDMembers(p){
-  const members=p.members||[];
-  el('pdMemberList').innerHTML=members.length?members.map(m=>{
-    const tasks=(p.subtasks||[]).filter(t=>t.assigneeId===m.id);
-    return`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8fafc;border-radius:10px;margin-bottom:8px;flex-wrap:wrap">
-      <div class="member-chip">👤 ${esc(m.name)}</div>
-      ${m.role?`<span style="font-size:.75rem;color:var(--gray)">${esc(m.role)}</span>`:''}
-      <span style="font-size:.75rem;color:var(--gray);margin-left:auto">${tasks.length} task${tasks.length!==1?'s':''}</span>
-      <button onclick="deleteProjectMember(${p.id},${m.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+
+function renderProjectDetail(id){
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  el('pdTitle').textContent=p.title||p.name||'Project';
+  const course=p.courseId?D.courses.find(c=>c.id==p.courseId):null;
+  el('pdMeta').textContent=[course?course.name:null,p.dueDate?'Due '+new Date(p.dueDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):null].filter(Boolean).join(' • ');
+  el('pdStatusSelect').value=p.status||'planning';
+  // Progress bar
+  const tasks=p.subtasks||[];const done=tasks.filter(t=>t.completed||t.done).length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
+  const col=statusColors[p.status]||'#6366f1';
+  el('pdProgressBar').innerHTML=tasks.length?`<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden"><div style="height:100%;background:${col};width:${pct}%;transition:width .5s;border-radius:4px"></div></div><span style="font-size:.78rem;font-weight:700;color:${col}">${pct}%</span></div>`:'';
+  // Render the currently active section
+  const activeSection=document.querySelector('.pd-nav-btn.active');
+  const sectionName=activeSection?(activeSection.onclick+'').match(/switchPdSection\('(\w+)'/)?.[1]||'overview':'overview';
+  renderPdSection(sectionName,id);
+}
+
+function renderPdSection(name,id){
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
+  const col=statusColors[p.status]||'#6366f1';
+  const tasks=p.subtasks||[];const members=p.members||[];
+
+  if(name==='overview'){
+    const done=tasks.filter(t=>t.completed||t.done).length;
+    const overdueTasks=tasks.filter(t=>!t.completed&&!t.done&&t.dueDate&&new Date(t.dueDate)<new Date()).length;
+    const doneMilestones=(p.milestones||[]).filter(m=>m.done).length;
+    el('pd-overview').innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        <div class="stat-card" style="border-left:4px solid ${col}"><h3>Tasks</h3><div class="val" style="color:${col}">${done}/${tasks.length}</div></div>
+        <div class="stat-card" style="border-left:4px solid #f59e0b"><h3>Overdue</h3><div class="val" style="color:${overdueTasks>0?'#ef4444':'#10b981'}">${overdueTasks}</div></div>
+        <div class="stat-card" style="border-left:4px solid #10b981"><h3>Members</h3><div class="val" style="color:#10b981">${members.length}</div></div>
+        <div class="stat-card" style="border-left:4px solid #8b5cf6"><h3>Milestones</h3><div class="val" style="color:#8b5cf6">${doneMilestones}/${(p.milestones||[]).length}</div></div>
+      </div>
+      ${p.desc?`<div style="padding:14px;background:#f8fafc;border-radius:10px;margin-bottom:16px"><h4 style="margin-bottom:6px">📝 Description</h4><p style="font-size:.88rem;line-height:1.6;color:#334155">${esc(p.desc)}</p></div>`:''}
+      <h4 style="margin-bottom:10px">🔥 Upcoming Tasks</h4>
+      ${tasks.filter(t=>!t.completed&&!t.done).slice(0,5).map(t=>`<div class="task-row"><div class="task-priority-dot" style="background:${t.priority==='high'?'#ef4444':t.priority==='medium'?'#f59e0b':'#10b981'}"></div><span class="task-name" style="flex:1;font-size:.85rem">${esc(t.name||t.title||'')}</span>${t.dueDate?`<span style="font-size:.7rem;color:var(--gray)">${new Date(t.dueDate).toLocaleDateString()}</span>`:''}</div>`).join('') || '<p style="color:var(--gray);font-size:.85rem">No pending tasks 🎉</p>'}
+    `;
+  }
+  else if(name==='tasks'){
+    el('pd-tasks').innerHTML=`
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
+        <h4 style="margin-bottom:10px">Add Task</h4>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input type="text" id="pdNewTask" placeholder="Task name…">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="pdTaskAssignee" style="flex:1;min-width:120px"><option value="">Unassigned</option>${members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select>
+            <select id="pdTaskPriority" style="flex:1;min-width:100px"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
+            <input type="date" id="pdTaskDue" style="flex:1;min-width:120px">
+            <button class="btn btn-primary" onclick="addProjectTask()">+ Add Task</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="filter-btn active" onclick="filterPdTasks('all',this)">All (${tasks.length})</button>
+        <button class="filter-btn" onclick="filterPdTasks('pending',this)">Pending (${tasks.filter(t=>!t.completed&&!t.done).length})</button>
+        <button class="filter-btn" onclick="filterPdTasks('done',this)">Done (${tasks.filter(t=>t.completed||t.done).length})</button>
+      </div>
+      <div id="pdTaskListFull">${renderTaskList(tasks,members,'all')}</div>
+    `;
+  }
+  else if(name==='kanban'){
+    const cols=['todo','in-progress','review','done'];
+    const colLabels={todo:'📋 To Do',  'in-progress':'🚧 In Progress',review:'👀 Review',done:'✅ Done'};
+    const colColors={todo:'#94a3b8','in-progress':'#6366f1',review:'#f59e0b',done:'#10b981'};
+    // Map old tasks to kanban columns: no kanbanCol = todo, completed = done
+    el('pd-kanban').innerHTML=`<div class="kanban-board">${cols.map(col=>`
+      <div class="kanban-col">
+        <div class="kanban-col-header" style="color:${colColors[col]};background:${colColors[col]}22">${colLabels[col]}</div>
+        ${tasks.filter(t=>(t.kanbanCol||((t.completed||t.done)?'done':'todo'))===col).map(t=>`
+          <div class="kanban-task" onclick="cycleKanbanTask(${p.id},${t.id})">
+            <div style="font-weight:600;font-size:.8rem;margin-bottom:3px">${esc(t.name||t.title||'')}</div>
+            ${t.assigneeId?`<span style="font-size:.65rem;background:${col==='done'?'#f0fdf4':'#eef2ff'};color:${col==='done'?'#10b981':'var(--primary)'};padding:1px 6px;border-radius:6px">${esc((members.find(m=>m.id==t.assigneeId)||{}).name||'')}</span>`:''}
+          </div>`).join('') || `<div style="font-size:.75rem;color:var(--gray);text-align:center;padding:10px">Empty</div>`}
+        <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:6px;font-size:.72rem" onclick="addKanbanTask('${col}',${p.id})">+ Add</button>
+      </div>`).join('')}
     </div>`;
-  }).join(''):'<p style="color:var(--gray);font-size:.85rem">No members yet</p>';
+  }
+  else if(name==='members'){
+    el('pd-members').innerHTML=`
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
+        <h4 style="margin-bottom:10px">Add Member</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" id="pdNewMember" placeholder="Name…" style="flex:1">
+          <input type="text" id="pdNewRole" placeholder="Role (e.g. Developer)…" style="flex:1">
+          <input type="email" id="pdNewEmail" placeholder="Email (optional)…" style="flex:1">
+          <button class="btn btn-primary" onclick="addProjectMember()">+ Add</button>
+        </div>
+      </div>
+      <div id="pdMemberListFull">${members.length?members.map(m=>{
+        const mTasks=tasks.filter(t=>String(t.assigneeId)===String(m.id));
+        const mDone=mTasks.filter(t=>t.completed||t.done).length;
+        return`<div class="member-card">
+          <div class="member-avatar" style="background:${col}">${(m.name||'?')[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.92rem">${esc(m.name)}</div>
+            ${m.role?`<div style="font-size:.75rem;color:var(--gray)">${esc(m.role)}</div>`:''}
+            ${m.email?`<div style="font-size:.72rem;color:var(--gray)">${esc(m.email)}</div>`:''}
+            ${mTasks.length?`<div style="font-size:.72rem;margin-top:4px;color:var(--gray)">${mDone}/${mTasks.length} tasks done</div>`:'<div style="font-size:.72rem;color:var(--gray);margin-top:4px">No tasks assigned</div>'}
+          </div>
+          <button onclick="deleteProjectMember(${p.id},${m.id})" class="btn btn-danger btn-sm">Remove</button>
+        </div>`;
+      }).join(''):'<div class="empty"><div class="ei">👥</div><p>No members yet</p></div>'}</div>
+    `;
+  }
+  else if(name==='milestones'){
+    const ms=p.milestones||[];
+    el('pd-milestones').innerHTML=`
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
+        <h4 style="margin-bottom:10px">Add Milestone</h4>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" id="pdNewMs" placeholder="Milestone name…" style="flex:1">
+          <input type="date" id="pdNewMsDate" style="flex:1;min-width:130px">
+          <button class="btn btn-primary" onclick="addMilestone()">+ Add</button>
+        </div>
+      </div>
+      ${ms.length?`<div style="position:relative;padding-left:20px">${ms.map((m,i)=>{
+        const overdue=m.date&&new Date(m.date)<new Date()&&!m.done;
+        return`<div class="milestone-item${m.done?' done-ms':overdue?' overdue-ms':''}" style="position:relative">
+          <div style="position:absolute;left:-20px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:${m.done?'#10b981':overdue?'#ef4444':'#6366f1'};border:2px solid #fff;box-shadow:0 0 0 2px ${m.done?'#10b981':overdue?'#ef4444':'#6366f1'}"></div>
+          <input type="checkbox" ${m.done?'checked':''} onchange="toggleMilestone(${p.id},${m.id},this.checked)" style="width:16px;height:16px;cursor:pointer">
+          <div style="flex:1"><div style="font-weight:600;font-size:.88rem">${esc(m.name)}</div>${m.date?`<div style="font-size:.72rem;color:var(--gray)">${new Date(m.date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}</div>`:''}</div>
+          <button onclick="deleteMilestone(${p.id},${m.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+        </div>`;
+      }).join('')}</div>` : '<div class="empty"><div class="ei">🏁</div><p>No milestones yet</p></div>'}
+    `;
+  }
+  else if(name==='files'){
+    if(!p.links)p.links=[];if(!p.projectNotes)p.projectNotes='';
+    el('pd-files').innerHTML=`
+      <div style="margin-bottom:16px">
+        <h4 style="margin-bottom:8px">📝 Project Notes</h4>
+        <textarea id="pdProjectNotes" style="width:100%;min-height:120px;border-radius:10px;border:2px solid #e2e8f0;padding:10px;font-size:.88rem" placeholder="Write project notes, decisions, context…" oninput="saveProjectNotes(${p.id})">${esc(p.projectNotes||'')}</textarea>
+      </div>
+      <div style="margin-bottom:16px">
+        <h4 style="margin-bottom:8px">🔗 Links & Resources</h4>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <input type="text" id="pdNewLinkLabel" placeholder="Label (e.g. Google Doc)…" style="flex:1;min-width:120px">
+          <input type="text" id="pdNewLinkUrl" placeholder="URL…" style="flex:2;min-width:180px">
+          <button class="btn btn-primary" onclick="addProjectLink(${p.id})">+ Add</button>
+        </div>
+        ${p.links.length?p.links.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border-radius:8px;margin-bottom:6px">
+          <a href="${esc(l.url)}" target="_blank" style="flex:1;color:var(--primary);font-size:.85rem;font-weight:600">🔗 ${esc(l.label||l.url)}</a>
+          <button onclick="deleteProjectLink(${p.id},${l.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+        </div>`).join(''):'<p style="color:var(--gray);font-size:.82rem">No links added yet</p>'}
+      </div>
+    `;
+  }
+  else if(name==='log'){
+    const log=[...(p.log||[])].reverse();
+    el('pd-log').innerHTML=`
+      <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="display:flex;gap:8px">
+          <input type="text" id="pdNewLog" placeholder="Add activity note…" style="flex:1">
+          <button class="btn btn-primary" onclick="addProjectLog(${p.id})">+ Log</button>
+        </div>
+      </div>
+      ${log.length?log.map(e=>`<div class="log-entry"><div>${esc(e.text)}</div><div class="log-time">${new Date(e.at).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div>`).join(''):'<div class="empty"><div class="ei">📋</div><p>No activity yet</p></div>'}
+    `;
+  }
+}
+
+function renderTaskList(tasks,members,filter){
+  let list=tasks;
+  if(filter==='pending')list=tasks.filter(t=>!t.completed&&!t.done);
+  if(filter==='done')list=tasks.filter(t=>t.completed||t.done);
+  if(!list.length)return'<p style="color:var(--gray);font-size:.85rem;text-align:center;padding:20px">No tasks here</p>';
+  return list.map(t=>{
+    const member=members.find(m=>String(m.id)===String(t.assigneeId));
+    const isDone=t.completed||t.done;
+    return`<div class="task-row${isDone?' done-task':''}">
+      <input type="checkbox" ${isDone?'checked':''} onchange="toggleProjectTask(0,${t.id},this.checked,true)" style="width:16px;height:16px;cursor:pointer">
+      <div class="task-priority-dot" style="background:${t.priority==='high'?'#ef4444':t.priority==='medium'?'#f59e0b':'#10b981'}"></div>
+      <span class="task-name" style="flex:1;font-size:.85rem">${esc(t.name||t.title||'')}</span>
+      ${member?`<span class="task-assignee">${esc(member.name)}</span>`:''}
+      ${t.dueDate?`<span style="font-size:.7rem;color:${new Date(t.dueDate)<new Date()&&!isDone?'#ef4444':'var(--gray)'}">${new Date(t.dueDate).toLocaleDateString()}</span>`:''}
+      <button onclick="deleteProjectTask(0,${t.id},true)" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.9rem">✕</button>
+    </div>`;
+  }).join('');
+}
+function filterPdTasks(filter,btn){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  document.querySelectorAll('#pd-tasks .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  el('pdTaskListFull').innerHTML=renderTaskList(p.subtasks||[],p.members||[],filter);
 }
 function addProjectTask(){
   const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
   const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
   const name=el('pdNewTask').value.trim();if(!name)return;
   const assigneeId=el('pdTaskAssignee').value?parseInt(el('pdTaskAssignee').value):null;
+  const priority=el('pdTaskPriority').value||'medium';
+  const dueDate=el('pdTaskDue').value||null;
   if(!p.subtasks)p.subtasks=[];
-  p.subtasks.push({id:uid(),name,assigneeId,completed:false});
-  el('pdNewTask').value='';save();renderPDTasks(p);renderProjects();
+  p.subtasks.push({id:uid(),name,assigneeId,priority,dueDate,completed:false,kanbanCol:'todo'});
+  el('pdNewTask').value='';
+  addProjectLogEntry(p,'Task added: '+name);
+  save();renderPdSection('tasks',p.id);renderPdSection('overview',p.id);renderProjects();
 }
-function deleteProjectTask(pid,tid){
-  const p=D.projects.find(x=>x.id===pid);if(!p)return;
-  p.subtasks=(p.subtasks||[]).filter(t=>t.id!==tid);save();renderPDTasks(p);renderProjects();
+function deleteProjectTask(pid,tid,fromDetail){
+  const modal=el('projectDetailModal');
+  const id=fromDetail?(modal?modal._pid:pid):pid;
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  const t=(p.subtasks||[]).find(x=>x.id===tid);
+  p.subtasks=(p.subtasks||[]).filter(t=>t.id!==tid);
+  if(t)addProjectLogEntry(p,'Task removed: '+(t.name||t.title||''));
+  save();if(fromDetail){renderPdSection('tasks',p.id);renderPdSection('overview',p.id);}renderProjects();
 }
-function toggleProjectTask(pid,tid,done){
+function toggleProjectTask(pid,tid,done,fromDetail){
+  const modal=el('projectDetailModal');
+  const id=fromDetail?(modal?modal._pid:pid):pid;
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  const t=(p.subtasks||[]).find(x=>x.id===tid);if(!t)return;
+  t.completed=done;t.done=done;t.kanbanCol=done?'done':(t.kanbanCol==='done'?'todo':t.kanbanCol);
+  addProjectLogEntry(p,(done?'Completed':'Reopened')+': '+(t.name||t.title||''));
+  save();if(fromDetail){renderPdSection('tasks',p.id);renderPdSection('overview',p.id);renderProjectDetail(id);}renderProjects();
+}
+function cycleKanbanTask(pid,tid){
   const p=D.projects.find(x=>x.id===pid);if(!p)return;
-  const t=(p.subtasks||[]).find(x=>x.id===tid);if(t)t.completed=done;save();renderPDTasks(p);renderProjects();
+  const t=(p.subtasks||[]).find(x=>x.id===tid);if(!t)return;
+  const cols=['todo','in-progress','review','done'];
+  const cur=t.kanbanCol||'todo';const next=cols[(cols.indexOf(cur)+1)%cols.length];
+  t.kanbanCol=next;t.completed=next==='done';t.done=next==='done';
+  save();renderPdSection('kanban',pid);renderPdSection('overview',pid);renderProjectDetail(pid);renderProjects();
+}
+function addKanbanTask(col,pid){
+  const name=prompt('Task name:');if(!name)return;
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  if(!p.subtasks)p.subtasks=[];
+  p.subtasks.push({id:uid(),name:name.trim(),kanbanCol:col,completed:col==='done',done:col==='done',priority:'medium'});
+  save();renderPdSection('kanban',pid);renderProjectDetail(pid);renderProjects();
 }
 function addProjectMember(){
   const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
   const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
   const name=el('pdNewMember').value.trim();if(!name)return;
-  const role=el('pdNewRole').value.trim();
+  const role=el('pdNewRole').value.trim();const email=el('pdNewEmail').value.trim();
   if(!p.members)p.members=[];
-  p.members.push({id:uid(),name,role});
-  el('pdNewMember').value='';el('pdNewRole').value='';save();renderPDMembers(p);renderPDTasks(p);renderProjects();
+  p.members.push({id:uid(),name,role,email});
+  el('pdNewMember').value='';el('pdNewRole').value='';el('pdNewEmail').value='';
+  addProjectLogEntry(p,'Member added: '+name);
+  save();renderPdSection('members',p.id);renderProjects();
 }
 function deleteProjectMember(pid,mid){
   const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const m=(p.members||[]).find(x=>x.id===mid);
   p.members=(p.members||[]).filter(m=>m.id!==mid);
-  p.subtasks=(p.subtasks||[]).map(t=>({...t,assigneeId:t.assigneeId===mid?null:t.assigneeId}));
-  save();renderPDMembers(p);renderPDTasks(p);renderProjects();
+  if(m)addProjectLogEntry(p,'Member removed: '+m.name);
+  save();renderPdSection('members',pid);renderProjects();
 }
+function updateProjectStatus(){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  const newStatus=el('pdStatusSelect').value;
+  addProjectLogEntry(p,'Status changed to: '+newStatus);
+  p.status=newStatus;save();renderProjectDetail(p.id);renderProjects();
+}
+function addMilestone(){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  const name=el('pdNewMs').value.trim();if(!name)return;
+  const date=el('pdNewMsDate').value||null;
+  if(!p.milestones)p.milestones=[];
+  p.milestones.push({id:uid(),name,date,done:false});
+  el('pdNewMs').value='';el('pdNewMsDate').value='';
+  addProjectLogEntry(p,'Milestone added: '+name);
+  save();renderPdSection('milestones',p.id);renderProjects();
+}
+function toggleMilestone(pid,mid,done){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const m=(p.milestones||[]).find(x=>x.id===mid);if(!m)return;
+  m.done=done;addProjectLogEntry(p,(done?'Milestone reached':'Milestone reopened')+': '+m.name);
+  save();renderPdSection('milestones',pid);renderProjects();
+}
+function deleteMilestone(pid,mid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  p.milestones=(p.milestones||[]).filter(m=>m.id!==mid);
+  save();renderPdSection('milestones',pid);
+}
+function saveProjectNotes(pid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const t=el('pdProjectNotes');if(t)p.projectNotes=t.value;
+  save();
+}
+function addProjectLink(pid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const label=el('pdNewLinkLabel').value.trim();const url=el('pdNewLinkUrl').value.trim();
+  if(!url)return;if(!p.links)p.links=[];
+  p.links.push({id:uid(),label:label||url,url});
+  el('pdNewLinkLabel').value='';el('pdNewLinkUrl').value='';
+  save();renderPdSection('files',pid);
+}
+function deleteProjectLink(pid,lid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  p.links=(p.links||[]).filter(l=>l.id!==lid);save();renderPdSection('files',pid);
+}
+function addProjectLog(pid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const text=el('pdNewLog').value.trim();if(!text)return;
+  addProjectLogEntry(p,text);el('pdNewLog').value='';save();renderPdSection('log',pid);
+}
+function addProjectLogEntry(p,text){
+  if(!p.log)p.log=[];p.log.push({id:uid(),text,at:new Date().toISOString()});
+}
+
 
 function buildProjectHTML(p){
   const st=p.subtasks||[],mb=p.members||[],lg=p.log||[];
