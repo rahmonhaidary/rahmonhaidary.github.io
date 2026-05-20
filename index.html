@@ -1551,10 +1551,12 @@ const firebaseConfig = {
 };
 
 const fbApp = initializeApp(firebaseConfig);
+window._fbApp = fbApp; // expose for clearAllData
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 // Ensure auth persists across PWA restarts and page reloads
 setPersistence(auth, browserLocalPersistence).catch(e => console.log('Persistence error:', e));
+window._db = db; // expose for clearAllData
 let currentUser = null;
 let syncTimeout = null;
 let unsubscribeSnapshot = null;
@@ -3117,25 +3119,38 @@ function importData(event){
   reader.readAsText(file);
   event.target.value=''; // reset file input
 }
-function clearAllData(){
+async function clearAllData(){
   if(!confirm('⚠️ This will permanently delete ALL your UniTracker data. This cannot be undone!\n\nAre you absolutely sure?'))return;
   if(!confirm('Last chance — click OK to permanently clear everything.'))return;
+  const status=el('importStatus');
+  if(status){status.style.color='#f59e0b';status.textContent='⏳ Clearing data...';}
   localStorage.removeItem('UT7');
-  if(window.currentUser && window.cloudSave){
-    const empty={
-      student:{name:'',semester:''},
-      courses:[],assignments:[],projects:[],schedule:[],
-      expenses:[],paychecks:[],studyLog:[],
-      weekNotes:{},budget:0,gcData:{},
-      exams:[],notes:[],
-      dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
-      standards:{daily:0,weekly:0,credits:0,reminderDays:2},
-      studyHistory:{},
-      bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
-      semSettings:null,bgTheme:null,topics:{},attendance:{},darkMode:false
-    };
-    Object.assign(window.D, empty);
-    window.cloudSave().then(()=>location.reload());
+  const empty={
+    student:{name:'',semester:''},
+    courses:[],assignments:[],projects:[],schedule:[],
+    expenses:[],paychecks:[],studyLog:[],
+    weekNotes:{},budget:0,gcData:{},
+    exams:[],notes:[],
+    dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
+    standards:{daily:0,weekly:0,credits:0,reminderDays:2},
+    studyHistory:{},
+    bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
+    semSettings:null,bgTheme:null,topics:{},attendance:{},darkMode:false
+  };
+  Object.assign(window.D, empty);
+  localStorage.setItem('UT7', JSON.stringify(empty));
+  // Write empty data directly to Firestore then reload
+  if(window.currentUser && window._db){
+    const user=window.currentUser;
+    const {doc,setDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    try{
+      await setDoc(doc(window._db,'users',user.uid),{data:empty,updatedAt:new Date().toISOString()});
+      if(status){status.style.color='#10b981';status.textContent='✅ Cleared!';}
+      setTimeout(()=>location.reload(),600);
+    }catch(e){
+      console.error('Clear error:',e);
+      location.reload();
+    }
   } else {
     location.reload();
   }
