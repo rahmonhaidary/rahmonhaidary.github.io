@@ -625,6 +625,13 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
 </style>
 </head>
 <body>
+<!-- UPDATE BANNER -->
+<div id="updateBanner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 20px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);display:none;align-items:center;gap:12px;z-index:99999;font-size:.88rem;max-width:340px;width:90%">
+  <span>🆕 New version available!</span>
+  <button onclick="applyUpdate()" style="background:#6366f1;color:#fff;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem">Update Now</button>
+  <button onclick="document.getElementById('updateBanner').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem">✕</button>
+</div>
+
 <!-- LOGIN SCREEN -->
 <div id="loginScreen">
   <div class="login-card">
@@ -1381,7 +1388,7 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, enableNetwork, disableNetwork } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA8hf_MochYnYCVPs7RQd4y7SNIhGIW1Qs",
@@ -1451,6 +1458,7 @@ document.addEventListener('click', e => {
 window.cloudSave = async function() {
   const user = currentUser || window.currentUser;
   if(!user) { console.log('cloudSave: no user'); return; }
+  window._lastSaveTime = new Date().toISOString();
   const status = document.getElementById('syncStatus');
   if(status){ status.className='sync-status sync-saving'; status.textContent='⏳ Saving…'; status.style.display='inline-block'; }
   if(syncTimeout) clearTimeout(syncTimeout);
@@ -1522,6 +1530,38 @@ onAuthStateChanged(auth, async (user) => {
 
     // Render everything via exposed function
     if(window._refreshAll) window._refreshAll();
+
+    // ── REAL-TIME LISTENER: sync changes from other devices instantly ──
+    if(unsubscribeSnapshot) unsubscribeSnapshot();
+    let isFirstSnapshot = true;
+    unsubscribeSnapshot = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+      if(isFirstSnapshot){ isFirstSnapshot=false; return; } // skip initial load
+      if(!snap.exists()) return;
+      const cloud = snap.data().data;
+      if(!cloud) return;
+      // Only update if the cloud version is newer than what we saved
+      const cloudTime = snap.data().updatedAt;
+      if(window._lastSaveTime && cloudTime <= window._lastSaveTime) return;
+      console.log('Real-time sync: received update from another device');
+      Object.assign(window.D, cloud);
+      if(window._refreshAll) window._refreshAll();
+      const status = document.getElementById('syncStatus');
+      if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
+    }, (err) => {
+      console.log('Snapshot listener error:', err.code);
+    });
+
+    // Track online/offline
+    window.addEventListener('online', () => {
+      enableNetwork(db).then(() => { if(window.cloudSave) window.cloudSave(); });
+      const status = document.getElementById('syncStatus');
+      if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Online'; }
+    });
+    window.addEventListener('offline', () => {
+      disableNetwork(db);
+      const status = document.getElementById('syncStatus');
+      if(status){ status.className='sync-status sync-error'; status.textContent='⚡ Offline'; }
+    });
 
   } else {
     currentUser = null;
@@ -3225,25 +3265,41 @@ function saveWeekNotes(){
 }
 
 
-// ══ SERVICE WORKER ══
+// ══ SERVICE WORKER + AUTO UPDATE ══
+let swReg = null;
+window.applyUpdate = function(){
+  if(swReg && swReg.waiting){
+    swReg.waiting.postMessage('skipWaiting');
+  }
+  document.getElementById('updateBanner').style.display='none';
+};
 if('serviceWorker' in navigator){
-  // Unregister any old service workers to force fresh load
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => {
-      // If old cache, unregister and reload
-      reg.active && caches.keys().then(keys => {
-        if(keys.some(k => k !== 'unitracker-v3')) {
-          reg.unregister().then(() => location.reload());
-        }
+  window.addEventListener('load', async () => {
+    try {
+      swReg = await navigator.serviceWorker.register('./service-worker.js');
+      console.log('UniTracker: SW registered');
+
+      // New SW waiting — show update banner
+      if(swReg.waiting){
+        document.getElementById('updateBanner').style.display='flex';
+      }
+      swReg.addEventListener('updatefound', () => {
+        const newSW = swReg.installing;
+        newSW.addEventListener('statechange', () => {
+          if(newSW.state === 'installed' && navigator.serviceWorker.controller){
+            document.getElementById('updateBanner').style.display='flex';
+          }
+        });
       });
-    });
-  });
-}
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(()=>console.log('UniTracker: Service Worker registered'))
-      .catch(e=>console.log('SW error:',e));
+      // When SW takes over, reload to get fresh app
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+      // Check for updates every 60 seconds
+      setInterval(() => swReg.update(), 60000);
+    } catch(e) {
+      console.log('SW error:', e);
+    }
   });
 }
 
