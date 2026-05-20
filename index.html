@@ -432,6 +432,153 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
 .sync-ok{background:#f0fdf4;color:#10b981;}
 .sync-saving{background:#fffbeb;color:#f59e0b;}
 .sync-error{background:#fef2f2;color:#ef4444;}
+
+/* ── DARK MODE ── */
+body.dark-mode{--dark:#e2e8f0;--gray:#94a3b8;--card-bg:#1e293b;--shadow:0 4px 6px -1px rgba(0,0,0,.3);}
+body.dark-mode .card{background:#1e293b;color:#e2e8f0;}
+body.dark-mode header{background:#0f172a;}
+body.dark-mode nav{background:#0f172a;border-color:#334155;}
+body.dark-mode .nav-btn{color:#94a3b8;}
+body.dark-mode .nav-btn.active{background:var(--primary);color:#fff;}
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#334155;color:#e2e8f0;border-color:#475569;}
+body.dark-mode .modal-content{background:#1e293b;color:#e2e8f0;}
+body.dark-mode .assign-item,body.dark-mode .exam-card{background:#334155;}
+body.dark-mode .note-card{background:#334155!important;color:#e2e8f0;}
+body.dark-mode .inner-tab{background:#334155;color:#94a3b8;}
+body.dark-mode .inner-tab.active{background:var(--primary);color:#fff;}
+body.dark-mode .filter-btn{background:#334155;color:#94a3b8;}
+body.dark-mode .filter-btn.active{background:var(--primary);color:#fff;}
+body.dark-mode .stat-card{background:#334155;}
+body.dark-mode .job-card{background:#334155;}
+body.dark-mode .job-col{background:#1e293b;}
+body.dark-mode .job-col-header{background:#334155;color:#e2e8f0;}
+body.dark-mode .course-card{opacity:.95;}
+body.dark-mode .login-card{background:#1e293b;color:#e2e8f0;}
+body.dark-mode .login-card p{color:#94a3b8;}
+body.dark-mode .google-btn{background:#334155;border-color:#475569;color:#e2e8f0;}
+body.dark-mode table th{background:#334155;}
+body.dark-mode table td{border-color:#334155;}
+body.dark-mode .cal-day{background:#334155;}
+body.dark-mode .cal-day.today{background:#312e81;}
+body.dark-mode .cal-day.other-month{background:#1e293b;opacity:.5;}
+body.dark-mode .cal-header{background:#0f172a;color:#e2e8f0;}
+body.dark-mode .topic-item{background:#334155;color:#e2e8f0;}
+body.dark-mode .topic-item:hover{background:#475569;}
+body.dark-mode .attend-row{background:#334155;}
+body.dark-mode .pipeline-node{background:#334155;color:#e2e8f0;}
+
+/* ── TOGGLE SWITCH ── */
+.toggle-switch{position:relative;display:inline-block;width:48px;height:26px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:26px;transition:.3s;}
+.toggle-slider:before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+input:checked + .toggle-slider{background:var(--primary);}
+input:checked + .toggle-slider:before{transform:translateX(22px);}
+
+/* ── CALENDAR ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-header{text-align:center;padding:8px 4px;font-weight:700;font-size:.75rem;color:var(--gray);background:#f8fafc;border-radius:6px;}
+.cal-day{min-height:80px;padding:6px;border-radius:8px;background:#f8fafc;cursor:pointer;transition:all .2s;position:relative;}
+.cal-day:hover{background:#eef2ff;}
+.cal-day.today{background:#eef2ff;border:2px solid var(--primary);}
+.cal-day.other-month{opacity:.4;}
+.cal-day.has-items{background:#faf5ff;}
+.cal-date{font-size:.78rem;font-weight:700;color:var(--dark);margin-bottom:3px;}
+.cal-event{font-size:.65rem;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.cal-event.urgent{background:#fee2e2;color:#ef4444;}
+.cal-event.warning{background:#fef3c7;color:#d97706;}
+.cal-event.normal{background:#e0e7ff;color:#4f46e5;}
+.cal-event.exam{background:#fce7f3;color:#db2777;}
+
+/* ── COURSE TOPICS ── */
+.topic-sidebar{border-right:2px solid #e2e8f0;padding-right:16px;min-width:200px;}
+.topic-item{padding:8px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:all .2s;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.topic-item:hover{background:#eef2ff;color:var(--primary);}
+.topic-item.active{background:#eef2ff;color:var(--primary);font-weight:600;}
+.topic-item.subtopic{padding-left:28px;font-size:.8rem;color:var(--gray);}
+.topic-item.subtopic.active{color:var(--primary);}
+.topic-note-area{flex:1;min-width:0;}
+.topic-layout{display:flex;gap:20px;align-items:flex-start;}
+
+/* ── ATTENDANCE ── */
+.attend-course{margin-bottom:18px;}
+.attend-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.attend-bar-bg{height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;flex:1;min-width:100px;}
+.attend-bar-fill{height:100%;border-radius:5px;transition:width .5s;}
+.attend-weeks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.attend-week{width:36px;height:36px;border-radius:8px;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.72rem;font-weight:700;transition:all .2s;}
+.attend-week.present{background:#10b981;border-color:#10b981;color:#fff;}
+.attend-week.absent{background:#ef4444;border-color:#ef4444;color:#fff;}
+.attend-week.late{background:#f59e0b;border-color:#f59e0b;color:#fff;}
+.attend-week:hover{transform:scale(1.1);}
+
+/* ── PIPELINE TREE ── */
+.pipeline-tree{padding:20px;overflow-x:auto;}
+.pipeline-stage{display:flex;flex-direction:column;align-items:center;gap:8px;}
+.pipeline-row{display:flex;gap:0;align-items:flex-start;justify-content:center;}
+.pipeline-node{background:#fff;border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;min-width:140px;max-width:160px;text-align:center;cursor:pointer;transition:all .2s;position:relative;font-size:.82rem;}
+.pipeline-node:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.pipeline-node .pn-company{font-weight:700;font-size:.88rem;margin-bottom:2px;}
+.pipeline-node .pn-title{font-size:.72rem;color:var(--gray);}
+.pipeline-node .pn-status{font-size:.65rem;padding:2px 7px;border-radius:8px;margin-top:4px;display:inline-block;font-weight:600;}
+.pipeline-connector{display:flex;flex-direction:column;align-items:center;}
+.pipeline-line{width:2px;height:24px;background:#e2e8f0;}
+.pipeline-branch{display:flex;gap:20px;position:relative;}
+.pipeline-branch::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:calc(100% - 140px);height:2px;background:#e2e8f0;}
+.pn-saved{border-color:#94a3b8;background:#f8fafc;}
+.pn-applied{border-color:#6366f1;background:#eef2ff;}
+.pn-interview{border-color:#f59e0b;background:#fffbeb;}
+.pn-offer{border-color:#10b981;background:#f0fdf4;}
+.pn-rejected{border-color:#ef4444;background:#fef2f2;opacity:.7;}
+
+/* ── PROJECT MEMBERS ── */
+.member-chip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;color:var(--primary);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600;margin:3px;}
+.task-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border-radius:8px;margin-bottom:6px;}
+.task-item.done{opacity:.6;text-decoration:line-through;}
+.task-assignee{font-size:.72rem;background:#e0e7ff;color:var(--primary);padding:2px 7px;border-radius:8px;font-weight:600;}
+
+/* ── MOBILE LAYOUT ── */
+@media(max-width:768px){
+  .container{padding:8px;}
+  header{padding:10px 12px;flex-wrap:wrap;gap:8px;}
+  header h1{font-size:1.2rem;}
+  .user-info{gap:6px;}
+  .user-info input{width:100px;font-size:.78rem;padding:6px 8px;}
+  nav{padding:6px 8px;gap:4px;overflow-x:auto;flex-wrap:nowrap;justify-content:flex-start;}
+  .nav-btn{padding:7px 10px;font-size:.72rem;white-space:nowrap;flex-shrink:0;}
+  .card{padding:14px;border-radius:14px;margin-bottom:12px;}
+  .card-header{flex-wrap:wrap;gap:8px;}
+  .card-header h2{font-size:1rem;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .stat-card{padding:12px;}
+  .stat-card .val{font-size:1.6rem;}
+  .course-grid{grid-template-columns:1fr;}
+  .form-row{flex-direction:column;}
+  .modal-content{margin:10px;padding:20px 16px;max-height:90vh;overflow-y:auto;}
+  .job-kanban{flex-direction:column;}
+  .job-col{min-width:unset;width:100%;}
+  .topic-layout{flex-direction:column;}
+  .topic-sidebar{border-right:none;border-bottom:2px solid #e2e8f0;padding-right:0;padding-bottom:12px;min-width:unset;width:100%;}
+  .pipeline-branch{flex-direction:column;align-items:center;}
+  .pipeline-branch::before{display:none;}
+  .cal-day{min-height:50px;padding:4px;}
+  .cal-event{display:none;}
+  .cal-day.has-items::after{content:'•';color:var(--primary);font-size:1rem;position:absolute;bottom:2px;right:4px;}
+  .attend-week{width:28px;height:28px;font-size:.65rem;}
+  .gym-ex-card{padding:12px;}
+  .inner-tabs{flex-wrap:wrap;gap:4px;}
+  .inner-tab{font-size:.78rem;padding:6px 10px;}
+  .login-card{padding:28px 20px;}
+  .sync-status{display:none!important;}
+}
+@media(max-width:480px){
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .cal-header{font-size:.6rem;padding:4px 2px;}
+  .cal-date{font-size:.65rem;}
+  nav{gap:2px;}
+  .nav-btn{padding:6px 8px;font-size:.68rem;}
+}
+
 </style>
 </head>
 <body>
@@ -484,6 +631,8 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
   <button class="nav-btn" data-tab="body">⚖️ Body</button>
   <button class="nav-btn" data-tab="gym">🏋️ Gym</button>
   <button class="nav-btn" data-tab="jobs">💼 Jobs</button>
+  <button class="nav-btn" data-tab="calendar">📅 Calendar</button>
+  <button class="nav-btn" data-tab="attendance">✅ Attendance</button>
   <button class="nav-btn" data-tab="settings">⚙️ Settings</button>
 </nav>
 
@@ -799,12 +948,60 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
       <div class="stat-card" style="border-left:4px solid #10b981"><h3>Offer</h3><div class="val" id="jobStatOffer" style="color:#10b981">0</div></div>
       <div class="stat-card" style="border-left:4px solid #ef4444"><h3>Rejected</h3><div class="val" id="jobStatRejected" style="color:#ef4444">0</div></div>
     </div>
-    <div class="job-kanban" id="jobKanban"></div>
+    <div class="inner-tabs" style="margin-bottom:14px">
+      <button class="inner-tab active" data-panel="job-panel-kanban">📋 Kanban Board</button>
+      <button class="inner-tab" data-panel="job-panel-pipeline">🌿 Pipeline Tree</button>
+    </div>
+    <div class="inner-panel active" id="job-panel-kanban">
+      <div class="job-kanban" id="jobKanban"></div>
+    </div>
+    <div class="inner-panel" id="job-panel-pipeline">
+      <div id="jobPipeline"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="calendar" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>📅 Assignment Calendar</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-secondary btn-sm" onclick="calPrev()">◀</button>
+        <span id="calTitle" style="font-weight:700;font-size:1rem;min-width:140px;text-align:center"></span>
+        <button class="btn btn-secondary btn-sm" onclick="calNext()">▶</button>
+        <button class="btn btn-primary btn-sm" onclick="calToday()">Today</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div id="calDayDetail" style="display:none;margin-top:16px;padding:14px;background:#f8fafc;border-radius:12px;border-left:4px solid var(--primary)">
+      <h4 id="calDayTitle" style="margin-bottom:8px"></h4>
+      <div id="calDayItems"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ATTENDANCE -->
+<div id="attendance" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>✅ Attendance Tracker</h2></div>
+    <div id="attendanceList"><div class="empty"><div class="ei">✅</div><p>Add courses to track attendance</p></div></div>
   </div>
 </div>
 
 <!-- SETTINGS -->
 <div id="settings" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>🌙 Appearance</h2></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <span style="font-weight:600;font-size:.95rem">Dark Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span style="font-size:.85rem;color:var(--gray)" id="darkModeLabel">Off</span>
+    </div>
+  </div>
   <div class="card" style="border:2px solid #10b981">
     <div class="card-header"><h2>💾 Data Backup &amp; Restore</h2></div>
     <p style="color:var(--gray);font-size:.87rem;margin-bottom:16px">Export all your data as a JSON file to back it up or transfer to another device. Import to restore.</p>
@@ -1131,7 +1328,7 @@ th{background:#f8fafc;color:var(--dark);font-weight:600;}
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1150,6 +1347,7 @@ const db = getFirestore(fbApp);
 let currentUser = null;
 let syncTimeout = null;
 let unsubscribeSnapshot = null;
+window.currentUser = null; // expose for debugging
 
 // ── AUTH ──
 window.signInWithGoogle = async function() {
@@ -1159,7 +1357,14 @@ window.signInWithGoogle = async function() {
   err.textContent = '';
   try {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    // Use redirect on mobile/PWA (popup blocked), popup on desktop
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if(isMobile || isStandalone) {
+      await signInWithRedirect(auth, provider);
+    } else {
+      await signInWithPopup(auth, provider);
+    }
   } catch(e) {
     err.textContent = '❌ ' + (e.message || 'Sign in failed');
     btn.disabled = false;
@@ -1170,6 +1375,7 @@ window.signInWithGoogle = async function() {
 window.signOut = async function() {
   if(!confirm('Sign out of UniTracker?')) return;
   if(unsubscribeSnapshot) unsubscribeSnapshot();
+  currentUser = null; window.currentUser = null;
   await fbSignOut(auth);
   document.getElementById('userMenu').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
@@ -1191,23 +1397,28 @@ document.addEventListener('click', e => {
 
 // ── CLOUD SAVE ──
 window.cloudSave = async function() {
-  if(!currentUser) return;
+  const user = currentUser || window.currentUser;
+  if(!user) { console.log('cloudSave: no user'); return; }
   const status = document.getElementById('syncStatus');
   if(status){ status.className='sync-status sync-saving'; status.textContent='⏳ Saving…'; status.style.display='inline-block'; }
   if(syncTimeout) clearTimeout(syncTimeout);
   syncTimeout = setTimeout(async () => {
     try {
       const dataToSave = JSON.parse(JSON.stringify(window.D));
-      await setDoc(doc(db, 'users', currentUser.uid), { data: dataToSave, updatedAt: new Date().toISOString() });
+      await setDoc(doc(db, 'users', user.uid), { data: dataToSave, updatedAt: new Date().toISOString() });
       if(status){ status.className='sync-status sync-ok'; status.textContent='✓ Synced'; }
+      console.log('Saved to Firestore for', user.email);
     } catch(e) {
-      console.error('Cloud save error:', e);
-      if(status){ status.className='sync-status sync-error'; status.textContent='⚠ Sync failed'; }
+      console.error('Cloud save error:', e.code, e.message);
+      if(status){ status.className='sync-status sync-error'; status.textContent='⚠ '+e.code; }
     }
   }, 1500);
 };
 
 // ── AUTH STATE ──
+// Handle redirect result on mobile
+getRedirectResult(auth).catch(e => console.log('Redirect result error:', e));
+
 onAuthStateChanged(auth, async (user) => {
   const loginScreen = document.getElementById('loginScreen');
   const container = document.querySelector('.container');
@@ -1216,6 +1427,7 @@ onAuthStateChanged(auth, async (user) => {
 
   if(user) {
     currentUser = user;
+    window.currentUser = user;
     loginScreen.style.display = 'none';
     container.style.display = 'block';
     nav.style.display = 'flex';
@@ -1295,6 +1507,7 @@ window._refreshAll = function(){
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
   renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
   refreshSwCourses();fillGymExSelect();
+  renderAttendance();renderCalendar();initDarkMode();
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
@@ -1314,7 +1527,7 @@ function load(){
     if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
     if(!D.dayTypes)D.dayTypes={monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'};
     if(!D.standards)D.standards={daily:0,weekly:0,credits:0,reminderDays:2};
-    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;
+    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;if(!D.topics)D.topics={};if(!D.attendance)D.attendance={};if(D.darkMode===undefined)D.darkMode=false;
     el('studentName').value=D.student.name||'';el('semester').value=D.student.semester||'';el('budgetInput').value=D.budget||'';
   }
 }
@@ -1341,6 +1554,8 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='gym'){renderGymLog();renderGymExercises();renderGymCharts();fillGymExSelect();}
   if(t==='jobs')renderJobs();
   if(t==='settings'){renderBgOptions();}
+  if(t==='calendar'){renderCalendar();}
+  if(t==='attendance'){renderAttendance();}
 }));
 document.querySelectorAll('.inner-tab').forEach(b=>b.addEventListener('click',()=>{
   const parent=b.closest('.card,.tab-content');
@@ -1449,6 +1664,7 @@ function renderCourses(){
         <button class="cc-btn" onclick="deleteCourse(${co.id})">🗑️</button>
         <button class="cc-btn" onclick="openGCForCourse(${co.id})">🧮 Calc</button>
         <button class="cc-btn" onclick="showCourseWeeks(${co.id})">📅 Weeks</button>
+        <button class="cc-btn" onclick="openTopicModal(${co.id})">📋 Topics</button>
       </div>
     </div>`;
   }).join('');}
@@ -1561,8 +1777,131 @@ function getProject(id){return D.projects.find(p=>p.id===id);}
 function renderProjects(){
   const container=el('projectList');
   if(!D.projects.length){container.innerHTML='<div class="empty"><div class="ei">🗂️</div><p>No projects yet. Click "+ Project" above.</p></div>';return;}
-  container.innerHTML=[...D.projects].sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate)).map(p=>buildProjectHTML(p)).join('');
+  container.innerHTML=D.projects.map(p=>{
+    const tasks=p.subtasks||[];const members=p.members||[];
+    const done=tasks.filter(t=>t.completed).length;
+    const pct=tasks.length?Math.round(done/tasks.length*100):0;
+    const daysLeft=p.dueDate?Math.ceil((new Date(p.dueDate)-new Date())/864e5):null;
+    const statusColors={active:'#6366f1',completed:'#10b981','on-hold':'#f59e0b',planning:'#94a3b8'};
+    return`<div class="card" style="margin-bottom:12px;border-left:4px solid ${statusColors[p.status]||'#6366f1'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <h3 style="font-size:1rem;margin-bottom:4px">${esc(p.name)}</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <span style="font-size:.72rem;background:${statusColors[p.status]||'#6366f1'}22;color:${statusColors[p.status]||'#6366f1'};padding:2px 8px;border-radius:8px;font-weight:600">${p.status}</span>
+            ${daysLeft!==null?`<span style="font-size:.72rem;color:${daysLeft<3?'#ef4444':daysLeft<7?'#f59e0b':'var(--gray)'}">${daysLeft<0?'Overdue':daysLeft===0?'Due today':'Due in '+daysLeft+'d'}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="openProjectDetail(${p.id})">👥 Manage</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id})">🗑️</button>
+        </div>
+      </div>
+      ${tasks.length?`<div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--gray);margin-bottom:4px"><span>Tasks</span><span>${done}/${tasks.length} complete</span></div>
+        <div style="height:6px;background:#e2e8f0;border-radius:3px"><div style="height:100%;background:${statusColors[p.status]||'#6366f1'};border-radius:3px;width:${pct}%"></div></div>
+      </div>`:''}
+      ${members.length?`<div style="margin-top:8px">${members.map(m=>`<span class="member-chip">👤 ${esc(m.name)}</span>`).join('')}</div>`:''}
+    </div>`;
+  }).join('');
 }
+
+function openProjectDetail(id){
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  if(!p.members)p.members=[];if(!p.subtasks)p.subtasks=[];
+  let modal=el('projectDetailModal');
+  if(!modal){
+    modal=document.createElement('div');modal.className='modal';modal.id='projectDetailModal';
+    modal.innerHTML=`<div class="modal-content" style="max-width:700px">
+      <div class="modal-header"><h2 id="pdTitle"></h2><button class="close-btn" onclick="closeModal('projectDetailModal')">&times;</button></div>
+      <div class="inner-tabs" style="margin-bottom:14px">
+        <button class="inner-tab active" data-panel="pd-panel-tasks">📋 Tasks</button>
+        <button class="inner-tab" data-panel="pd-panel-members">👥 Members</button>
+      </div>
+      <div class="inner-panel active" id="pd-panel-tasks">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="pdNewTask" placeholder="New task…" style="flex:1">
+          <select id="pdTaskAssignee" style="max-width:140px"><option value="">Unassigned</option></select>
+          <button class="btn btn-primary btn-sm" onclick="addProjectTask()">+ Add</button>
+        </div>
+        <div id="pdTaskList"></div>
+      </div>
+      <div class="inner-panel" id="pd-panel-members">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="pdNewMember" placeholder="Member name…" style="flex:1">
+          <input type="text" id="pdNewRole" placeholder="Role (optional)" style="max-width:140px">
+          <button class="btn btn-primary btn-sm" onclick="addProjectMember()">+ Add</button>
+        </div>
+        <div id="pdMemberList"></div>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('active');});
+  }
+  modal._pid=id;
+  el('pdTitle').textContent=p.name;
+  renderPDTasks(p);renderPDMembers(p);
+  modal.classList.add('active');
+}
+function renderPDTasks(p){
+  const assigneeSelect=el('pdTaskAssignee');
+  assigneeSelect.innerHTML='<option value="">Unassigned</option>'+(p.members||[]).map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  const tasks=p.subtasks||[];
+  el('pdTaskList').innerHTML=tasks.length?tasks.map(t=>{
+    const member=(p.members||[]).find(m=>m.id===t.assigneeId);
+    return`<div class="task-item${t.completed?' done':''}">
+      <input type="checkbox" ${t.completed?'checked':''} onchange="toggleProjectTask(${p.id},${t.id},this.checked)" style="width:16px;height:16px;cursor:pointer">
+      <span style="flex:1">${esc(t.name)}</span>
+      ${member?`<span class="task-assignee">${esc(member.name)}</span>`:''}
+      <button onclick="deleteProjectTask(${p.id},${t.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+    </div>`;
+  }).join(''):'<p style="color:var(--gray);font-size:.85rem">No tasks yet</p>';
+}
+function renderPDMembers(p){
+  const members=p.members||[];
+  el('pdMemberList').innerHTML=members.length?members.map(m=>{
+    const tasks=(p.subtasks||[]).filter(t=>t.assigneeId===m.id);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f8fafc;border-radius:10px;margin-bottom:8px;flex-wrap:wrap">
+      <div class="member-chip">👤 ${esc(m.name)}</div>
+      ${m.role?`<span style="font-size:.75rem;color:var(--gray)">${esc(m.role)}</span>`:''}
+      <span style="font-size:.75rem;color:var(--gray);margin-left:auto">${tasks.length} task${tasks.length!==1?'s':''}</span>
+      <button onclick="deleteProjectMember(${p.id},${m.id})" style="background:none;border:none;cursor:pointer;color:#ef4444">✕</button>
+    </div>`;
+  }).join(''):'<p style="color:var(--gray);font-size:.85rem">No members yet</p>';
+}
+function addProjectTask(){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  const name=el('pdNewTask').value.trim();if(!name)return;
+  const assigneeId=el('pdTaskAssignee').value?parseInt(el('pdTaskAssignee').value):null;
+  if(!p.subtasks)p.subtasks=[];
+  p.subtasks.push({id:uid(),name,assigneeId,completed:false});
+  el('pdNewTask').value='';save();renderPDTasks(p);renderProjects();
+}
+function deleteProjectTask(pid,tid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  p.subtasks=(p.subtasks||[]).filter(t=>t.id!==tid);save();renderPDTasks(p);renderProjects();
+}
+function toggleProjectTask(pid,tid,done){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const t=(p.subtasks||[]).find(x=>x.id===tid);if(t)t.completed=done;save();renderPDTasks(p);renderProjects();
+}
+function addProjectMember(){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  const name=el('pdNewMember').value.trim();if(!name)return;
+  const role=el('pdNewRole').value.trim();
+  if(!p.members)p.members=[];
+  p.members.push({id:uid(),name,role});
+  el('pdNewMember').value='';el('pdNewRole').value='';save();renderPDMembers(p);renderPDTasks(p);renderProjects();
+}
+function deleteProjectMember(pid,mid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  p.members=(p.members||[]).filter(m=>m.id!==mid);
+  p.subtasks=(p.subtasks||[]).map(t=>({...t,assigneeId:t.assigneeId===mid?null:t.assigneeId}));
+  save();renderPDMembers(p);renderPDTasks(p);renderProjects();
+}
+
 function buildProjectHTML(p){
   const st=p.subtasks||[],mb=p.members||[],lg=p.log||[];
   const course=D.courses.find(c=>c.id==p.courseId);
@@ -2553,7 +2892,21 @@ function saveWeekNotes(){
   save();closeModal('weekNotesModal');
 }
 
+
 // ══ SERVICE WORKER ══
+if('serviceWorker' in navigator){
+  // Unregister any old service workers to force fresh load
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => {
+      // If old cache, unregister and reload
+      reg.active && caches.keys().then(keys => {
+        if(keys.some(k => k !== 'unitracker-v3')) {
+          reg.unregister().then(() => location.reload());
+        }
+      });
+    });
+  });
+}
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./service-worker.js')
@@ -2561,6 +2914,257 @@ if('serviceWorker' in navigator){
       .catch(e=>console.log('SW error:',e));
   });
 }
+
+
+// ══ DARK MODE ══
+function toggleDarkMode(on){
+  document.body.classList.toggle('dark-mode', on);
+  D.darkMode = on;
+  save();
+  el('darkModeLabel').textContent = on ? 'On' : 'Off';
+}
+function initDarkMode(){
+  if(D.darkMode){
+    document.body.classList.add('dark-mode');
+    const t = el('darkModeToggle');
+    if(t){ t.checked = true; }
+    const l = el('darkModeLabel');
+    if(l) l.textContent = 'On';
+  }
+}
+
+// ══ CALENDAR ══
+let calDate = new Date();
+function renderCalendar(){
+  const year = calDate.getFullYear(), month = calDate.getMonth();
+  el('calTitle').textContent = calDate.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+  const grid = el('calGrid');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  let html = days.map(d=>`<div class="cal-header">${d}</div>`).join('');
+  const first = new Date(year, month, 1);
+  let startDay = first.getDay() - 1; if(startDay < 0) startDay = 6;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  // Collect all events for the month
+  const events = {};
+  const addEvent = (dateStr, label, type) => {
+    if(!events[dateStr]) events[dateStr] = [];
+    events[dateStr].push({label, type});
+  };
+  D.assignments.filter(a=>!a.completed&&a.dueDate).forEach(a=>{
+    const d = new Date(a.dueDate); const ds = d.toISOString().split('T')[0];
+    const diff = Math.ceil((d-today)/864e5);
+    addEvent(ds, a.title, diff<=2?'urgent':diff<=7?'warning':'normal');
+  });
+  D.exams.filter(e=>e.date).forEach(e=>{
+    addEvent(e.date, '📝 '+e.name, 'exam');
+  });
+  // Render cells
+  let day = 1, nextDay = 1;
+  for(let i = 0; i < 42; i++){
+    let dateNum, dateStr, isOther = false;
+    if(i < startDay){ dateNum = daysInPrev - startDay + i + 1; isOther = true; dateStr = new Date(year, month-1, dateNum).toISOString().split('T')[0]; }
+    else if(day <= daysInMonth){ dateNum = day; dateStr = new Date(year, month, day).toISOString().split('T')[0]; day++; }
+    else{ dateNum = nextDay; isOther = true; dateStr = new Date(year, month+1, nextDay).toISOString().split('T')[0]; nextDay++; }
+    const isToday = dateStr === today.toISOString().split('T')[0];
+    const dayEvents = events[dateStr] || [];
+    html += `<div class="cal-day${isOther?' other-month':''}${isToday?' today':''}${dayEvents.length?' has-items':''}" onclick="showCalDay('${dateStr}')">
+      <div class="cal-date">${dateNum}</div>
+      ${dayEvents.slice(0,3).map(e=>`<div class="cal-event ${e.type}">${esc(e.label.substring(0,18))}</div>`).join('')}
+      ${dayEvents.length>3?`<div style="font-size:.6rem;color:var(--gray)">+${dayEvents.length-3} more</div>`:''}
+    </div>`;
+  }
+  grid.innerHTML = html;
+  el('calDayDetail').style.display = 'none';
+}
+function showCalDay(dateStr){
+  const d = new Date(dateStr);
+  const label = d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+  const assigns = D.assignments.filter(a=>a.dueDate===dateStr&&!a.completed);
+  const exams = D.exams.filter(e=>e.date===dateStr);
+  if(!assigns.length && !exams.length){ el('calDayDetail').style.display='none'; return; }
+  el('calDayTitle').textContent = label;
+  el('calDayItems').innerHTML = [
+    ...exams.map(e=>`<div style="padding:8px;background:#fce7f3;border-radius:8px;margin-bottom:6px"><strong>📝 ${esc(e.name)}</strong>${e.time?` at ${e.time}`:''}</div>`),
+    ...assigns.map(a=>`<div style="padding:8px;background:#eef2ff;border-radius:8px;margin-bottom:6px"><strong>${esc(a.title)}</strong> <span class="pri pri-${a.priority}">${a.priority}</span></div>`)
+  ].join('');
+  el('calDayDetail').style.display = 'block';
+}
+function calPrev(){ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); }
+function calNext(){ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); }
+function calToday(){ calDate = new Date(); renderCalendar(); }
+
+// ══ COURSE TOPICS ══
+function openTopicModal(courseId){
+  const course = D.courses.find(c=>c.id===courseId); if(!course) return;
+  if(!D.topics) D.topics = {};
+  if(!D.topics[courseId]) D.topics[courseId] = [];
+  let modal = el('topicModal');
+  if(!modal){
+    modal = document.createElement('div'); modal.className='modal'; modal.id='topicModal';
+    modal.innerHTML=`<div class="modal-content" style="max-width:900px;height:85vh;display:flex;flex-direction:column">
+      <div class="modal-header"><h2 id="topicModalTitle"></h2><button class="close-btn" onclick="closeModal('topicModal')">&times;</button></div>
+      <div class="topic-layout" style="flex:1;overflow:hidden;gap:16px">
+        <div class="topic-sidebar" style="overflow-y:auto;max-height:100%">
+          <div style="margin-bottom:10px">
+            <input type="text" id="topicNewName" placeholder="New topic…" style="width:100%;margin-bottom:6px">
+            <input type="text" id="topicNewSub" placeholder="New subtopic…" style="width:100%;margin-bottom:6px">
+            <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:4px" onclick="addTopic(false)">+ Topic</button>
+            <button class="btn btn-secondary btn-sm" style="width:100%" onclick="addTopic(true)">+ Subtopic</button>
+          </div>
+          <div id="topicList"></div>
+        </div>
+        <div class="topic-note-area" style="overflow-y:auto;max-height:100%;display:flex;flex-direction:column">
+          <div id="topicNoteHeader" style="font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--primary)">Select a topic</div>
+          <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical" oninput="saveTopicNote()"></textarea>
+        </div>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('active');});
+  }
+  modal._cid = courseId;
+  el('topicModalTitle').textContent = course.name + ' — Topics';
+  renderTopicList(courseId);
+  modal.classList.add('active');
+}
+let activeTopic = null;
+function renderTopicList(courseId){
+  if(!D.topics) D.topics = {};
+  if(!D.topics[courseId]) D.topics[courseId] = [];
+  const topics = D.topics[courseId];
+  el('topicList').innerHTML = topics.length ? topics.map((t,i)=>`
+    <div class="topic-item${!t.parentId&&activeTopic===t.id?' active':''}${t.parentId?' subtopic':''}${t.parentId&&activeTopic===t.id?' active':''}" onclick="selectTopic(${t.id},'${courseId}')">
+      ${t.parentId?'└ ':'📌 '}<span style="flex:1">${esc(t.name)}</span>
+      <button onclick="event.stopPropagation();deleteTopic(${t.id},'${courseId}')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem">✕</button>
+    </div>`).join('') : '<p style="color:var(--gray);font-size:.82rem">No topics yet</p>';
+}
+function addTopic(isSub){
+  const modal = el('topicModal'); if(!modal||!modal._cid) return;
+  const cid = modal._cid;
+  const name = el(isSub?'topicNewSub':'topicNewName').value.trim(); if(!name) return;
+  if(!D.topics[cid]) D.topics[cid]=[];
+  const parentId = isSub && activeTopic ? activeTopic : null;
+  D.topics[cid].push({id:uid(), name, parentId, note:''});
+  el(isSub?'topicNewSub':'topicNewName').value='';
+  save(); renderTopicList(cid);
+}
+function selectTopic(id, courseId){
+  activeTopic = id;
+  const topic = D.topics[courseId]?.find(t=>t.id===id); if(!topic) return;
+  el('topicNoteHeader').textContent = topic.name;
+  el('topicNoteText').value = topic.note || '';
+  renderTopicList(courseId);
+}
+function saveTopicNote(){
+  const modal = el('topicModal'); if(!modal||!modal._cid||!activeTopic) return;
+  const cid = modal._cid;
+  const topic = D.topics[cid]?.find(t=>t.id===activeTopic); if(!topic) return;
+  topic.note = el('topicNoteText').value;
+  save();
+}
+function deleteTopic(id, courseId){
+  if(!D.topics[courseId]) return;
+  D.topics[courseId] = D.topics[courseId].filter(t=>t.id!==id&&t.parentId!==id);
+  if(activeTopic===id) activeTopic=null;
+  save(); renderTopicList(courseId);
+}
+
+// ══ ATTENDANCE ══
+function renderAttendance(){
+  if(!D.attendance) D.attendance={};
+  const weeks = D.semSettings?.weeks||12;
+  const c = el('attendanceList');
+  const active = D.courses.filter(co=>!co.archived);
+  if(!active.length){c.innerHTML='<div class="empty"><div class="ei">✅</div><p>Add courses first</p></div>';return;}
+  c.innerHTML = active.map(course=>{
+    if(!D.attendance[course.id]) D.attendance[course.id]={};
+    const att = D.attendance[course.id];
+    const total = Object.keys(att).length;
+    const present = Object.values(att).filter(v=>v==='present').length;
+    const late = Object.values(att).filter(v=>v==='late').length;
+    const pct = total>0?Math.round((present+late*0.5)/weeks*100):0;
+    const barColor = pct>=80?'#10b981':pct>=60?'#f59e0b':'#ef4444';
+    return`<div class="card" style="margin-bottom:14px">
+      <div class="attend-header">
+        <h3 style="font-size:.95rem">${esc(course.name)} <span style="font-size:.78rem;color:var(--gray)">${course.code}</span></h3>
+        <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:300px;margin-left:16px">
+          <div class="attend-bar-bg"><div class="attend-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+          <span style="font-weight:700;color:${barColor};min-width:36px">${pct}%</span>
+        </div>
+        <span style="font-size:.78rem;color:var(--gray)">${present}P ${Object.values(att).filter(v=>v==='absent').length}A ${late}L / ${weeks} weeks</span>
+      </div>
+      <div class="attend-weeks">
+        ${Array.from({length:weeks},(_,i)=>i+1).map(w=>{
+          const status = att[w]||'unset';
+          const colors={present:'present',absent:'absent',late:'late',unset:''};
+          return`<div class="attend-week ${colors[status]}" title="Week ${w}: ${status}" onclick="cycleAttendance(${course.id},${w})">${w}</div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:10px;margin-top:10px;font-size:.75rem;color:var(--gray)">
+        <span>🟢 Present</span><span>🔴 Absent</span><span>🟡 Late</span><span style="font-style:italic">Click to cycle</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function cycleAttendance(courseId, week){
+  if(!D.attendance) D.attendance={};
+  if(!D.attendance[courseId]) D.attendance[courseId]={};
+  const cur = D.attendance[courseId][week]||'unset';
+  const next = {unset:'present',present:'absent',absent:'late',late:'unset'};
+  if(next[cur]==='unset') delete D.attendance[courseId][week];
+  else D.attendance[courseId][week]=next[cur];
+  save(); renderAttendance();
+}
+
+// ══ JOB PIPELINE TREE ══
+function renderJobPipeline(){
+  const c = el('jobPipeline'); if(!c) return;
+  if(!D.jobs||!D.jobs.length){c.innerHTML='<div class="empty"><div class="ei">🌿</div><p>Add job applications to see your pipeline</p></div>';return;}
+  const statuses=['saved','applied','interview','offer','rejected'];
+  const statusColors={saved:'#94a3b8',applied:'#6366f1',interview:'#f59e0b',offer:'#10b981',rejected:'#ef4444'};
+  const statusLabels={saved:'📌 Saved',applied:'📤 Applied',interview:'🎤 Interview',offer:'🎉 Offer',rejected:'❌ Rejected'};
+  // Build tree: each job flows through stages
+  let html=`<div class="pipeline-tree">`;
+  // Show as vertical flow with branches per stage
+  statuses.forEach((status,si)=>{
+    const jobs=D.jobs.filter(j=>j.status===status);
+    if(!jobs.length) return;
+    html+=`<div style="margin-bottom:24px">
+      <div style="text-align:center;margin-bottom:12px">
+        <span style="background:${statusColors[status]}22;color:${statusColors[status]};padding:6px 16px;border-radius:20px;font-weight:700;font-size:.85rem">${statusLabels[status]} (${jobs.length})</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">`;
+    jobs.forEach(j=>{
+      html+=`<div class="pipeline-node pn-${j.status}" onclick="editJob(${j.id})">
+        <div class="pn-company">${esc(j.company)}</div>
+        <div class="pn-title">${esc(j.title)}</div>
+        ${j.salary?`<div style="font-size:.68rem;color:#10b981;font-weight:600;margin-top:3px">💰 ${esc(j.salary)}</div>`:''}
+        ${j.date?`<div style="font-size:.65rem;color:var(--gray);margin-top:2px">${new Date(j.date).toLocaleDateString()}</div>`:''}
+      </div>`;
+    });
+    html+=`</div>`;
+    // Connector line between stages (except last)
+    if(si<statuses.length-1&&D.jobs.some(j=>j.status===statuses[si+1])){
+      html+=`<div style="display:flex;justify-content:center;margin-top:12px"><div style="width:2px;height:24px;background:#e2e8f0"></div></div>`;
+    }
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+  c.innerHTML=html;
+}
+
+// ══ UPDATE RENDERJOBS TO ALSO RENDER PIPELINE ══
+const _origRenderJobs = renderJobs;
+window.renderJobs = function(){
+  _origRenderJobs();
+  renderJobPipeline();
+};
+renderJobs = window.renderJobs;
+
+// ══ UPDATE COURSE CARDS FOR TOPICS BUTTON ══
+// (handled in renderCourses which already has showCourseWeeks — add openTopicModal)
 
 // ══ INIT (non-auth setup only) ══
 el('studentName').addEventListener('change',save);
