@@ -791,6 +791,36 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
 .cal-event.schedule-work{background:#fef3c7;color:#92400e;}
 .cal-event.schedule-study{background:#dcfce7;color:#166534;}
 .cal-event.schedule-other{background:#f1f5f9;color:#475569;}
+
+/* ── NOTES ENHANCEMENTS ── */
+.note-card.pinned{border-color:var(--warning);box-shadow:0 0 0 2px #fef3c7;}
+.note-pin-btn{position:absolute;top:10px;right:34px;background:none;border:none;cursor:pointer;font-size:.85rem;opacity:.4;transition:opacity .2s;}
+.note-pin-btn:hover,.note-pin-btn.pinned{opacity:1;}
+.note-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:600;background:#e0e7ff;color:#4f46e5;margin:2px 2px 0 0;cursor:pointer;}
+.note-tag:hover{background:#c7d2fe;}
+.rich-toolbar{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.rich-btn{padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#fff;cursor:pointer;font-size:.82rem;transition:all .2s;}
+.rich-btn:hover{background:#eef2ff;border-color:var(--primary);}
+.rich-editor{width:100%;min-height:120px;border:2px solid #e2e8f0;border-radius:8px;padding:10px;font-size:.92rem;font-family:inherit;outline:none;}
+.rich-editor:focus{border-color:var(--primary);}
+body.dark-mode .rich-btn{background:#334155;border-color:#475569;color:#e2e8f0;}
+body.dark-mode .note-card.pinned{border-color:var(--warning);}
+
+/* ── GANTT CHART ── */
+.gantt-wrap{overflow-x:auto;padding-bottom:8px;}
+.gantt-row{display:flex;align-items:center;gap:0;margin-bottom:6px;min-height:32px;}
+.gantt-label{width:180px;min-width:180px;font-size:.78rem;font-weight:600;color:var(--dark);padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.gantt-track{flex:1;position:relative;height:24px;background:#f1f5f9;border-radius:4px;overflow:hidden;}
+.gantt-bar{position:absolute;height:100%;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:.65rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;cursor:pointer;transition:opacity .2s;}
+.gantt-bar:hover{opacity:.85;}
+.gantt-header-row{display:flex;margin-bottom:8px;}
+.gantt-header-spacer{width:180px;min-width:180px;flex-shrink:0;}
+.gantt-header-months{flex:1;display:flex;}
+.gantt-month-label{font-size:.7rem;font-weight:700;color:var(--gray);text-align:center;border-left:1px solid #e2e8f0;padding:2px 4px;}
+.gantt-today-line{position:absolute;top:0;bottom:0;width:2px;background:#ef4444;z-index:10;opacity:.7;}
+/* ── TIME TRACKING ── */
+.time-log-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#f8fafc;border-radius:8px;margin-bottom:5px;font-size:.83rem;}
+.time-log-duration{font-weight:700;color:var(--primary);}
 </style>
 </head>
 <body>
@@ -930,6 +960,7 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
     <div class="inner-tabs">
       <button class="inner-tab active" data-panel="panel-assignments">📋 Assignments</button>
       <button class="inner-tab" data-panel="panel-projects">🗂️ Projects</button>
+      <button class="inner-tab" data-panel="panel-gantt">📊 Gantt</button>
     </div>
     <div class="inner-panel active" id="panel-assignments">
       <div class="filter-group">
@@ -951,6 +982,10 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
         </select>
       </div>
       <div id="projectList"><div class="empty"><div class="ei">🗂️</div><p>No projects yet. Click "+ Project" above.</p></div></div>
+    </div>
+    <div class="inner-panel" id="panel-gantt">
+      <div id="ganttChart"><div class="empty"><div class="ei">📊</div><p>Add projects with due dates to see the Gantt chart</p></div></div>
+    </div>
     </div>
   </div>
 </div>
@@ -1232,6 +1267,19 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
 <!-- SETTINGS -->
 <div id="settings" class="tab-content">
   <div class="card">
+    <div class="card-header"><h2>🎓 GPA Scale</h2></div>
+    <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Choose your university's grading scale.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:.88rem" id="gpaScale4Label">
+        <input type="radio" name="gpaScale" value="4" onchange="setGPAScale('4')" style="width:16px;height:16px"> 4.0 Scale (US/Canada)
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:.88rem" id="gpaScale7Label">
+        <input type="radio" name="gpaScale" value="7" onchange="setGPAScale('7')" style="width:16px;height:16px"> 7-point Scale (Australian)
+      </label>
+    </div>
+    <div id="gpaScaleInfo" style="font-size:.82rem;color:var(--gray);background:#f8fafc;border-radius:8px;padding:10px 14px"></div>
+  </div>
+  <div class="card">
     <div class="card-header"><h2>🌙 Appearance</h2></div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <span style="font-weight:600;font-size:.95rem">Dark Mode</span>
@@ -1267,6 +1315,11 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
     <div class="form-row" style="max-width:500px">
       <div class="form-group"><label>Semester Start Date</label><input type="date" id="semStart"></div>
       <div class="form-group"><label>Total Weeks</label><input type="number" id="semWeeks" min="1" max="52" value="12" placeholder="12"></div>
+    </div>
+    <div class="form-group" style="margin-top:14px">
+      <label>Break Weeks (comma separated, e.g. 7,8 for mid-sem break)</label>
+      <input type="text" id="semBreaks" placeholder="e.g. 7,8">
+      <p style="font-size:.75rem;color:var(--gray);margin-top:4px">Classes won't show on the calendar during these semester weeks.</p>
     </div>
     <button class="btn btn-primary" onclick="saveSemSettings()">Save Settings</button>
   </div>
@@ -1392,11 +1445,24 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
       <div class="form-row">
         <div class="form-group"><label>Instructor</label><input type="text" id="cInstructor" placeholder="Dr. Smith"></div>
         <div class="form-group"><label>Grade</label>
-          <select id="cGrade">
-            <option value="">Not graded</option><option value="4.0">A (4.0)</option><option value="3.7">A- (3.7)</option>
-            <option value="3.3">B+ (3.3)</option><option value="3.0">B (3.0)</option><option value="2.7">B- (2.7)</option>
-            <option value="2.3">C+ (2.3)</option><option value="2.0">C (2.0)</option><option value="1.7">C- (1.7)</option>
-            <option value="1.3">D+ (1.3)</option><option value="1.0">D (1.0)</option><option value="0.0">F (0.0)</option>
+          <select id="cGrade" onchange="updateGPA()">
+            <option value="">Not graded</option>
+            <!-- 4.0 scale options -->
+            <optgroup label="4.0 Scale" class="grade-opts-4">
+              <option value="4.0">A (4.0)</option><option value="3.7">A- (3.7)</option>
+              <option value="3.3">B+ (3.3)</option><option value="3.0">B (3.0)</option><option value="2.7">B- (2.7)</option>
+              <option value="2.3">C+ (2.3)</option><option value="2.0">C (2.0)</option><option value="1.7">C- (1.7)</option>
+              <option value="1.3">D+ (1.3)</option><option value="1.0">D (1.0)</option><option value="0.0">F (0.0)</option>
+            </optgroup>
+            <!-- 7-point Australian scale -->
+            <optgroup label="7-point Australian Scale" class="grade-opts-7">
+              <option value="7">HD – High Distinction (7)</option>
+              <option value="6">D – Distinction (6)</option>
+              <option value="5">C – Credit (5)</option>
+              <option value="4">P – Pass (4)</option>
+              <option value="3">CP – Conceded Pass (3)</option>
+              <option value="0">F – Fail (0)</option>
+            </optgroup>
           </select>
         </div>
       </div>
@@ -1518,7 +1584,20 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
     <div class="modal-header"><h2>New Note</h2><button class="close-btn" onclick="closeModal('noteModal')">&times;</button></div>
     <form id="noteForm">
       <div class="form-group"><label>Title</label><input type="text" id="nTitle" required placeholder="Quick thought, reminder…"></div>
-      <div class="form-group"><label>Note</label><textarea id="nBody" rows="6" placeholder="Write anything…"></textarea></div>
+      <div class="form-group">
+        <label>Note</label>
+        <div class="rich-toolbar">
+          <button type="button" class="rich-btn" onclick="richCmd('bold')"><b>B</b></button>
+          <button type="button" class="rich-btn" onclick="richCmd('italic')"><i>I</i></button>
+          <button type="button" class="rich-btn" onclick="richCmd('underline')"><u>U</u></button>
+          <button type="button" class="rich-btn" onclick="richCmd('insertUnorderedList')">• List</button>
+          <button type="button" class="rich-btn" onclick="richCmd('insertOrderedList')">1. List</button>
+          <button type="button" class="rich-btn" onclick="richHeading('h3')">H</button>
+          <button type="button" class="rich-btn" onclick="richCmd('removeFormat')">✕</button>
+        </div>
+        <div id="nBody" class="rich-editor" contenteditable="true" data-placeholder="Write anything…" style="min-height:120px;border:2px solid #e2e8f0;border-radius:8px;padding:10px;outline:none;font-size:.92rem"></div>
+      </div>
+      <div class="form-group"><label>Tag / Folder</label><input type="text" id="nTag" placeholder="e.g. Lecture, Idea, Todo…"></div>
       <div class="form-group"><label>Colour</label>
         <div class="note-colors">
           <div class="nc active" style="background:#fff;border-color:#e2e8f0" data-color="#fff" onclick="pickNoteColor(this,'#fff')"></div>
@@ -1528,6 +1607,10 @@ body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
           <div class="nc" style="background:#fce7f3" data-color="#fce7f3" onclick="pickNoteColor(this,'#fce7f3')"></div>
           <div class="nc" style="background:#ede9fe" data-color="#ede9fe" onclick="pickNoteColor(this,'#ede9fe')"></div>
         </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px">
+        <input type="checkbox" id="nPinned" style="width:16px;height:16px;cursor:pointer">
+        <label for="nPinned" style="cursor:pointer;font-size:.88rem;font-weight:500;color:var(--dark)">📌 Pin this note</label>
       </div>
       <div class="form-group"><label>Link to Course (optional)</label><select id="nCourse"><option value="">None</option></select></div>
       <button type="submit" class="btn btn-primary" style="width:100%">Save Note</button>
@@ -1765,7 +1848,7 @@ onAuthStateChanged(auth, async (user) => {
     // Restore settings
     if(window.D.student){ document.getElementById('studentName').value=window.D.student.name||''; document.getElementById('semester').value=window.D.student.semester||''; }
     if(window.D.bgTheme){ document.body.style.background=window.D.bgTheme; document.body.style.backgroundAttachment='fixed'; }
-    if(window.D.semSettings){ const ss=document.getElementById('semStart'),sw=document.getElementById('semWeeks'); if(ss)ss.value=window.D.semSettings.start||''; if(sw)sw.value=window.D.semSettings.weeks||12; }
+    if(window.D.semSettings){ const ss=document.getElementById('semStart'),sw=document.getElementById('semWeeks'),sb=document.getElementById('semBreaks'); if(ss)ss.value=window.D.semSettings.start||''; if(sw)sw.value=window.D.semSettings.weeks||12; if(sb&&window.D.semSettings.breaks)sb.value=(window.D.semSettings.breaks||[]).join(','); }
     const bi=document.getElementById('budgetInput'); if(bi)bi.value=window.D.budget||'';
 
     // Render everything via exposed function
@@ -1842,7 +1925,7 @@ let D={
 window.D = D;
 window.migrateProjects = function(arr){return(arr||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[],members:Array.isArray(p.members)?p.members:[],log:Array.isArray(p.log)?p.log:[]}));};
 window._refreshAll = function(){
-  renderBgOptions();renderSemProgress();renderWeeklyReview();
+  renderBgOptions();renderSemProgress();renderWeeklyReview();updateGPAScaleUI();
   renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
   renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
@@ -1906,6 +1989,7 @@ document.querySelectorAll('.inner-tab').forEach(b=>b.addEventListener('click',()
   }
   b.classList.add('active');el(b.dataset.panel).classList.add('active');
   if(b.dataset.panel==='gym-panel-charts')renderGymCharts();
+  if(b.dataset.panel==='panel-gantt')renderGantt();
 }));
 document.querySelectorAll('.gc-tab').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.gc-tab').forEach(x=>x.classList.remove('active'));
@@ -2028,6 +2112,39 @@ function renderCourses(){
 }
 function archiveCourse(id){const c=D.courses.find(x=>x.id===id);if(c){c.archived=true;save();renderCourses();updateGPA();renderDashboard();}}
 function unarchiveCourse(id){const c=D.courses.find(x=>x.id===id);if(c){c.archived=false;save();renderCourses();updateGPA();renderDashboard();}}
+
+// ══ GPA SCALE ══
+function setGPAScale(scale){
+  if(!D.student)D.student={};
+  D.student.gpaScale=scale;
+  save();
+  updateGPAScaleUI();
+  updateGPA();
+}
+function updateGPAScaleUI(){
+  const scale=D.student?.gpaScale||'4';
+  document.querySelectorAll('input[name="gpaScale"]').forEach(r=>{r.checked=r.value===scale;});
+  const info=el('gpaScaleInfo');
+  if(info){
+    if(scale==='7'){
+      info.innerHTML='<strong>Australian 7-point:</strong> HD(7) · D(6) · C(5) · P(4) · CP(3) · F(0) — GPA shown out of 7.0';
+    } else {
+      info.innerHTML='<strong>4.0 Scale:</strong> A(4.0) · A-(3.7) · B+(3.3) · B(3.0) · C(2.0) · D(1.0) · F(0.0)';
+    }
+  }
+  // Update grade select label visibility
+  const lbl4=el('gpaScale4Label');const lbl7=el('gpaScale7Label');
+  if(lbl4)lbl4.style.borderColor=scale==='4'?'var(--primary)':'#e2e8f0';
+  if(lbl7)lbl7.style.borderColor=scale==='7'?'var(--primary)':'#e2e8f0';
+}
+function getGPAMax(){ return (D.student?.gpaScale||'4')==='7'?7:4; }
+function gradeLetterAU(p){
+  // p is the numeric grade value
+  if((D.student?.gpaScale||'4')==='7'){
+    if(p>=7)return'HD';if(p>=6)return'D';if(p>=5)return'C';if(p>=4)return'P';if(p>=3)return'CP';return'F';
+  }
+  return gradeLetter(p);
+}
 function gradeLetter(p){if(p>=4.0)return'A';if(p>=3.7)return'A-';if(p>=3.3)return'B+';if(p>=3.0)return'B';if(p>=2.7)return'B-';if(p>=2.3)return'C+';if(p>=2.0)return'C';if(p>=1.7)return'C-';if(p>=1.3)return'D+';if(p>=1.0)return'D';return'F';}
 function showCourseWeeks(courseId){
   const course=D.courses.find(c=>c.id===courseId);if(!course)return;
@@ -2187,6 +2304,7 @@ function openProjectDetail(id){
           <button class="pd-nav-btn" onclick="switchPdSection('milestones',this)">🏁 Milestones</button>
           <button class="pd-nav-btn" onclick="switchPdSection('files',this)">📎 Notes & Links</button>
           <button class="pd-nav-btn" onclick="switchPdSection('log',this)">📋 Activity</button>
+          <button class="pd-nav-btn" onclick="switchPdSection('time',this)">⏱ Time</button>
         </div>
         <div class="project-detail-content">
           <div class="pd-section active" id="pd-overview"></div>
@@ -2196,6 +2314,7 @@ function openProjectDetail(id){
           <div class="pd-section" id="pd-milestones"></div>
           <div class="pd-section" id="pd-files"></div>
           <div class="pd-section" id="pd-log"></div>
+          <div class="pd-section" id="pd-time"></div>
         </div>
       </div>
     </div>`;
@@ -2212,7 +2331,10 @@ function switchPdSection(name,btn){
   document.querySelectorAll('.pd-section').forEach(s=>s.classList.remove('active'));
   btn.classList.add('active');
   el('pd-'+name).classList.add('active');
-  const modal=el('projectDetailModal');if(modal&&modal._pid)renderPdSection(name,modal._pid);
+  const modal=el('projectDetailModal');if(modal&&modal._pid){
+    if(name==='time') renderPdTime(modal._pid);
+    else renderPdSection(name,modal._pid);
+  }
 }
 
 function renderProjectDetail(id){
@@ -2791,11 +2913,15 @@ function fmtTime(t){if(!t)return'';const[h,m]=t.split(':');const hr=parseInt(h);
 // ══ GPA ══
 function updateGPA(){
   const tbody=document.querySelector('#gpaTable tbody');const graded=D.courses.filter(c=>c.grade&&!c.archived);
-  if(!graded.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--gray)">No graded courses yet</td></tr>';el('calcGPA').textContent='0.00';el('totalCr').textContent='0';return;}
+  const scale=D.student?.gpaScale||'4';
+  const max=getGPAMax();
+  if(!graded.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--gray)">No graded courses yet</td></tr>';el('calcGPA').textContent='0.00';el('totalCr').textContent='0';el('dashGPA').textContent='0.00';return;}
   let tp=0,tc=0;
-  tbody.innerHTML=graded.map(c=>{const p=parseFloat(c.grade);tp+=p*c.credits;tc+=c.credits;return`<tr><td>${c.name}</td><td>${c.credits}</td><td>${gradeLetter(p)}</td><td>${p.toFixed(1)}</td></tr>`;}).join('');
+  tbody.innerHTML=graded.map(c=>{const p=parseFloat(c.grade);tp+=p*c.credits;tc+=c.credits;return`<tr><td>${c.name}</td><td>${c.credits}</td><td>${gradeLetterAU(p)}</td><td>${p.toFixed(1)} / ${max}</td></tr>`;}).join('');
   const gpa=tc>0?(tp/tc).toFixed(2):'0.00';
-  el('calcGPA').textContent=gpa;el('totalCr').textContent=tc;el('dashGPA').textContent=gpa;
+  el('calcGPA').textContent=gpa+' / '+max;el('totalCr').textContent=tc;el('dashGPA').textContent=gpa;
+  // Update GPA hero label
+  const totalCrEl=el('totalCr');if(totalCrEl)totalCrEl.textContent=tc;
 }
 
 // ══ GRADE CALC ══
@@ -2968,10 +3094,29 @@ function renderStandards(){
 function pickNoteColor(elmt,c){document.querySelectorAll('.nc').forEach(x=>x.classList.remove('active'));elmt.classList.add('active');noteColor=c;}
 el('noteForm').addEventListener('submit',e=>{
   e.preventDefault();
-  D.notes.push({id:uid(),title:el('nTitle').value.trim(),body:el('nBody').value,color:noteColor,courseId:el('nCourse').value||null,createdAt:new Date().toISOString()});
+  const bodyEl=el('nBody');
+  const body=bodyEl.innerHTML||bodyEl.value||'';
+  D.notes.push({
+    id:uid(),
+    title:el('nTitle').value.trim(),
+    body,
+    isRich:true,
+    color:noteColor,
+    courseId:el('nCourse').value||null,
+    tag:el('nTag')?.value.trim()||'',
+    pinned:el('nPinned')?.checked||false,
+    createdAt:new Date().toISOString()
+  });
   save();renderNotes();closeModal('noteModal');e.target.reset();
+  if(bodyEl.tagName==='DIV')bodyEl.innerHTML='';
   document.querySelectorAll('.nc').forEach((x,i)=>{if(i===0)x.classList.add('active');else x.classList.remove('active');});noteColor='#fff';
+  if(el('nPinned'))el('nPinned').checked=false;
+  if(el('nTag'))el('nTag').value='';
 });
+function richCmd(cmd){document.execCommand(cmd,false,null);el('nBody')?.focus();}
+function richHeading(tag){
+  document.execCommand('formatBlock',false,tag);el('nBody')?.focus();
+}
 function renderNotes(){
   const c=el('noteGrid');
   const nfc=el('noteFilterCourse');
@@ -2979,24 +3124,54 @@ function renderNotes(){
   if(!D.notes.length){c.innerHTML='<div class="empty"><div class="ei">🗒️</div><p>No notes yet</p></div>';return;}
   const q=(el('noteSearch')?.value||'').toLowerCase();
   const cf=String(el('noteFilterCourse')?.value||'');
-  let list=[...D.notes].reverse().filter(n=>{
+  // Get all unique tags for filter
+  const allTags=[...new Set(D.notes.map(n=>n.tag).filter(Boolean))];
+  // Show tag filter row if tags exist
+  let tagFilterHTML='';
+  if(allTags.length){
+    const activeTag=window._noteTagFilter||'';
+    tagFilterHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="note-tag${!activeTag?' active':''}" style="${!activeTag?'background:#6366f1;color:#fff':''}" onclick="setNoteTagFilter('')">All</span>
+      ${allTags.map(t=>`<span class="note-tag${activeTag===t?' active':''}" style="${activeTag===t?'background:#6366f1;color:#fff':''}" onclick="setNoteTagFilter('${esc(t)}')">${esc(t)}</span>`).join('')}
+    </div>`;
+  }
+  const activeTag=window._noteTagFilter||'';
+  let list=[...D.notes].filter(n=>{
     const matchQ=!q||n.title.toLowerCase().includes(q)||(n.body||'').toLowerCase().includes(q);
     const matchC=!cf||String(n.courseId||'')===cf;
-    return matchQ&&matchC;
+    const matchT=!activeTag||(n.tag||'')=== activeTag;
+    return matchQ&&matchC&&matchT;
   });
-  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No notes match your search</p></div>';return;}
-  c.innerHTML=list.map(n=>{
+  // Pinned first
+  list.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
+  if(!list.length){c.parentElement.querySelector('.notepad-grid')?c.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No notes match</p></div>':null;c.innerHTML='<div class="empty"><div class="ei">🔍</div><p>No notes match your search</p></div>';return;}
+  const gridHTML=list.map(n=>{
     const course=n.courseId?D.courses.find(co=>co.id==n.courseId):null;
-    return`<div class="note-card" style="background:${n.color||'#fff'}">
+    const bodyDisplay=n.isRich?n.body:esc(n.body||'');
+    return`<div class="note-card${n.pinned?' pinned':''}" style="background:${n.color||'#fff'}">
       <button class="note-del" onclick="deleteNote(${n.id})">🗑</button>
+      <button class="note-pin-btn${n.pinned?' pinned':''}" onclick="togglePinNote(${n.id})" title="${n.pinned?'Unpin':'Pin'}">📌</button>
       <h4>${esc(n.title)}</h4>
-      ${course?`<span style="font-size:.72rem;background:${SOLID[D.courses.indexOf(course)%SOLID.length]}22;color:${SOLID[D.courses.indexOf(course)%SOLID.length]};padding:2px 8px;border-radius:7px;display:inline-block;margin-bottom:6px">${course.code}</span>`:''}
-      <p>${esc(n.body)}</p>
+      ${course?`<span style="font-size:.72rem;background:${SOLID[D.courses.indexOf(course)%SOLID.length]}22;color:${SOLID[D.courses.indexOf(course)%SOLID.length]};padding:2px 8px;border-radius:7px;display:inline-block;margin-bottom:4px">${course.code}</span>`:''}
+      ${n.tag?`<span class="note-tag" onclick="setNoteTagFilter('${esc(n.tag)}')">${esc(n.tag)}</span>`:''}
+      <div style="color:var(--gray);font-size:.85rem;line-height:1.5;margin-top:6px;max-height:120px;overflow:hidden">${bodyDisplay}</div>
       <div class="note-date">${new Date(n.createdAt).toLocaleDateString()} ${new Date(n.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
     </div>`;
   }).join('');
+  // Insert tag filter + grid
+  const wrapper=c.closest('.card');
+  let tagRow=wrapper?.querySelector('#noteTagRow');
+  if(!tagRow&&wrapper&&tagFilterHTML){tagRow=document.createElement('div');tagRow.id='noteTagRow';c.before(tagRow);}
+  if(tagRow)tagRow.innerHTML=tagFilterHTML;
+  c.innerHTML=gridHTML;
+  // Fix: reassign c after potential DOM changes - just set it directly
+  el('noteGrid').innerHTML=gridHTML;
 }
+
+function togglePinNote(id){const n=D.notes.find(x=>x.id===id);if(!n)return;n.pinned=!n.pinned;save();renderNotes();}
+function setNoteTagFilter(tag){window._noteTagFilter=tag;renderNotes();}
 function deleteNote(id){D.notes=D.notes.filter(n=>n.id!==id);save();renderNotes();}
+
 
 // ══ BUDGET ══
 el('paycheckForm').addEventListener('submit',e=>{e.preventDefault();D.paychecks.push({id:uid(),employer:el('pcEmp').value,gross:parseFloat(el('pcGross').value)||0,net:parseFloat(el('pcNet').value)||0,payDate:el('pcDate').value});save();renderPaychecks();updateBudgetDisplay();closeModal('paycheckModal');e.target.reset();});
@@ -3066,6 +3241,130 @@ function renderTodayAgenda(){
       </div>`;}).join('');
   }
   c.innerHTML=html;
+}
+
+// ══ GANTT CHART ══
+function renderGantt(){
+  const c=el('ganttChart');if(!c)return;
+  const projects=D.projects.filter(p=>p.dueDate);
+  if(!projects.length){c.innerHTML='<div class="empty"><div class="ei">📊</div><p>Add projects with due dates to see the Gantt chart</p></div>';return;}
+
+  // Determine date range
+  const now=new Date();
+  const semStart=D.semSettings?.start?new Date(D.semSettings.start):new Date(now.getFullYear(),now.getMonth()-1,1);
+  const semEnd=D.semSettings?.start?new Date(new Date(D.semSettings.start).getTime()+(D.semSettings.weeks||13)*7*864e5):new Date(now.getFullYear(),now.getMonth()+3,1);
+  const totalDays=Math.ceil((semEnd-semStart)/864e5);
+
+  // Build month headers
+  const months=[];let cur=new Date(semStart.getFullYear(),semStart.getMonth(),1);
+  while(cur<=semEnd){
+    const daysInMonth=new Date(cur.getFullYear(),cur.getMonth()+1,0).getDate();
+    const startOffset=Math.max(0,Math.ceil((cur-semStart)/864e5));
+    const pct=(daysInMonth/totalDays)*100;
+    months.push({label:cur.toLocaleString('default',{month:'short',year:'2-digit'}),pct,startOffset});
+    cur.setMonth(cur.getMonth()+1);
+  }
+
+  const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
+  const todayOffset=Math.ceil((now-semStart)/864e5);
+  const todayPct=(todayOffset/totalDays)*100;
+
+  let html=`<div class="gantt-header-row">
+    <div class="gantt-header-spacer"></div>
+    <div class="gantt-header-months" style="position:relative">
+      ${months.map(m=>`<div class="gantt-month-label" style="width:${m.pct}%">${m.label}</div>`).join('')}
+    </div>
+  </div>`;
+
+  html+=projects.map(p=>{
+    const col=statusColors[p.status]||'#6366f1';
+    // Use semStart as project start if no explicit start, else use createdAt
+    const pStart=p.startDate?new Date(p.startDate):(p.createdAt?new Date(p.createdAt):semStart);
+    const pEnd=new Date(p.dueDate);
+    const startPct=Math.max(0,Math.min(100,(pStart-semStart)/(semEnd-semStart)*100));
+    const widthPct=Math.max(1,Math.min(100-startPct,(pEnd-Math.max(pStart,semStart))/(semEnd-semStart)*100));
+    const done=(p.subtasks||[]).filter(s=>s.done||s.completed).length;
+    const total=(p.subtasks||[]).length;
+    const pct=total?Math.round(done/total*100):0;
+    return`<div class="gantt-row" title="${esc(p.title||'')} — ${p.dueDate}">
+      <div class="gantt-label">${esc(p.title||p.name||'')}</div>
+      <div class="gantt-track">
+        <div class="gantt-bar" style="left:${startPct}%;width:${widthPct}%;background:${col}" onclick="openProjectDetail(${p.id})">
+          ${pct}%
+        </div>
+        ${todayPct>0&&todayPct<100?`<div class="gantt-today-line" style="left:${todayPct}%"></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  html+=`<div style="margin-top:10px;font-size:.75rem;color:var(--gray);display:flex;gap:14px;flex-wrap:wrap">
+    ${Object.entries(statusColors).map(([s,c])=>`<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c};margin-right:4px"></span>${s}</span>`).join('')}
+    <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#ef4444;margin-right:4px"></span>Today</span>
+  </div>`;
+
+  c.innerHTML='<div class="gantt-wrap">'+html+'</div>';
+}
+
+// ══ TIME TRACKING PER PROJECT ══
+function renderPdTime(id){
+  const p=D.projects.find(x=>x.id===id);if(!p)return;
+  if(!p.timeLogs)p.timeLogs=[];
+  const totalMins=p.timeLogs.reduce((s,l)=>s+l.mins,0);
+  const hrs=Math.floor(totalMins/60),mins=totalMins%60;
+  el('pd-time').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px">
+      <div class="stat-card" style="text-align:center"><h3>Total Time</h3><div class="val" style="color:var(--primary);font-size:1.5rem">${hrs}h ${mins}m</div></div>
+      <div class="stat-card" style="text-align:center"><h3>Sessions</h3><div class="val" style="color:#10b981;font-size:1.5rem">${p.timeLogs.length}</div></div>
+    </div>
+    <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
+      <h4 style="margin-bottom:10px">Log Time</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:100px">
+          <label style="font-size:.78rem;color:var(--gray);display:block;margin-bottom:4px">Hours</label>
+          <input type="number" id="tlHours" min="0" max="24" value="0" style="width:100%">
+        </div>
+        <div style="flex:1;min-width:100px">
+          <label style="font-size:.78rem;color:var(--gray);display:block;margin-bottom:4px">Minutes</label>
+          <input type="number" id="tlMins" min="0" max="59" value="30" style="width:100%">
+        </div>
+        <div style="flex:2;min-width:140px">
+          <label style="font-size:.78rem;color:var(--gray);display:block;margin-bottom:4px">Note (optional)</label>
+          <input type="text" id="tlNote" placeholder="What did you work on?" style="width:100%">
+        </div>
+        <button class="btn btn-primary" onclick="addProjectTime(${p.id})">+ Log</button>
+      </div>
+    </div>
+    <div>
+      ${p.timeLogs.length?[...p.timeLogs].reverse().map(l=>`<div class="time-log-item">
+        <div>
+          <div style="font-weight:600;font-size:.85rem">${l.note?esc(l.note):'Work session'}</div>
+          <div style="font-size:.72rem;color:var(--gray)">${new Date(l.at).toLocaleDateString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="time-log-duration">${Math.floor(l.mins/60)}h ${l.mins%60}m</span>
+          <button onclick="deleteProjectTime(${p.id},${l.id})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.85rem">✕</button>
+        </div>
+      </div>`).join(''):'<div class="empty" style="padding:20px"><p>No time logged yet</p></div>'}
+    </div>
+  `;
+}
+
+function addProjectTime(pid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  const h=parseInt(el('tlHours')?.value)||0;
+  const m=parseInt(el('tlMins')?.value)||0;
+  const mins=h*60+m;
+  if(mins<=0){alert('Enter a valid duration');return;}
+  if(!p.timeLogs)p.timeLogs=[];
+  p.timeLogs.push({id:uid(),mins,note:el('tlNote')?.value.trim()||'',at:new Date().toISOString()});
+  addProjectLogEntry(p,`Logged ${h>0?h+'h ':''}${m>0?m+'m':''} of work`);
+  save();renderPdTime(pid);
+}
+
+function deleteProjectTime(pid,lid){
+  const p=D.projects.find(x=>x.id===pid);if(!p)return;
+  p.timeLogs=(p.timeLogs||[]).filter(l=>l.id!==lid);
+  save();renderPdTime(pid);
 }
 function renderUpcoming(){
   const c=el('upcomingDeadlines');
@@ -3542,8 +3841,15 @@ function renderSemProgress(){
 }
 function saveSemSettings(){
   if(!D.semSettings)D.semSettings={};
-  D.semSettings.start=el('semStart').value;D.semSettings.weeks=parseInt(el('semWeeks').value)||12;
-  save();renderSemProgress();
+  D.semSettings.start=el('semStart').value;
+  D.semSettings.weeks=parseInt(el('semWeeks').value)||12;
+  const breaksEl=el('semBreaks');
+  if(breaksEl&&breaksEl.value.trim()){
+    D.semSettings.breaks=breaksEl.value.split(',').map(b=>parseInt(b.trim())).filter(n=>!isNaN(n));
+  } else {
+    D.semSettings.breaks=[];
+  }
+  save();renderSemProgress();renderCalendar();
 }
 
 // ══ BACKGROUND ══
@@ -3680,6 +3986,7 @@ function getScheduleDatesForMonth(year, month){
   const semStart = D.semSettings?.start ? new Date(D.semSettings.start) : null;
   const semWeeks = D.semSettings?.weeks || 52;
   const semEnd = semStart ? new Date(semStart.getTime() + semWeeks*7*864e5) : null;
+  const breakWeeks = D.semSettings?.breaks || [];
 
   // Iterate every day in the month
   const daysInMonth = new Date(year, month+1, 0).getDate();
@@ -3687,6 +3994,11 @@ function getScheduleDatesForMonth(year, month){
     const date = new Date(year, month, d);
     // Check within semester if set
     if(semStart && (date < semStart || date > semEnd)) continue;
+    // Check if this date falls in a break week
+    if(semStart && breakWeeks.length){
+      const weekNum = Math.ceil((date - semStart)/(7*864e5));
+      if(breakWeeks.includes(weekNum)) continue;
+    }
     const jsDay = date.getDay(); // 0=Sun,1=Mon...
     const dateStr = date.toISOString().split('T')[0];
     D.schedule.forEach(s=>{
@@ -3794,28 +4106,112 @@ function showCalDay(dateStr){
   const d = new Date(dateStr);
   const label = d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
   const assigns = D.assignments.filter(a=>a.dueDate===dateStr&&!a.completed);
+  const assignsDone = D.assignments.filter(a=>a.dueDate===dateStr&&a.completed);
   const exams = D.exams.filter(e=>e.date===dateStr);
-  // Get schedule items for this day
+  const projects = D.projects.filter(p=>p.dueDate===dateStr&&p.status!=='completed');
   const jsDay = d.getDay();
   const semStart = D.semSettings?.start ? new Date(D.semSettings.start) : null;
   const semEnd = semStart ? new Date(semStart.getTime()+(D.semSettings.weeks||52)*7*864e5) : null;
   const schedItems = (!semStart || (d >= semStart && d <= semEnd))
     ? (D.schedule||[]).filter(s=>DAY_NAME_MAP[s.day]===jsDay)
     : [];
-  if(!assigns.length && !exams.length && !schedItems.length){ el('calDayDetail').style.display='none'; return; }
+  if(!assigns.length && !assignsDone.length && !exams.length && !schedItems.length && !projects.length){
+    el('calDayDetail').style.display='none'; return;
+  }
   el('calDayTitle').textContent = label;
   const typeColors={uni:'#eef2ff',work:'#fef3c7',study:'#f0fdf4',other:'#f8fafc'};
   const typeBorder={uni:'#6366f1',work:'#f59e0b',study:'#10b981',other:'#94a3b8'};
   const typeIcon={uni:'🎓',work:'💼',study:'📖',other:'📌'};
-  el('calDayItems').innerHTML = [
-    ...schedItems.sort((a,b)=>a.startTime.localeCompare(b.startTime)).map(s=>`<div style="padding:8px 12px;background:${typeColors[s.type]||'#f8fafc'};border-radius:8px;margin-bottom:6px;border-left:3px solid ${typeBorder[s.type]||'#94a3b8'}">
-      <div style="font-weight:600;font-size:.88rem">${typeIcon[s.type]||'📌'} ${esc(s.label)}</div>
-      <div style="font-size:.75rem;color:var(--gray);margin-top:2px">${s.startTime?fmtTime(s.startTime):''}${s.endTime?' – '+fmtTime(s.endTime):''}${s.location?' · 📍 '+s.location:''}</div>
-    </div>`),
-    ...exams.map(e=>`<div style="padding:8px 12px;background:#fce7f3;border-radius:8px;margin-bottom:6px;border-left:3px solid #db2777"><strong>📝 ${esc(e.name)}</strong>${e.time?` at ${fmtTime(e.time)}`:''}</div>`),
-    ...assigns.map(a=>`<div style="padding:8px 12px;background:#eef2ff;border-radius:8px;margin-bottom:6px;border-left:3px solid #6366f1"><strong>${esc(a.title)}</strong> <span class="pri pri-${a.priority}">${a.priority}</span></div>`)
-  ].join('');
+  const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
+
+  let html = '';
+
+  // Schedule
+  if(schedItems.length){
+    html += `<div style="font-size:.72rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">📅 Schedule</div>`;
+    html += schedItems.sort((a,b)=>a.startTime.localeCompare(b.startTime)).map(s=>`
+      <div style="padding:10px 12px;background:${typeColors[s.type]||'#f8fafc'};border-radius:10px;margin-bottom:7px;border-left:3px solid ${typeBorder[s.type]||'#94a3b8'}">
+        <div style="font-weight:600;font-size:.88rem">${typeIcon[s.type]||'📌'} ${esc(s.label)}</div>
+        <div style="font-size:.75rem;color:var(--gray);margin-top:3px">${s.startTime?fmtTime(s.startTime):''}${s.endTime?' – '+fmtTime(s.endTime):''}${s.location?' · 📍 '+esc(s.location):''}</div>
+      </div>`).join('');
+  }
+
+  // Exams
+  if(exams.length){
+    html += `<div style="font-size:.72rem;font-weight:700;color:#db2777;text-transform:uppercase;letter-spacing:.05em;margin:${schedItems.length?'10px':0} 0 6px">📝 Exams</div>`;
+    html += exams.map(e=>{
+      const course = D.courses.find(c=>c.id==e.courseId);
+      return`<div style="padding:10px 12px;background:#fce7f3;border-radius:10px;margin-bottom:7px;border-left:3px solid #db2777">
+        <div style="font-weight:600;font-size:.88rem">📝 ${esc(e.name)}</div>
+        <div style="font-size:.75rem;color:var(--gray);margin-top:3px">${course?esc(course.name)+' · ':''}${e.time?fmtTime(e.time):'Time TBC'}${e.location?' · 📍 '+esc(e.location):''}</div>
+        ${e.notes?`<div style="font-size:.74rem;color:var(--gray);margin-top:3px;font-style:italic">${esc(e.notes)}</div>`:''}
+      </div>`;}).join('');
+  }
+
+  // Assignments due
+  if(assigns.length){
+    html += `<div style="font-size:.72rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.05em;margin:${(schedItems.length||exams.length)?'10px':0} 0 6px">📋 Assignments Due</div>`;
+    html += assigns.map(a=>{
+      const course = D.courses.find(c=>c.id==a.courseId);
+      return`<div style="padding:10px 12px;background:#eef2ff;border-radius:10px;margin-bottom:7px;border-left:3px solid #6366f1;display:flex;align-items:flex-start;gap:10px">
+        <div onclick="calToggleAssign(${a.id})" style="width:20px;height:20px;min-width:20px;border:2px solid #6366f1;border-radius:5px;cursor:pointer;background:#fff;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:.88rem">${esc(a.title)}</div>
+          <div style="font-size:.75rem;color:var(--gray);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap">
+            ${course?`<span>${esc(course.name)}</span>`:''}
+            <span class="pri pri-${a.priority}">${a.priority}</span>
+            ${a.weight?`<span style="background:#e0e7ff;color:#4f46e5;padding:1px 6px;border-radius:6px;font-size:.7rem">${a.weight}%</span>`:''}
+          </div>
+          ${a.notes?`<div style="font-size:.74rem;color:var(--gray);margin-top:3px;font-style:italic">${esc(a.notes)}</div>`:''}
+        </div>
+      </div>`;}).join('');
+  }
+
+  // Projects due
+  if(projects.length){
+    html += `<div style="font-size:.72rem;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em;margin:${(schedItems.length||exams.length||assigns.length)?'10px':0} 0 6px">🗂️ Projects Due</div>`;
+    html += projects.map(p=>{
+      const done=(p.subtasks||[]).filter(s=>s.done||s.completed).length;
+      const total=(p.subtasks||[]).length;
+      const pct=total?Math.round(done/total*100):0;
+      const col=statusColors[p.status]||'#6366f1';
+      const course=D.courses.find(c=>c.id==p.courseId);
+      return`<div style="padding:10px 12px;background:#fffbeb;border-radius:10px;margin-bottom:7px;border-left:3px solid ${col}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="font-weight:600;font-size:.88rem">🗂️ ${esc(p.title||p.name||'')}</div>
+          <span style="font-size:.7rem;background:${col}22;color:${col};padding:2px 7px;border-radius:8px;font-weight:600;white-space:nowrap">${p.status}</span>
+        </div>
+        ${course?`<div style="font-size:.75rem;color:var(--gray);margin-top:2px">${esc(course.name)}</div>`:''}
+        ${p.desc?`<div style="font-size:.75rem;color:var(--gray);margin-top:3px">${esc(p.desc)}</div>`:''}
+        ${total?`<div style="margin-top:7px">
+          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--gray);margin-bottom:3px"><span>${done}/${total} subtasks</span><span>${pct}%</span></div>
+          <div style="height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden"><div style="height:100%;background:${col};width:${pct}%;border-radius:3px;transition:width .3s"></div></div>
+        </div>`:''}
+        ${p.members&&p.members.length?`<div style="font-size:.73rem;color:var(--gray);margin-top:5px">👥 ${p.members.map(m=>esc(m.name)).join(', ')}</div>`:''}
+      </div>`;}).join('');
+  }
+
+  // Completed assignments (collapsed)
+  if(assignsDone.length){
+    html += `<div style="font-size:.72rem;color:var(--gray);margin-top:8px">✅ ${assignsDone.length} completed assignment${assignsDone.length!==1?'s':''} also due today</div>`;
+  }
+
+  el('calDayItems').innerHTML = html;
   el('calDayDetail').style.display = 'block';
+}
+
+function calToggleAssign(id){
+  const a=D.assignments.find(x=>x.id===id);if(!a)return;
+  a.completed=true;save();
+  // Re-render the day detail and calendar
+  const detail=el('calDayDetail');
+  if(detail.style.display!=='none'){
+    // find which date is showing
+    const title=el('calDayTitle').textContent;
+    // Just re-render calendar and hide detail
+    renderCalendar();
+    detail.style.display='none';
+  }
 }
 function calPrev(){ calDate.setMonth(calDate.getMonth()-1); renderCalendar(); }
 function calNext(){ calDate.setMonth(calDate.getMonth()+1); renderCalendar(); }
