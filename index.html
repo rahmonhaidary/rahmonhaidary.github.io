@@ -3281,8 +3281,12 @@ function renderGantt(){
     // Use semStart as project start if no explicit start, else use createdAt
     const pStart=p.startDate?new Date(p.startDate):(p.createdAt?new Date(p.createdAt):semStart);
     const pEnd=new Date(p.dueDate);
-    const startPct=Math.max(0,Math.min(100,(pStart-semStart)/(semEnd-semStart)*100));
-    const widthPct=Math.max(1,Math.min(100-startPct,(pEnd-Math.max(pStart,semStart))/(semEnd-semStart)*100));
+    // Clamp both ends to the visible range
+    const visStart=Math.max(pStart,semStart);
+    const visEnd=Math.min(pEnd,semEnd);
+    if(visEnd<semStart||visStart>semEnd) return''; // outside range
+    const startPct=Math.max(0,Math.min(100,(visStart-semStart)/(semEnd-semStart)*100));
+    const widthPct=Math.max(0.5,Math.min(100-startPct,(visEnd-visStart)/(semEnd-semStart)*100));
     const done=(p.subtasks||[]).filter(s=>s.done||s.completed).length;
     const total=(p.subtasks||[]).length;
     const pct=total?Math.round(done/total*100):0;
@@ -4051,6 +4055,13 @@ function renderCalendar(){
   // Exams
   D.exams.filter(e=>e.date).forEach(e=>{
     addEvent(e.date, '📝 '+e.name, 'exam');
+  });
+
+  // Projects due
+  D.projects.filter(p=>p.dueDate&&p.status!=='completed').forEach(p=>{
+    const d = new Date(p.dueDate); const ds = d.toISOString().split('T')[0];
+    const diff = Math.ceil((d-today)/864e5);
+    addEvent(ds, '🗂️ '+(p.title||p.name||'Project'), diff<=2?'urgent':diff<=7?'warning':'normal');
   });
 
   // Recurring schedule
