@@ -786,6 +786,11 @@ body.dark-mode .kanban-task{background:#1e293b;border-color:#475569;}
 body.dark-mode .ai-msg-bot .ai-bubble{background:#334155;border-color:#475569;color:#e2e8f0;}
 body.dark-mode .ai-avatar{background:#334155;}
 body.dark-mode #aiInput{background:#334155;color:#e2e8f0;border-color:#475569;}
+
+.cal-event.schedule-uni{background:#e0e7ff;color:#4f46e5;}
+.cal-event.schedule-work{background:#fef3c7;color:#92400e;}
+.cal-event.schedule-study{background:#dcfce7;color:#166534;}
+.cal-event.schedule-other{background:#f1f5f9;color:#475569;}
 </style>
 </head>
 <body>
@@ -3662,9 +3667,52 @@ function initDarkMode(){
 
 // ══ CALENDAR ══
 let calDate = new Date();
+
+// Map day names to JS getDay() numbers (0=Sun)
+const DAY_NAME_MAP = {monday:1,tuesday:2,wednesday:3,thursday:4,friday:5,saturday:6,sunday:0};
+
+function getScheduleDatesForMonth(year, month){
+  // Returns a map of dateStr -> array of schedule items
+  // Only within semester bounds if semSettings defined
+  const result = {};
+  if(!D.schedule || !D.schedule.length) return result;
+
+  const semStart = D.semSettings?.start ? new Date(D.semSettings.start) : null;
+  const semWeeks = D.semSettings?.weeks || 52;
+  const semEnd = semStart ? new Date(semStart.getTime() + semWeeks*7*864e5) : null;
+
+  // Iterate every day in the month
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  for(let d = 1; d <= daysInMonth; d++){
+    const date = new Date(year, month, d);
+    // Check within semester if set
+    if(semStart && (date < semStart || date > semEnd)) continue;
+    const jsDay = date.getDay(); // 0=Sun,1=Mon...
+    const dateStr = date.toISOString().split('T')[0];
+    D.schedule.forEach(s=>{
+      const targetDay = DAY_NAME_MAP[s.day];
+      if(targetDay === jsDay){
+        if(!result[dateStr]) result[dateStr] = [];
+        result[dateStr].push(s);
+      }
+    });
+  }
+  return result;
+}
+
 function renderCalendar(){
   const year = calDate.getFullYear(), month = calDate.getMonth();
-  el('calTitle').textContent = calDate.toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+  // Show semester week in title if semSettings set
+  let titleExtra = '';
+  if(D.semSettings?.start){
+    const semStart = new Date(D.semSettings.start);
+    const monthStart = new Date(year, month, 1);
+    const weekNum = Math.ceil((monthStart - semStart) / (7*864e5));
+    if(weekNum > 0 && weekNum <= (D.semSettings.weeks||52)){
+      titleExtra = ` · Sem Week ${weekNum}`;
+    }
+  }
+  el('calTitle').textContent = calDate.toLocaleDateString('en-AU',{month:'long',year:'numeric'}) + titleExtra;
   const grid = el('calGrid');
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   let html = days.map(d=>`<div class="cal-header">${d}</div>`).join('');
@@ -3673,48 +3721,99 @@ function renderCalendar(){
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const daysInPrev = new Date(year, month, 0).getDate();
   const today = new Date(); today.setHours(0,0,0,0);
-  // Collect all events for the month
+
+  // Collect events
   const events = {};
   const addEvent = (dateStr, label, type) => {
     if(!events[dateStr]) events[dateStr] = [];
     events[dateStr].push({label, type});
   };
+
+  // Assignments
   D.assignments.filter(a=>!a.completed&&a.dueDate).forEach(a=>{
     const d = new Date(a.dueDate); const ds = d.toISOString().split('T')[0];
     const diff = Math.ceil((d-today)/864e5);
     addEvent(ds, a.title, diff<=2?'urgent':diff<=7?'warning':'normal');
   });
+
+  // Exams
   D.exams.filter(e=>e.date).forEach(e=>{
     addEvent(e.date, '📝 '+e.name, 'exam');
   });
+
+  // Recurring schedule
+  const schedDates = getScheduleDatesForMonth(year, month);
+  Object.entries(schedDates).forEach(([dateStr, items])=>{
+    items.forEach(s=>{
+      const typeColors = {uni:'schedule-uni', work:'schedule-work', study:'schedule-study', other:'schedule-other'};
+      addEvent(dateStr, '🕐 '+s.label, typeColors[s.type]||'schedule-other');
+    });
+  });
+
   // Render cells
   let day = 1, nextDay = 1;
   for(let i = 0; i < 42; i++){
     let dateNum, dateStr, isOther = false;
     if(i < startDay){ dateNum = daysInPrev - startDay + i + 1; isOther = true; dateStr = new Date(year, month-1, dateNum).toISOString().split('T')[0]; }
-    else if(day <= daysInMonth){ dateNum = day; dateStr = new Date(year, month, day).toISOString().split('T')[0]; day++; }
+    else if(day <= daysInMonth){ dateNum = day; dateStr = new Date(year, month, day).toISOString().split('T')[0];
+      // Show semester week number on Mondays
+      let weekLabel = '';
+      if(D.semSettings?.start){
+        const semStart = new Date(D.semSettings.start);
+        const cellDate = new Date(year, month, day);
+        const jsDay = cellDate.getDay();
+        if(jsDay === 1){ // Monday
+          const wk = Math.ceil((cellDate - semStart)/(7*864e5));
+          if(wk > 0 && wk <= (D.semSettings.weeks||52)) weekLabel = `<div style="font-size:.58rem;color:var(--primary);font-weight:700;margin-bottom:1px">Wk ${wk}</div>`;
+        }
+      }
+      day++;
+      const isToday = dateStr === today.toISOString().split('T')[0];
+      const dayEvents = events[dateStr] || [];
+      html += `<div class="cal-day${isOther?' other-month':''}${isToday?' today':''}${dayEvents.length?' has-items':''}" onclick="showCalDay('${dateStr}')">
+        ${weekLabel}<div class="cal-date">${dateNum}</div>
+        ${dayEvents.slice(0,3).map(e=>`<div class="cal-event ${e.type}">${esc(e.label.substring(0,20))}</div>`).join('')}
+        ${dayEvents.length>3?`<div style="font-size:.6rem;color:var(--gray)">+${dayEvents.length-3} more</div>`:''}
+      </div>`;
+      continue;
+    }
     else{ dateNum = nextDay; isOther = true; dateStr = new Date(year, month+1, nextDay).toISOString().split('T')[0]; nextDay++; }
     const isToday = dateStr === today.toISOString().split('T')[0];
     const dayEvents = events[dateStr] || [];
     html += `<div class="cal-day${isOther?' other-month':''}${isToday?' today':''}${dayEvents.length?' has-items':''}" onclick="showCalDay('${dateStr}')">
       <div class="cal-date">${dateNum}</div>
-      ${dayEvents.slice(0,3).map(e=>`<div class="cal-event ${e.type}">${esc(e.label.substring(0,18))}</div>`).join('')}
+      ${dayEvents.slice(0,3).map(e=>`<div class="cal-event ${e.type}">${esc(e.label.substring(0,20))}</div>`).join('')}
       ${dayEvents.length>3?`<div style="font-size:.6rem;color:var(--gray)">+${dayEvents.length-3} more</div>`:''}
     </div>`;
   }
   grid.innerHTML = html;
   el('calDayDetail').style.display = 'none';
 }
+
 function showCalDay(dateStr){
   const d = new Date(dateStr);
   const label = d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
   const assigns = D.assignments.filter(a=>a.dueDate===dateStr&&!a.completed);
   const exams = D.exams.filter(e=>e.date===dateStr);
-  if(!assigns.length && !exams.length){ el('calDayDetail').style.display='none'; return; }
+  // Get schedule items for this day
+  const jsDay = d.getDay();
+  const semStart = D.semSettings?.start ? new Date(D.semSettings.start) : null;
+  const semEnd = semStart ? new Date(semStart.getTime()+(D.semSettings.weeks||52)*7*864e5) : null;
+  const schedItems = (!semStart || (d >= semStart && d <= semEnd))
+    ? (D.schedule||[]).filter(s=>DAY_NAME_MAP[s.day]===jsDay)
+    : [];
+  if(!assigns.length && !exams.length && !schedItems.length){ el('calDayDetail').style.display='none'; return; }
   el('calDayTitle').textContent = label;
+  const typeColors={uni:'#eef2ff',work:'#fef3c7',study:'#f0fdf4',other:'#f8fafc'};
+  const typeBorder={uni:'#6366f1',work:'#f59e0b',study:'#10b981',other:'#94a3b8'};
+  const typeIcon={uni:'🎓',work:'💼',study:'📖',other:'📌'};
   el('calDayItems').innerHTML = [
-    ...exams.map(e=>`<div style="padding:8px;background:#fce7f3;border-radius:8px;margin-bottom:6px"><strong>📝 ${esc(e.name)}</strong>${e.time?` at ${e.time}`:''}</div>`),
-    ...assigns.map(a=>`<div style="padding:8px;background:#eef2ff;border-radius:8px;margin-bottom:6px"><strong>${esc(a.title)}</strong> <span class="pri pri-${a.priority}">${a.priority}</span></div>`)
+    ...schedItems.sort((a,b)=>a.startTime.localeCompare(b.startTime)).map(s=>`<div style="padding:8px 12px;background:${typeColors[s.type]||'#f8fafc'};border-radius:8px;margin-bottom:6px;border-left:3px solid ${typeBorder[s.type]||'#94a3b8'}">
+      <div style="font-weight:600;font-size:.88rem">${typeIcon[s.type]||'📌'} ${esc(s.label)}</div>
+      <div style="font-size:.75rem;color:var(--gray);margin-top:2px">${s.startTime?fmtTime(s.startTime):''}${s.endTime?' – '+fmtTime(s.endTime):''}${s.location?' · 📍 '+s.location:''}</div>
+    </div>`),
+    ...exams.map(e=>`<div style="padding:8px 12px;background:#fce7f3;border-radius:8px;margin-bottom:6px;border-left:3px solid #db2777"><strong>📝 ${esc(e.name)}</strong>${e.time?` at ${fmtTime(e.time)}`:''}</div>`),
+    ...assigns.map(a=>`<div style="padding:8px 12px;background:#eef2ff;border-radius:8px;margin-bottom:6px;border-left:3px solid #6366f1"><strong>${esc(a.title)}</strong> <span class="pri pri-${a.priority}">${a.priority}</span></div>`)
   ].join('');
   el('calDayDetail').style.display = 'block';
 }
