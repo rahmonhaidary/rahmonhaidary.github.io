@@ -5354,12 +5354,12 @@ async function deletePDF(courseId, path, name){
   renderPDFList(courseId);
 }
 async function deletePDFById(courseId, pdfIndex){
-  const course = D.courses.find(c=>c.id===courseId);
+  const course = D.courses.find(c=>c.id==courseId); // == for string/number comparison
   if(!course||!course.pdfs) return;
   const pdf = course.pdfs[pdfIndex];
   if(!pdf) return;
   if(!confirm('Delete ' + pdf.name + '?')) return;
-  try { await window.deleteCoursePDF(pdf.path); } catch(e) { console.log('Storage delete error:', e); }
+  try { if(pdf.path) await window.deleteCoursePDF(pdf.path); } catch(e) { console.log('Storage delete error:', e); }
   course.pdfs.splice(pdfIndex, 1);
   save();
   renderPDFList(courseId);
