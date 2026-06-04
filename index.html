@@ -4182,23 +4182,75 @@ function showCalDay(dateStr){
   if(projects.length){
     html += `<div style="font-size:.72rem;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.05em;margin:${(schedItems.length||exams.length||assigns.length)?'10px':0} 0 6px">🗂️ Projects Due</div>`;
     html += projects.map(p=>{
-      const done=(p.subtasks||[]).filter(s=>s.done||s.completed).length;
-      const total=(p.subtasks||[]).length;
+      const subtasks=p.subtasks||[];
+      const done=subtasks.filter(s=>s.done||s.completed).length;
+      const total=subtasks.length;
       const pct=total?Math.round(done/total*100):0;
       const col=statusColors[p.status]||'#6366f1';
       const course=D.courses.find(c=>c.id==p.courseId);
-      return`<div style="padding:10px 12px;background:#fffbeb;border-radius:10px;margin-bottom:7px;border-left:3px solid ${col}">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-          <div style="font-weight:600;font-size:.88rem">🗂️ ${esc(p.title||p.name||'')}</div>
-          <span style="font-size:.7rem;background:${col}22;color:${col};padding:2px 7px;border-radius:8px;font-weight:600;white-space:nowrap">${p.status}</span>
+      const members=p.members||[];
+      const totalMins=(p.timeLogs||[]).reduce((s,l)=>s+l.mins,0);
+      const pendingTasks=subtasks.filter(s=>!s.done&&!s.completed);
+      const overdueTasks=subtasks.filter(s=>!s.done&&!s.completed&&s.dueDate&&new Date(s.dueDate)<new Date());
+      const statusLabels={'planning':'📋 Planning','in-progress':'🚧 In Progress','on-hold':'⏸ On Hold','completed':'✅ Completed'};
+      return`<div style="background:#fffbeb;border-radius:12px;margin-bottom:10px;border:1px solid #fde68a;overflow:hidden">
+        <!-- Header -->
+        <div style="padding:12px 14px;border-bottom:1px solid #fde68a;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:.95rem;color:var(--dark);margin-bottom:4px">🗂️ ${esc(p.title||p.name||'')}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <span style="font-size:.72rem;background:${col}22;color:${col};padding:2px 8px;border-radius:8px;font-weight:600">${statusLabels[p.status]||p.status}</span>
+              ${course?`<span style="font-size:.72rem;color:var(--gray)">📚 ${esc(course.name)}</span>`:''}
+              ${p.priority?`<span style="font-size:.72rem;background:${p.priority==='high'?'#fee2e2':p.priority==='medium'?'#fef3c7':'#f0fdf4'};color:${p.priority==='high'?'#ef4444':p.priority==='medium'?'#d97706':'#10b981'};padding:2px 7px;border-radius:7px;font-weight:600">${p.priority}</span>`:''}
+              ${p.weight?`<span style="font-size:.72rem;color:var(--primary);font-weight:600">${p.weight}% of grade</span>`:''}
+            </div>
+          </div>
+          <button onclick="openProjectDetail(${p.id})" style="background:var(--primary);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:.75rem;cursor:pointer;white-space:nowrap;flex-shrink:0">Open →</button>
         </div>
-        ${course?`<div style="font-size:.75rem;color:var(--gray);margin-top:2px">${esc(course.name)}</div>`:''}
-        ${p.desc?`<div style="font-size:.75rem;color:var(--gray);margin-top:3px">${esc(p.desc)}</div>`:''}
-        ${total?`<div style="margin-top:7px">
-          <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--gray);margin-bottom:3px"><span>${done}/${total} subtasks</span><span>${pct}%</span></div>
-          <div style="height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden"><div style="height:100%;background:${col};width:${pct}%;border-radius:3px;transition:width .3s"></div></div>
+        <!-- Description -->
+        ${p.desc?`<div style="padding:8px 14px;font-size:.82rem;color:var(--gray);border-bottom:1px solid #fde68a;line-height:1.5">${esc(p.desc)}</div>`:''}
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:0;border-bottom:1px solid #fde68a">
+          <div style="padding:8px 12px;text-align:center;border-right:1px solid #fde68a">
+            <div style="font-size:1.1rem;font-weight:700;color:${col}">${pct}%</div>
+            <div style="font-size:.65rem;color:var(--gray)">Complete</div>
+          </div>
+          <div style="padding:8px 12px;text-align:center;border-right:1px solid #fde68a">
+            <div style="font-size:1.1rem;font-weight:700;color:var(--dark)">${done}/${total}</div>
+            <div style="font-size:.65rem;color:var(--gray)">Tasks</div>
+          </div>
+          ${overdueTasks.length?`<div style="padding:8px 12px;text-align:center;border-right:1px solid #fde68a">
+            <div style="font-size:1.1rem;font-weight:700;color:#ef4444">${overdueTasks.length}</div>
+            <div style="font-size:.65rem;color:var(--gray)">Overdue</div>
+          </div>`:''}
+          ${members.length?`<div style="padding:8px 12px;text-align:center;border-right:1px solid #fde68a">
+            <div style="font-size:1.1rem;font-weight:700;color:#8b5cf6">${members.length}</div>
+            <div style="font-size:.65rem;color:var(--gray)">Members</div>
+          </div>`:''}
+          ${totalMins>0?`<div style="padding:8px 12px;text-align:center">
+            <div style="font-size:1rem;font-weight:700;color:#10b981">${Math.floor(totalMins/60)}h${totalMins%60>0?' '+totalMins%60+'m':''}</div>
+            <div style="font-size:.65rem;color:var(--gray)">Logged</div>
+          </div>`:''}
+        </div>
+        <!-- Progress bar -->
+        ${total?`<div style="padding:10px 14px">
+          <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+            <div style="height:100%;background:${col};width:${pct}%;border-radius:3px;transition:width .3s"></div>
+          </div>
+          <!-- Pending tasks preview -->
+          ${pendingTasks.length?`<div style="margin-top:8px">${pendingTasks.slice(0,3).map(t=>`<div style="display:flex;align-items:center;gap:7px;padding:4px 0;font-size:.78rem;color:var(--dark)">
+            <div style="width:14px;height:14px;border:2px solid ${col};border-radius:3px;flex-shrink:0"></div>
+            <span>${esc(t.name||t.title||'')}</span>
+            ${t.assigneeId?`<span style="font-size:.65rem;background:#e0e7ff;color:#4f46e5;padding:1px 5px;border-radius:5px">${esc((members.find(m=>m.id==t.assigneeId)||{}).name||'')}</span>`:''}
+          </div>`).join('')}${pendingTasks.length>3?`<div style="font-size:.72rem;color:var(--gray);margin-top:3px">+${pendingTasks.length-3} more tasks</div>`:''}</div>`:''}
+        </div>`:'<div style="padding:10px 14px;font-size:.78rem;color:var(--gray)">No subtasks added yet</div>'}
+        <!-- Members -->
+        ${members.length?`<div style="padding:6px 14px 10px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid #fde68a">
+          ${members.map((m,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e2e8f0;padding:3px 9px;border-radius:20px;font-size:.72rem">
+            <span style="width:18px;height:18px;border-radius:50%;background:${col};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.65rem">${(m.name||'?')[0].toUpperCase()}</span>
+            ${esc(m.name)}${m.role?` · <span style="color:var(--gray)">${esc(m.role)}</span>`:''}
+          </span>`).join('')}
         </div>`:''}
-        ${p.members&&p.members.length?`<div style="font-size:.73rem;color:var(--gray);margin-top:5px">👥 ${p.members.map(m=>esc(m.name)).join(', ')}</div>`:''}
       </div>`;}).join('');
   }
 
