@@ -4738,14 +4738,13 @@ function loadApiKeyUI(){
 
 function getUniTrackerContext(){
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
   const activeCourses = D.courses.filter(c=>!c.archived);
   const pendingAssigns = D.assignments.filter(a=>!a.completed).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
   const upcomingExams = D.exams.filter(e=>new Date(e.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const activeProjects = D.projects.filter(p=>p.status!=='completed');
+  const activeProjects = D.projects.filter(p=>p.status!=="completed");
   const graded = D.courses.filter(c=>c.grade&&!c.archived);
-  let tp=0,tc=0;graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});
-  const gpa = tc>0?(tp/tc).toFixed(2):'N/A';
+  let tp=0,tc=0; graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});
+  const gpa = tc>0?(tp/tc).toFixed(2):"N/A";
   const wa = new Date(now); wa.setDate(wa.getDate()-7);
   const weekStudy = D.studyLog.filter(l=>new Date(l.date)>=wa).reduce((s,l)=>s+l.duration,0);
   const income = D.paychecks.reduce((s,p)=>s+(p.net||0),0);
@@ -4753,64 +4752,64 @@ function getUniTrackerContext(){
   const semStart = D.semSettings?.start;
   const semWeeks = D.semSettings?.weeks||12;
   const semWeekNum = semStart?Math.ceil((now-new Date(semStart))/(7*864e5)):null;
+  const scaleStr = (D.student?.gpaScale||"4")==="7"?"/ 7.0":"/ 4.0";
 
-    // Collect PDF content for all courses
-  const pdfContext = activeCourses.map(c=>{
+  const lines = [];
+  lines.push("You are an AI study assistant in UniTracker. You have access to the student data below. Be helpful, concise, friendly and specific.");
+  lines.push("");
+  lines.push("TODAY: "+now.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
+  if(semWeekNum) lines.push("SEMESTER: Week "+semWeekNum+" of "+semWeeks);
+  lines.push("STUDENT: "+(D.student?.name||"Student"));
+  lines.push("");
+  lines.push("COURSES ("+activeCourses.length+"):");
+  activeCourses.forEach(c=>{
+    lines.push("- "+c.name+" ("+c.code+") "+c.credits+" credits"+(c.grade?" Grade: "+gradeLetter(parseFloat(c.grade)):""));
+  });
+  lines.push("GPA: "+gpa+" "+scaleStr);
+  lines.push("");
+  lines.push("PENDING ASSIGNMENTS ("+pendingAssigns.length+"):");
+  pendingAssigns.slice(0,10).forEach(a=>{
+    const c=D.courses.find(x=>x.id==a.courseId);
+    const diff=Math.ceil((new Date(a.dueDate)-now)/864e5);
+    lines.push("- "+a.title+" ("+(c?c.code:"No course")+") Due: "+a.dueDate+" ("+(diff<0?"OVERDUE":diff===0?"TODAY":diff+" days")+") "+a.priority+" priority");
+  });
+  lines.push("");
+  lines.push("UPCOMING EXAMS ("+upcomingExams.length+"):");
+  upcomingExams.slice(0,5).forEach(e=>{
+    const c=D.courses.find(x=>x.id==e.courseId);
+    const diff=Math.ceil((new Date(e.date)-now)/864e5);
+    lines.push("- "+e.name+" ("+(c?c.code:"No course")+") "+e.date+" ("+diff+" days away)");
+  });
+  lines.push("");
+  lines.push("ACTIVE PROJECTS ("+activeProjects.length+"):");
+  activeProjects.slice(0,5).forEach(p=>{
+    const done=(p.subtasks||[]).filter(s=>s.done).length;
+    const total=(p.subtasks||[]).length;
+    lines.push("- "+(p.title||p.name)+" Status: "+p.status+" Tasks: "+done+"/"+total+" Due: "+(p.dueDate||"no date"));
+  });
+  lines.push("");
+  lines.push("STUDY THIS WEEK: "+Math.floor(weekStudy/60)+"h "+weekStudy%60+"m across "+D.studyLog.filter(l=>new Date(l.date)>=wa).length+" sessions");
+  lines.push("BUDGET: Income $"+income.toFixed(2)+" Expenses $"+expenses.toFixed(2)+" Net $"+(income-expenses).toFixed(2));
+  lines.push("");
+  lines.push("SCHEDULE:");
+  D.schedule.slice(0,15).forEach(s=>{ lines.push("- "+s.day+" "+s.startTime+"-"+s.endTime+": "+s.label+" ("+s.type+")"); });
+  lines.push("");
+  lines.push("ATTENDANCE: "+Object.keys(D.attendance||{}).length+" courses tracked");
+
+  // Add PDF content
+  const pdfSections = [];
+  activeCourses.forEach(c=>{
     const pdfs = c.pdfs||[];
-    if(!pdfs.length) return '';
-    return pdfs.map(p=>`--- PDF: ${p.name} (${c.code}) ---\n${(p.text||'').slice(0,8000)}`).join('\n\n');
-  }).filter(Boolean).join('\n\n');
+    pdfs.forEach(p=>{ pdfSections.push("--- PDF: "+p.name+" ("+c.code+") ---\n"+(p.text||"").slice(0,8000)); });
+  });
+  if(pdfSections.length){
+    lines.push("");
+    lines.push("COURSE PDF CONTENT (use to answer questions, summarise, quiz student):");
+    lines.push(pdfSections.join("\n\n").slice(0,30000));
+  }
 
-return `You are an AI study assistant built into UniTracker, a university life management app. You have access to the student's real data. Be helpful, concise, friendly and specific — use their actual data in answers.
-
-TODAY: ${now.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
-${semWeekNum?`SEMESTER: Week ${semWeekNum} of ${semWeeks}`:''}
-STUDENT: ${D.student?.name||'Student'}
-
-COURSES (${activeCourses.length}):
-${activeCourses.map(c=>`- ${c.name} (${c.code}) — ${c.credits} credits${c.grade?' — Current: '+gradeLetter(parseFloat(c.grade)):''}`).join('
-')||'None'}
-
-GPA: ${gpa} ${(D.student?.gpaScale||'4')==='7'?'/ 7.0':'/ 4.0'}
-
-PENDING ASSIGNMENTS (${pendingAssigns.length}):
-${pendingAssigns.slice(0,10).map(a=>{
-  const c=D.courses.find(x=>x.id==a.courseId);
-  const diff=Math.ceil((new Date(a.dueDate)-now)/864e5);
-  return`- ${a.title} (${c?c.code:'No course'}) — Due ${a.dueDate} (${diff<0?'OVERDUE':diff===0?'TODAY':diff+' days'}) — ${a.priority} priority`;
-}).join('
-')||'None'}
-
-UPCOMING EXAMS (${upcomingExams.length}):
-${upcomingExams.slice(0,5).map(e=>{
-  const c=D.courses.find(x=>x.id==e.courseId);
-  const diff=Math.ceil((new Date(e.date)-now)/864e5);
-  return`- ${e.name} (${c?c.code:'No course'}) — ${e.date} (${diff} days away)`;
-}).join('
-')||'None'}
-
-ACTIVE PROJECTS (${activeProjects.length}):
-${activeProjects.slice(0,5).map(p=>{
-  const done=(p.subtasks||[]).filter(s=>s.done).length;
-  const total=(p.subtasks||[]).length;
-  return`- ${p.title||p.name} — ${p.status} — ${done}/${total} tasks — Due ${p.dueDate||'no date'}`;
-}).join('
-')||'None'}
-
-STUDY THIS WEEK: ${Math.floor(weekStudy/60)}h ${weekStudy%60}m across ${D.studyLog.filter(l=>new Date(l.date)>=wa).length} sessions
-
-BUDGET: Income $${income.toFixed(2)} | Expenses $${expenses.toFixed(2)} | Net $${(income-expenses).toFixed(2)}
-
-SCHEDULE (weekly recurring):
-${D.schedule.slice(0,15).map(s=>`- ${s.day} ${s.startTime}-${s.endTime}: ${s.label} (${s.type})`).join('
-')||'None set'}
-
-ATTENDANCE: ${Object.keys(D.attendance||{}).length} courses tracked
-
-${pdfContext?`COURSE PDF CONTENT (use this to answer questions about course material, summarise notes, quiz the student):
-${pdfContext.slice(0,30000)}`:'No course PDFs uploaded yet — student can upload PDFs via Courses → 📄 PDFs button.'}`;
+  return lines.join("\n");
 }
-
 async function sendAIMessage(){
   const input = el('aiInput');
   const key = localStorage.getItem('anthropicKey');
