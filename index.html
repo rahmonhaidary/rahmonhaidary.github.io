@@ -9,6 +9,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="UniTracker">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -855,6 +858,13 @@ body.dark-mode .ai-suggestion{background:#334155;border-color:#475569;color:#a5b
 .ai-course-select{padding:8px 12px;border:2px solid #e2e8f0;border-radius:9px;font-size:.85rem;background:#fff;color:var(--dark);cursor:pointer;min-width:180px;}
 body.dark-mode .pdf-item{background:#334155;border-color:#475569;}
 body.dark-mode .pdf-name{color:#e2e8f0;}
+
+/* ── AI MATH & DIAGRAMS ── */
+.ai-math-block{text-align:center;padding:12px;background:#f8fafc;border-radius:10px;margin:10px 0;overflow-x:auto;border:1px solid #e2e8f0;}
+.ai-math-inline{font-style:italic;color:var(--primary);}
+.katex{font-size:1.1em;}
+.katex-display{margin:0;}
+body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
 </style>
 </head>
 <body>
@@ -4758,7 +4768,7 @@ function getUniTrackerContext(){
   const scaleStr = (D.student?.gpaScale||"4")==="7"?"/ 7.0":"/ 4.0";
 
   const lines = [];
-  lines.push("You are an AI study assistant in UniTracker. You have access to the student data below. Be helpful, concise, friendly and specific.");
+  lines.push("You are an AI study assistant in UniTracker. Format responses using markdown. Rules:\n- ## for headings, ### for subsections, **bold** key terms, bullet lists\n- For math/equations use LaTeX: inline with $equation$ and block with $$equation$$\n- For diagrams use ASCII/text art inside ```diagram blocks\n- For system block diagrams use: [Block] --> [Block] style\n- Be detailed, specific and use the student actual data.");
   lines.push("");
   lines.push("TODAY: "+now.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"}));
   if(semWeekNum) lines.push("SEMESTER: Week "+semWeekNum+" of "+semWeeks);
@@ -4877,24 +4887,215 @@ async function sendAIMessage(){
   if(sendBtn) sendBtn.disabled = false;
 }
 
+function markdownToHTML(text){
+  // Pre-process: handle code/diagram/math blocks first
+  const blocks = [];
+  let processed = text;
+
+  // Extract $$...$$ block math
+  processed = processed.replace(/\$\$([\s\S]+?)\$\$/g, (match, eq)=>{
+    const id = 'BLOCK_'+blocks.length;
+    blocks.push({id, type:'math-block', content:eq.trim()});
+    return '\n'+id+'\n';
+  });
+
+  // Extract ```diagram or ```ascii blocks
+  processed = processed.replace(/```(?:diagram|ascii|block|system)\n?([\s\S]+?)```/g, (match, content)=>{
+    const id = 'BLOCK_'+blocks.length;
+    blocks.push({id, type:'diagram', content:content.trim()});
+    return '\n'+id+'\n';
+  });
+
+  // Extract ```code blocks
+  processed = processed.replace(/```(\w*)\n?([\s\S]+?)```/g, (match, lang, content)=>{
+    const id = 'BLOCK_'+blocks.length;
+    blocks.push({id, type:'code', lang, content:content.trim()});
+    return '\n'+id+'\n';
+  });
+
+  // Now process line by line
+  const lines = processed.split('\n');
+  let html = '';
+  let inList = false;
+  let listType = 'ul';
+
+  for(let i=0; i<lines.length; i++){
+    let line = lines[i];
+
+    // Check if this line is a block placeholder
+    const block = blocks.find(b=>line.trim()===b.id);
+    if(block){
+      if(inList){html+='</'+listType+'>';inList=false;}
+      if(block.type==='math-block'){
+        html += '<div class="ai-math-block" data-math="'+escAttr(block.content)+'">$$'+escAttr(block.content)+'$$</div>';
+      } else if(block.type==='diagram'){
+        html += renderAIDiagram(block.content);
+      } else if(block.type==='code'){
+        html += '<pre style="background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px;overflow-x:auto;font-size:.82rem;margin:10px 0;line-height:1.5"><code>'+escHTML(block.content)+'</code></pre>';
+      }
+      continue;
+    }
+
+    // Escape HTML for normal lines
+    line = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // Headings
+    if(line.startsWith('### ')){
+      if(inList){html+='</'+listType+'>';inList=false;}
+      html += '<h4 style="margin:12px 0 4px;color:var(--dark);font-size:.92rem">'+formatInline(line.slice(4))+'</h4>';
+      continue;
+    }
+    if(line.startsWith('## ')){
+      if(inList){html+='</'+listType+'>';inList=false;}
+      html += '<h3 style="margin:14px 0 6px;color:var(--primary);font-size:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:4px">'+formatInline(line.slice(3))+'</h3>';
+      continue;
+    }
+    if(line.startsWith('# ')){
+      if(inList){html+='</'+listType+'>';inList=false;}
+      html += '<h2 style="margin:0 0 10px;color:var(--dark);font-size:1.05rem">'+formatInline(line.slice(2))+'</h2>';
+      continue;
+    }
+
+    // Bullet points
+    if(line.match(/^[-*] /)){
+      if(!inList||listType!=='ul'){if(inList)html+='</'+listType+'>';html+='<ul style="margin:6px 0;padding-left:0;list-style:none">';inList=true;listType='ul';}
+      html += '<li style="margin-bottom:5px;display:flex;gap:8px;align-items:flex-start"><span style="color:var(--primary);font-weight:700;flex-shrink:0;margin-top:2px">•</span><span>'+formatInline(line.slice(2))+'</span></li>';
+      continue;
+    }
+
+    // Numbered list
+    if(line.match(/^\d+\. /)){
+      if(!inList||listType!=='ol'){if(inList)html+='</'+listType+'>';html+='<ol style="margin:6px 0;padding-left:20px">';inList=true;listType='ol';}
+      html += '<li style="margin-bottom:5px">'+formatInline(line.replace(/^\d+\. /,''))+'</li>';
+      continue;
+    }
+
+    // Close list
+    if(inList && line.trim()===''){html+='</'+listType+'>';inList=false;html+='<div style="height:4px"></div>';continue;}
+    else if(inList){html+='</'+listType+'>';inList=false;}
+
+    // Horizontal rule
+    if(line.match(/^---+$/)){html+='<hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0">';continue;}
+
+    // Empty line
+    if(line.trim()===''){html+='<div style="height:6px"></div>';continue;}
+
+    // Regular paragraph
+    html += '<p style="margin:3px 0;line-height:1.65">'+formatInline(line)+'</p>';
+  }
+
+  if(inList) html += '</'+listType+'>';
+
+  // Now render math with KaTeX if available
+  setTimeout(()=>{
+    document.querySelectorAll('.ai-math-block').forEach(el=>{
+      if(window.katex){
+        try{
+          const eq = el.dataset.math;
+          el.innerHTML = window.katex.renderToString(eq, {displayMode:true,throwOnError:false});
+        }catch(e){}
+      }
+    });
+    document.querySelectorAll('.ai-math-inline').forEach(el=>{
+      if(window.katex){
+        try{
+          const eq = el.dataset.math;
+          el.innerHTML = window.katex.renderToString(eq, {displayMode:false,throwOnError:false});
+        }catch(e){}
+      }
+    });
+  }, 100);
+
+  return html;
+}
+
+function escHTML(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return s.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function formatInline(text){
+  // Bold
+  text = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  // Italic
+  text = text.replace(/\*(.*?)\*/g,'<em>$1</em>');
+  // Inline code
+  text = text.replace(/`([^`]+)`/g,'<code style="background:#f1f5f9;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:.85em;color:#6366f1">$1</code>');
+  // Strikethrough
+  text = text.replace(/~~(.*?)~~/g,'<del>$1</del>');
+  // Inline math $...$
+  text = text.replace(/\$([^$\n]+)\$/g,(match,eq)=>{
+    const id = 'imath_'+Math.random().toString(36).slice(2);
+    if(window.katex){
+      try{ return window.katex.renderToString(eq,{displayMode:false,throwOnError:false}); }catch(e){}
+    }
+    return '<span class="ai-math-inline" data-math="'+escAttr(eq)+'" style="font-style:italic;color:#6366f1">'+eq+'</span>';
+  });
+  return text;
+}
+
+function renderAIDiagram(content){
+  // Check if it's an arrow-flow diagram: A --> B --> C style
+  const isFlow = content.includes('-->') || content.includes('->') || content.includes('=>');
+
+  if(isFlow){
+    // Parse flow diagram
+    const lines = content.split('\n').filter(l=>l.trim());
+    let svgContent = '';
+    const nodes = [];
+    const edges = [];
+
+    // Simple left-to-right flow parser
+    lines.forEach(line=>{
+      const parts = line.split(/-->|->|=>/).map(s=>s.trim()).filter(Boolean);
+      for(let i=0;i<parts.length;i++){
+        if(!nodes.find(n=>n.label===parts[i])) nodes.push({label:parts[i]});
+        if(i>0) edges.push({from:parts[i-1],to:parts[i]});
+      }
+    });
+
+    const W = Math.max(500, nodes.length * 140);
+    const H = 120;
+    const nodeW = 110, nodeH = 44;
+    const spacing = W / (nodes.length + 0.5);
+
+    nodes.forEach((n,i)=>{ n.x = spacing*(i+0.75); n.y = H/2; });
+
+    svgContent = nodes.map(n=>{
+      const isStart = !edges.find(e=>e.to===n.label);
+      const isEnd = !edges.find(e=>e.from===n.label);
+      const fill = isStart?'#6366f1':isEnd?'#10b981':'#f8fafc';
+      const textFill = (isStart||isEnd)?'#fff':'#1e293b';
+      const stroke = isStart?'#4f46e5':isEnd?'#059669':'#6366f1';
+      return `<rect x="${n.x-nodeW/2}" y="${n.y-nodeH/2}" width="${nodeW}" height="${nodeH}" rx="8" fill="${fill}" stroke="${stroke}" stroke-width="2"/>
+        <text x="${n.x}" y="${n.y+5}" text-anchor="middle" font-size="12" font-family="sans-serif" fill="${textFill}" font-weight="600">${escHTML(n.label)}</text>`;
+    }).join('') +
+    edges.map(e=>{
+      const fn = nodes.find(n=>n.label===e.from);
+      const tn = nodes.find(n=>n.label===e.to);
+      if(!fn||!tn) return '';
+      const x1=fn.x+nodeW/2, x2=tn.x-nodeW/2, y=fn.y;
+      const mx=(x1+x2)/2;
+      return `<defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#6366f1"/></marker></defs>
+        <line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#6366f1" stroke-width="2" marker-end="url(#arr)"/>`;
+    }).join('');
+
+    return `<div style="overflow-x:auto;margin:12px 0"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width:100%">${svgContent}</svg></div>`;
+  }
+
+  // Otherwise render as styled ASCII/text diagram
+  return `<div style="background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px;margin:10px 0;font-family:monospace;font-size:.82rem;line-height:1.6;overflow-x:auto;white-space:pre">${escHTML(content)}</div>`;
+}
+
 function appendAIMessage(role, text){
   const msgs = el('aiMessages');
   if(!msgs) return;
   const div = document.createElement('div');
   div.className = 'ai-msg' + (role==='user'?' ai-msg-user':'');
-  // Convert markdown-style bold and newlines
-  const formatted = text
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/\n/g,'<br>')
-    .replace(/^- (.+)/gm,'• $1');
-  div.innerHTML = `<div class="ai-avatar">${role==='user'?'👤':'🤖'}</div><div class="ai-bubble">${formatted}</div>`;
+  const content = role==='user'
+    ? text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')
+    : markdownToHTML(text);
+  div.innerHTML = '<div class="ai-avatar">'+(role==='user'?'👤':'🤖')+'</div><div class="ai-bubble">'+content+'</div>';
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
-  // Show welcome message if first bot message
-  if(role==='bot'&&msgs.children.length<=2){
-    el('aiSuggestions') && (el('aiSuggestions').style.display='none');
-  }
 }
 
 function sendAISuggestion(btn){
