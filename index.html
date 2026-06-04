@@ -1413,12 +1413,15 @@ body.dark-mode .pdf-name{color:#e2e8f0;}
       💡 PDFs uploaded here can be read by the AI assistant. Ask it to summarise, quiz you, or explain concepts from your notes.
     </div>
     <div style="margin-bottom:16px">
-      <label class="btn btn-primary pdf-upload-btn" style="cursor:pointer;width:100%;justify-content:center">
+      <label class="btn btn-primary pdf-upload-btn" style="cursor:pointer;width:100%;justify-content:center" id="pdfUploadLabel-btn">
         📤 Upload PDF
         <input type="file" accept=".pdf" onchange="handlePDFUpload(event)">
       </label>
       <div id="pdfUploadProgress" style="display:none;margin-top:8px">
-        <div style="font-size:.8rem;color:var(--gray);margin-bottom:4px" id="pdfUploadLabel">Uploading…</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-size:.8rem;color:var(--gray)" id="pdfUploadLabel">Uploading…</div>
+          <button onclick="resetPDFUpload()" style="font-size:.72rem;background:none;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;cursor:pointer;color:var(--gray)">Cancel</button>
+        </div>
         <div class="pdf-progress"><div class="pdf-progress-fill" id="pdfProgressBar" style="width:0%"></div></div>
       </div>
     </div>
@@ -4930,6 +4933,16 @@ function initAITab(){
 // ══ COURSE PDFs ══
 let _pdfModalCourseId = null;
 
+
+function resetPDFUpload(){
+  const prog = el('pdfUploadProgress');
+  const bar = el('pdfProgressBar');
+  const label = el('pdfUploadLabel');
+  if(prog) prog.style.display='none';
+  if(bar) bar.style.width='0%';
+  if(label) label.textContent='Uploading…';
+  window._pdfUploadCancelled = true;
+}
 function openCoursePDFs(courseId){
   _pdfModalCourseId = courseId;
   const course = D.courses.find(c=>c.id===courseId);
@@ -4947,18 +4960,27 @@ function renderPDFList(courseId){
     c.innerHTML='<div class="empty"><div class="ei">📄</div><p>No PDFs uploaded yet.<br>Upload lecture notes, textbook chapters, past papers…</p></div>';
     return;
   }
-  c.innerHTML = pdfs.map(pdf=>`
-    <div class="pdf-item">
-      <div class="pdf-icon">PDF</div>
-      <div class="pdf-info">
-        <div class="pdf-name">${esc(pdf.name)}</div>
-        <div class="pdf-meta">${pdf.uploadedAt?new Date(pdf.uploadedAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):''} ${pdf.size?'· '+formatFileSize(pdf.size):''}</div>
-      </div>
-      <div style="display:flex;gap:6px">
-        <a href="${pdf.url}" target="_blank" class="btn btn-secondary btn-sm">👁 View</a>
-        <button class="btn btn-danger btn-sm" onclick="deletePDF(${courseId},'${pdf.path}','${pdf.name}')">🗑</button>
-      </div>
-    </div>`).join('');
+  c.innerHTML = pdfs.map((pdf,idx)=>{
+    const isHW = pdf.isHandwritten;
+    const iconBg = isHW?'linear-gradient(135deg,#8b5cf6,#6366f1)':'linear-gradient(135deg,#ef4444,#dc2626)';
+    const textInfo = pdf.text&&pdf.text.replace(/\[.*?\]/g,'').trim().length>100?' · '+Math.round(pdf.text.length/1000)+'k chars':'';
+    return '<div class="pdf-item">'
+      +'<div class="pdf-icon" style="background:'+iconBg+'">PDF</div>'
+      +'<div class="pdf-info">'
+        +'<div class="pdf-name">'+esc(pdf.name)+'</div>'
+        +'<div class="pdf-meta">'
+          +(pdf.uploadedAt?new Date(pdf.uploadedAt).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):''  )
+          +(pdf.size?' · '+formatFileSize(pdf.size):'')
+          +(isHW?' · ✍️ AI-read':'')
+          +textInfo
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px">'
+        +'<a href="'+pdf.url+'" target="_blank" class="btn btn-secondary btn-sm">👁 View</a>'
+        +'<button class="btn btn-danger btn-sm" onclick="deletePDFById('+courseId+','+idx+')">🗑</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
 }
 
 function formatFileSize(bytes){
@@ -5082,32 +5104,40 @@ async function extractPDFWithVision(file, apiKey, onProgress){
       const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
 
       // Send to Claude vision
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
-          max_tokens: 2000,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: { type: 'base64', media_type: 'image/jpeg', data: base64 }
-              },
-              {
-                type: 'text',
-                text: "This is page "+i+" of handwritten student notes. Transcribe ALL visible text, preserving structure, headings and bullet points. Output only the transcribed content."
-              }
-            ]
-          }]
-        })
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(), 30000); // 30s timeout per page
+      let response;
+      try {
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 2000,
+            messages: [{
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: { type: 'base64', media_type: 'image/jpeg', data: base64 }
+                },
+                {
+                  type: 'text',
+                  text: "This is page "+i+" of handwritten student notes. Transcribe ALL visible text, preserving structure, headings and bullet points. Output only the transcribed content."
+                }
+              ]
+            }]
+          })
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       const data = await response.json();
       if(data.error) throw new Error(data.error.message);
@@ -5206,6 +5236,17 @@ async function deletePDF(courseId, path, name){
   if(!course) return;
   await window.deleteCoursePDF(path);
   course.pdfs = (course.pdfs||[]).filter(p=>p.path!==path);
+  save();
+  renderPDFList(courseId);
+}
+async function deletePDFById(courseId, pdfIndex){
+  const course = D.courses.find(c=>c.id===courseId);
+  if(!course||!course.pdfs) return;
+  const pdf = course.pdfs[pdfIndex];
+  if(!pdf) return;
+  if(!confirm('Delete ' + pdf.name + '?')) return;
+  try { await window.deleteCoursePDF(pdf.path); } catch(e) { console.log('Storage delete error:', e); }
+  course.pdfs.splice(pdfIndex, 1);
   save();
   renderPDFList(courseId);
 }
