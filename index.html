@@ -1410,12 +1410,12 @@ body.dark-mode .pdf-name{color:#e2e8f0;}
       <button class="close-btn" onclick="closeModal('pdfModal')">&times;</button>
     </div>
     <div style="background:#eef2ff;border-radius:10px;padding:11px 14px;margin-bottom:16px;font-size:.83rem;color:#4f46e5">
-      💡 PDFs uploaded here can be read by the AI assistant. Ask it to summarise, quiz you, or explain concepts from your notes.
+      💡 Upload PDFs or images (PNG/JPG). For reMarkable notes, export as PNG and upload. The AI will read your handwriting and answer questions about your notes.
     </div>
     <div style="margin-bottom:16px">
       <label class="btn btn-primary pdf-upload-btn" style="cursor:pointer;width:100%;justify-content:center" id="pdfUploadLabel-btn">
-        📤 Upload PDF
-        <input type="file" accept=".pdf" onchange="handlePDFUpload(event)">
+        📤 Upload PDF or Image
+        <input type="file" accept=".pdf,image/png,image/jpeg,image/jpg" multiple onchange="handlePDFUpload(event)">
       </label>
       <div id="pdfUploadProgress" style="display:none;margin-top:8px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -4934,6 +4934,114 @@ function initAITab(){
 let _pdfModalCourseId = null;
 
 
+
+async function handleImageUpload(files){
+  const courseId = _pdfModalCourseId;
+  const course = D.courses.find(c=>c.id===courseId);
+  if(!course) return;
+  const apiKey = localStorage.getItem('anthropicKey');
+  if(!apiKey){ alert('Add your API key in Settings first to read images.'); return; }
+
+  const prog = el('pdfUploadProgress');
+  const bar = el('pdfProgressBar');
+  const label = el('pdfUploadLabel');
+  if(prog) prog.style.display='block';
+  if(bar) bar.style.width='5%';
+
+  const name = files.length===1 ? files[0].name : files[0].name.replace(/\.[^.]+$/,'')+' ('+files.length+' pages).png';
+
+  // Sort files by name so pages are in order
+  files.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const pageTexts = [];
+  for(let i=0; i<files.length; i++){
+    const file = files[i];
+    if(label) label.textContent = 'AI reading page '+(i+1)+' of '+files.length+'…';
+    if(bar) bar.style.width = (5 + Math.round((i/files.length)*60))+'%';
+
+    try {
+      // Convert image to base64
+      const base64 = await new Promise((res,rej)=>{
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result.split(',')[1]);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+
+      const mediaType = file.type || 'image/png';
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(), 30000);
+      let response;
+      try {
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-5',
+            max_tokens: 2000,
+            messages:[{
+              role:'user',
+              content:[
+                { type:'image', source:{ type:'base64', media_type:mediaType, data:base64 } },
+                { type:'text', text:"This is page "+(i+1)+" of handwritten student notes. Transcribe ALL visible text exactly, preserving headings, bullet points, equations and structure. Output only the transcribed content." }
+              ]
+            }]
+          })
+        });
+      } finally { clearTimeout(timeout); }
+
+      const data = await response.json();
+      if(data.error) throw new Error(data.error.message);
+      const pageText = data.content?.[0]?.text||'';
+      if(pageText.trim()) pageTexts.push('--- Page '+(i+1)+' ---\n'+pageText);
+    } catch(e){
+      console.error('Image page '+(i+1)+' error:', e);
+      pageTexts.push('--- Page '+(i+1)+' --- [Could not read: '+e.message+']');
+    }
+  }
+
+  if(bar) bar.style.width='70%';
+  if(label) label.textContent='Saving…';
+
+  const extractedText = pageTexts.join('\n\n');
+
+  // Upload first image to storage as reference
+  const firstFile = files[0];
+  const storageResult = await window.uploadCoursePDF(courseId, firstFile, (pct)=>{
+    if(bar) bar.style.width=(70+pct*0.25)+'%';
+  });
+
+  if(!course.pdfs) course.pdfs=[];
+  course.pdfs.push({
+    name,
+    url: storageResult?.url||'',
+    path: storageResult?.path||'',
+    size: files.reduce((s,f)=>s+f.size,0),
+    uploadedAt: new Date().toISOString(),
+    text: extractedText.slice(0,80000),
+    isHandwritten: true,
+    isImage: true
+  });
+
+  if(bar) bar.style.width='100%';
+  const textLen = extractedText.replace(/\[.*?\]/g,'').trim().length;
+  if(label) label.textContent = textLen>100
+    ? '✅ Done! AI read '+Math.round(textLen/1000)+'k chars from '+files.length+' page'+(files.length!==1?'s':'')+'.'
+    : '⚠️ Uploaded but could not read content.';
+
+  save();
+  renderPDFList(courseId);
+  const pdfEl=el('aiPDFCount');
+  if(pdfEl){ const total=D.courses.reduce((s,c)=>s+(c.pdfs||[]).length,0); pdfEl.textContent='📄 '+total+' PDF'+(total!==1?'s':'')+' loaded'; }
+  setTimeout(()=>{ if(prog) prog.style.display='none'; }, 3000);
+  event && (event.target.value='');
+}
 function resetPDFUpload(){
   const prog = el('pdfUploadProgress');
   const bar = el('pdfProgressBar');
@@ -4990,9 +5098,15 @@ function formatFileSize(bytes){
 }
 
 async function handlePDFUpload(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  if(file.type !== 'application/pdf'){alert('Please upload a PDF file');return;}
+  const files = Array.from(event.target.files);
+  if(!files.length) return;
+  // Handle multiple image files (e.g. multi-page reMarkable export)
+  if(files.length > 1 || files[0].type.startsWith('image/')){
+    await handleImageUpload(files);
+    return;
+  }
+  const file = files[0];
+  if(file.type !== 'application/pdf'){alert('Please upload a PDF or image file');return;}
   if(file.size > 30*1024*1024){alert('File too large. Max 30MB.');return;}
   const courseId = _pdfModalCourseId;
   const course = D.courses.find(c=>c.id===courseId);
