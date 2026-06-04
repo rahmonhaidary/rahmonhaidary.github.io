@@ -832,8 +832,8 @@ body.dark-mode .note-card.pinned{border-color:var(--warning);}
 .ai-msg-user{flex-direction:row-reverse;}
 .ai-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;background:#eef2ff;}
 .ai-msg-user .ai-avatar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;}
-.ai-bubble{padding:11px 15px;border-radius:16px;font-size:.88rem;line-height:1.6;max-width:82%;}
-.ai-msg-bot .ai-bubble{background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px 16px 16px 16px;color:var(--dark);}
+.ai-bubble{padding:14px 18px;border-radius:16px;font-size:.88rem;line-height:1.6;max-width:88%;}
+.ai-msg-bot .ai-bubble{background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px 16px 16px 16px;color:var(--dark);width:100%;}
 .ai-msg-user .ai-bubble{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:16px 4px 16px 16px;}
 .ai-typing{display:flex;gap:5px;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px 16px 16px 16px;width:fit-content;}
 .ai-typing span{width:7px;height:7px;background:#94a3b8;border-radius:50%;animation:aiDot 1.2s infinite;}
@@ -860,7 +860,7 @@ body.dark-mode .pdf-item{background:#334155;border-color:#475569;}
 body.dark-mode .pdf-name{color:#e2e8f0;}
 
 /* ── AI MATH & DIAGRAMS ── */
-.ai-math-block{text-align:center;padding:12px;background:#f8fafc;border-radius:10px;margin:10px 0;overflow-x:auto;border:1px solid #e2e8f0;}
+.ai-math-block{text-align:center;padding:16px;background:#f8fafc;border-radius:10px;margin:12px 0;overflow-x:auto;border:1px solid #e2e8f0;width:100%;}
 .ai-math-inline{font-style:italic;color:var(--primary);}
 .katex{font-size:1.1em;}
 .katex-display{margin:0;}
@@ -1404,7 +1404,7 @@ body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
       <button class="ai-suggestion" onclick="sendAISuggestion(this)">💰 How is my budget looking?</button>
       <button class="ai-suggestion" onclick="sendAISuggestion(this)">⏰ Make me a study plan for this week</button>
     </div>
-    <div id="aiMessages" style="min-height:300px;max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 2px;margin-bottom:16px"></div>
+    <div id="aiMessages" style="min-height:300px;max-height:60vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:4px 0;margin-bottom:16px"></div>
     <div style="display:flex;gap:10px;align-items:flex-end">
       <textarea id="aiInput" placeholder="Ask anything about your courses, assignments, exams, study plans…" rows="2" style="flex:1;resize:none;padding:10px 13px;border:2px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
       <button class="btn btn-primary" onclick="sendAIMessage()" id="aiSendBtn" style="height:44px;padding:0 18px">Send</button>
