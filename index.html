@@ -931,6 +931,7 @@ body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
   <button class="nav-btn" data-tab="attendance">✅ Attendance</button>
   <button class="nav-btn" data-tab="settings">⚙️ Settings</button>
   <button class="nav-btn" data-tab="ai">🤖 AI</button>
+  <button class="nav-btn" data-tab="game">🎮 Game</button>
 </nav>
 
 <!-- DASHBOARD -->
@@ -1436,6 +1437,30 @@ body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
       </div>
     </div>
     <div id="pdfList"><div class="empty"><div class="ei">📄</div><p>No PDFs uploaded yet</p></div></div>
+  </div>
+</div>
+
+<!-- SLOPE GAME -->
+<div id="game" class="tab-content">
+  <div class="card" style="padding:0;overflow:hidden;position:relative">
+    <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <h2 style="color:#fff;margin:0;font-size:1.2rem">🎮 Slope Run</h2>
+        <p style="color:#a5b4fc;font-size:.78rem;margin:2px 0 0">Dodge the red blocks. Don't fall off.</p>
+      </div>
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="text-align:center"><div style="color:#a5b4fc;font-size:.7rem">SCORE</div><div id="gameScore" style="color:#fff;font-size:1.4rem;font-weight:700">0</div></div>
+        <div style="text-align:center"><div style="color:#a5b4fc;font-size:.7rem">BEST</div><div id="gameBest" style="color:#fbbf24;font-size:1.4rem;font-weight:700">0</div></div>
+        <button onclick="startGame()" id="gameStartBtn" class="btn btn-primary" style="background:#6366f1;border:none">▶ Start</button>
+      </div>
+    </div>
+    <canvas id="slopeCanvas" style="display:block;width:100%;background:#0f0a2e;cursor:pointer" height="420"></canvas>
+    <div id="gameOverlay" style="position:absolute;inset:0;top:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,10,46,.85);backdrop-filter:blur(4px)">
+      <div style="font-size:3rem;margin-bottom:10px">🎮</div>
+      <div style="color:#fff;font-size:1.4rem;font-weight:700;margin-bottom:6px">Slope Run</div>
+      <div style="color:#a5b4fc;font-size:.9rem;margin-bottom:24px;text-align:center;max-width:260px">Use ← → arrow keys or A/D to steer.<br>Tap left/right side on mobile.</div>
+      <button onclick="startGame()" class="btn btn-primary" style="padding:12px 32px;font-size:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:12px">▶ Play</button>
+    </div>
   </div>
 </div>
 
@@ -2127,6 +2152,7 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='settings'){renderBgOptions();}
   if(t==='calendar'){renderCalendar();}
   if(t==='ai'){loadApiKeyUI();initAITab();}
+  if(t==='game'){document.getElementById('gameBest').textContent=localStorage.getItem('slopeBest')||'0';}
   if(t==='attendance'){renderAttendance();}
 }));
 document.querySelectorAll('.inner-tab').forEach(b=>b.addEventListener('click',()=>{
@@ -5568,6 +5594,348 @@ function deletePDFById(courseId, pdfIndex){
   renderPDFList(cid);
   // Try storage delete in background (don't block UI)
   if(path && window.deleteCoursePDF) window.deleteCoursePDF(path).catch(()=>{});
+}
+
+
+// ══ SLOPE GAME ══
+let _game = null;
+
+function startGame(){
+  const overlay = document.getElementById('gameOverlay');
+  if(overlay) overlay.style.display = 'none';
+  if(_game) _game.stop();
+  _game = new SlopeGame();
+  _game.start();
+}
+
+class SlopeGame {
+  constructor(){
+    this.canvas = document.getElementById('slopeCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.running = false;
+    this.score = 0;
+    this.speed = 6;
+    this.frame = 0;
+    this.best = parseInt(localStorage.getItem('slopeBest')||'0');
+    document.getElementById('gameBest').textContent = this.best;
+
+    // Ball
+    this.ball = { x: 0, y: 0, vx: 0, vy: 0, r: 14 };
+
+    // Track segments
+    this.segments = [];
+    this.obstacles = [];
+    this.particles = [];
+
+    // Input
+    this.keys = {};
+    this.touchLeft = false;
+    this.touchRight = false;
+
+    this._keydown = (e) => { this.keys[e.key] = true; };
+    this._keyup = (e) => { this.keys[e.key] = false; };
+    this._touchstart = (e) => {
+      e.preventDefault();
+      const r = this.canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - r.left;
+      if(x < r.width/2) this.touchLeft = true;
+      else this.touchRight = true;
+    };
+    this._touchend = (e) => { this.touchLeft = false; this.touchRight = false; };
+
+    window.addEventListener('keydown', this._keydown);
+    window.addEventListener('keyup', this._keyup);
+    this.canvas.addEventListener('touchstart', this._touchstart, {passive:false});
+    this.canvas.addEventListener('touchend', this._touchend);
+    this.canvas.addEventListener('click', (e)=>{
+      const r = this.canvas.getBoundingClientRect();
+      if(e.clientX - r.left < r.width/2) this.keys['ArrowLeft'] = true;
+      else this.keys['ArrowRight'] = true;
+      setTimeout(()=>{ this.keys['ArrowLeft']=false; this.keys['ArrowRight']=false; }, 150);
+    });
+
+    this.resize();
+    window.addEventListener('resize', ()=>this.resize());
+  }
+
+  resize(){
+    const w = this.canvas.parentElement.offsetWidth;
+    this.canvas.width = w;
+    this.W = w;
+    this.H = this.canvas.height;
+    this.ball.x = this.W / 2;
+    this.ball.y = this.H * 0.3;
+    this.generateTrack();
+  }
+
+  generateTrack(){
+    this.segments = [];
+    this.obstacles = [];
+    const segH = 60;
+    const numSegs = Math.ceil(this.H / segH) + 4;
+    let trackX = this.W / 2;
+    let trackW = this.W * 0.7;
+
+    for(let i = -2; i < numSegs; i++){
+      const y = i * segH;
+      // Gradually narrow track and drift
+      if(i > 5){
+        trackX += (Math.random()-0.5) * 40;
+        trackW = Math.max(120, trackW - Math.random()*3);
+      }
+      trackX = Math.max(trackW/2+10, Math.min(this.W-trackW/2-10, trackX));
+      this.segments.push({ y, cx: trackX, w: trackW });
+    }
+    this.scrollY = 0;
+  }
+
+  start(){
+    this.running = true;
+    this.score = 0;
+    this.speed = 5;
+    this.frame = 0;
+    this.ball.x = this.W / 2;
+    this.ball.y = this.H * 0.3;
+    this.ball.vx = 0;
+    this.ball.vy = 0;
+    this.particles = [];
+    this.generateTrack();
+    this.loop();
+  }
+
+  stop(){ this.running = false; }
+
+  loop(){
+    if(!this.running) return;
+    this.update();
+    this.draw();
+    requestAnimationFrame(()=>this.loop());
+  }
+
+  update(){
+    this.frame++;
+    this.score = Math.floor(this.frame / 6);
+    this.speed = 5 + this.score * 0.008;
+    document.getElementById('gameScore').textContent = this.score;
+
+    // Input
+    const left = this.keys['ArrowLeft']||this.keys['a']||this.keys['A']||this.touchLeft;
+    const right = this.keys['ArrowRight']||this.keys['d']||this.keys['D']||this.touchRight;
+    if(left) this.ball.vx -= 0.7;
+    if(right) this.ball.vx += 0.7;
+    this.ball.vx *= 0.88; // friction
+    this.ball.x += this.ball.vx;
+
+    // Scroll track downward
+    this.scrollY += this.speed;
+
+    // Add new segments at top
+    const segH = 60;
+    const topSeg = this.segments[0];
+    if(topSeg && topSeg.y + this.scrollY > -segH){
+      const lastSeg = this.segments[this.segments.length-1];
+      let newCx = lastSeg.cx + (Math.random()-0.5)*50;
+      let newW = Math.max(90, lastSeg.w - Math.random()*4);
+      newCx = Math.max(newW/2+10, Math.min(this.W-newW/2-10, newCx));
+      const newSeg = {y: lastSeg.y - segH, cx: newCx, w: newW};
+      this.segments.unshift(newSeg);
+
+      // Add obstacle occasionally
+      if(this.score > 10 && Math.random() < 0.35){
+        const ox = newCx + (Math.random()-0.5)*(newW*0.5);
+        const ow = 28 + Math.random()*24;
+        const oh = 18;
+        this.obstacles.unshift({y: newSeg.y - segH*0.3, x: ox, w: ow, h: oh});
+      }
+    }
+
+    // Remove off-screen segments and obstacles
+    this.segments = this.segments.filter(s => s.y + this.scrollY < this.H + segH*2);
+    this.obstacles = this.obstacles.filter(o => o.y + this.scrollY < this.H + 60);
+
+    // Trail particles
+    if(this.frame%3===0){
+      this.particles.push({x:this.ball.x, y:this.ball.y, life:18, r:this.ball.r*0.6});
+    }
+    this.particles.forEach(p=>p.life--);
+    this.particles = this.particles.filter(p=>p.life>0);
+
+    // Check bounds using current track segment
+    const ballScreenY = this.ball.y;
+    let onTrack = false;
+    let fell = true;
+
+    for(const seg of this.segments){
+      const sy = seg.y + this.scrollY;
+      const nextIdx = this.segments.indexOf(seg)+1;
+      const nextSeg = this.segments[nextIdx];
+      if(!nextSeg) continue;
+      const ny = nextSeg.y + this.scrollY;
+      if(sy <= ballScreenY && ny > ballScreenY){
+        // Interpolate track width at ball Y
+        const t = (ballScreenY - sy)/(ny - sy);
+        const cx = seg.cx + (nextSeg.cx - seg.cx)*t;
+        const w = seg.w + (nextSeg.w - seg.w)*t;
+        const left = cx - w/2;
+        const right = cx + w/2;
+        if(this.ball.x - this.ball.r > left && this.ball.x + this.ball.r < right){
+          onTrack = true;
+        }
+        fell = false;
+        break;
+      }
+    }
+
+    if(!onTrack && !fell){
+      this.gameOver(); return;
+    }
+
+    // Check obstacles
+    for(const obs of this.obstacles){
+      const oy = obs.y + this.scrollY;
+      if(Math.abs(this.ball.y - oy) < this.ball.r + obs.h/2 &&
+         Math.abs(this.ball.x - obs.x) < this.ball.r + obs.w/2){
+        this.gameOver(); return;
+      }
+    }
+  }
+
+  draw(){
+    const ctx = this.ctx;
+    const W = this.W, H = this.H;
+    ctx.clearRect(0,0,W,H);
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,'#0f0a2e');
+    bg.addColorStop(1,'#1e1b4b');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    // Grid lines for depth effect
+    ctx.strokeStyle = 'rgba(99,102,241,0.08)';
+    ctx.lineWidth = 1;
+    for(let y=this.scrollY%40; y<H; y+=40){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+
+    // Draw track segments
+    if(this.segments.length > 1){
+      // Fill track
+      ctx.beginPath();
+      const first = this.segments[0];
+      ctx.moveTo(first.cx - first.w/2, first.y + this.scrollY);
+      for(const seg of this.segments){
+        ctx.lineTo(seg.cx - seg.w/2, seg.y + this.scrollY);
+      }
+      const last = this.segments[this.segments.length-1];
+      ctx.lineTo(last.cx + last.w/2, last.y + this.scrollY);
+      for(let i=this.segments.length-1; i>=0; i--){
+        const seg = this.segments[i];
+        ctx.lineTo(seg.cx + seg.w/2, seg.y + this.scrollY);
+      }
+      ctx.closePath();
+      const tg = ctx.createLinearGradient(0,0,W,0);
+      tg.addColorStop(0,'#1e1b4b');
+      tg.addColorStop(0.5,'#312e81');
+      tg.addColorStop(1,'#1e1b4b');
+      ctx.fillStyle = tg;
+      ctx.fill();
+
+      // Track edges glow
+      ctx.beginPath();
+      this.segments.forEach((seg,i)=>{
+        const y = seg.y + this.scrollY;
+        if(i===0) ctx.moveTo(seg.cx - seg.w/2, y);
+        else ctx.lineTo(seg.cx - seg.w/2, y);
+      });
+      ctx.strokeStyle = '#6366f1';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#6366f1';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      this.segments.forEach((seg,i)=>{
+        const y = seg.y + this.scrollY;
+        if(i===0) ctx.moveTo(seg.cx + seg.w/2, y);
+        else ctx.lineTo(seg.cx + seg.w/2, y);
+      });
+      ctx.strokeStyle = '#8b5cf6';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#8b5cf6';
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Obstacles
+    this.obstacles.forEach(obs=>{
+      const oy = obs.y + this.scrollY;
+      ctx.fillStyle = '#ef4444';
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.roundRect(obs.x - obs.w/2, oy - obs.h/2, obs.w, obs.h, 5);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    // Trail
+    this.particles.forEach(p=>{
+      const alpha = p.life/18 * 0.4;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r*(p.life/18), 0, Math.PI*2);
+      ctx.fillStyle = `rgba(139,92,246,${alpha})`;
+      ctx.fill();
+    });
+
+    // Ball
+    const ballGrad = ctx.createRadialGradient(
+      this.ball.x - this.ball.r*0.3, this.ball.y - this.ball.r*0.3, 1,
+      this.ball.x, this.ball.y, this.ball.r
+    );
+    ballGrad.addColorStop(0,'#fff');
+    ballGrad.addColorStop(0.4,'#a5b4fc');
+    ballGrad.addColorStop(1,'#6366f1');
+    ctx.beginPath();
+    ctx.arc(this.ball.x, this.ball.y, this.ball.r, 0, Math.PI*2);
+    ctx.fillStyle = ballGrad;
+    ctx.shadowColor = '#6366f1';
+    ctx.shadowBlur = 20;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Score overlay
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillStyle = 'rgba(165,180,252,0.6)';
+    ctx.textAlign = 'right';
+    ctx.fillText('Speed: '+this.speed.toFixed(1)+'x', W-12, 22);
+    ctx.textAlign = 'left';
+  }
+
+  gameOver(){
+    this.running = false;
+    if(this.score > this.best){
+      this.best = this.score;
+      localStorage.setItem('slopeBest', this.best);
+      document.getElementById('gameBest').textContent = this.best;
+    }
+    // Show game over overlay
+    const overlay = document.getElementById('gameOverlay');
+    if(overlay){
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `
+        <div style="font-size:2.5rem;margin-bottom:8px">💥</div>
+        <div style="color:#fff;font-size:1.4rem;font-weight:700;margin-bottom:4px">Game Over</div>
+        <div style="color:#a5b4fc;font-size:.9rem;margin-bottom:6px">Score: <strong style="color:#fff">${this.score}</strong></div>
+        ${this.score>=this.best?'<div style="color:#fbbf24;font-size:.82rem;margin-bottom:16px">🏆 New Best!</div>':'<div style="color:#6366f1;font-size:.82rem;margin-bottom:16px">Best: '+this.best+'</div>'}
+        <button onclick="startGame()" class="btn btn-primary" style="padding:12px 32px;font-size:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:12px">▶ Play Again</button>
+      `;
+    }
+  }
 }
 
 // ══ INIT (non-auth setup only) ══
