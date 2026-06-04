@@ -5353,16 +5353,20 @@ async function deletePDF(courseId, path, name){
   save();
   renderPDFList(courseId);
 }
-async function deletePDFById(courseId, pdfIndex){
-  const course = D.courses.find(c=>c.id==courseId); // == for string/number comparison
-  if(!course||!course.pdfs) return;
-  const pdf = course.pdfs[pdfIndex];
-  if(!pdf) return;
-  if(!confirm('Delete ' + pdf.name + '?')) return;
-  try { if(pdf.path) await window.deleteCoursePDF(pdf.path); } catch(e) { console.log('Storage delete error:', e); }
+function deletePDFById(courseId, pdfIndex){
+  // Use _pdfModalCourseId as fallback since courseId might be mismatched type
+  const cid = _pdfModalCourseId || courseId;
+  const course = D.courses.find(c=>String(c.id)===String(cid));
+  if(!course||!course.pdfs||!course.pdfs[pdfIndex]){ 
+    alert('Could not find PDF. Try refreshing.'); return; 
+  }
+  if(!confirm('Delete ' + (course.pdfs[pdfIndex].name||'this file') + '?')) return;
+  const path = course.pdfs[pdfIndex].path;
   course.pdfs.splice(pdfIndex, 1);
   save();
-  renderPDFList(courseId);
+  renderPDFList(cid);
+  // Try storage delete in background (don't block UI)
+  if(path && window.deleteCoursePDF) window.deleteCoursePDF(path).catch(()=>{});
 }
 
 // ══ INIT (non-auth setup only) ══
