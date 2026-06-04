@@ -5603,7 +5603,7 @@ let _game = null;
 function startGame(){
   const overlay = document.getElementById('gameOverlay');
   if(overlay) overlay.style.display = 'none';
-  if(_game) _game.stop();
+  if(_game){ _game.running = false; }
   _game = new SlopeGame();
   _game.start();
 }
@@ -5614,187 +5614,139 @@ class SlopeGame {
     this.ctx = this.canvas.getContext('2d');
     this.running = false;
     this.score = 0;
-    this.speed = 6;
     this.frame = 0;
     this.best = parseInt(localStorage.getItem('slopeBest')||'0');
     document.getElementById('gameBest').textContent = this.best;
-
-    // Ball
-    this.ball = { x: 0, y: 0, vx: 0, vy: 0, r: 14 };
-
-    // Track segments
-    this.segments = [];
-    this.obstacles = [];
-    this.particles = [];
-
-    // Input
     this.keys = {};
-    this.touchLeft = false;
-    this.touchRight = false;
-
-    this._keydown = (e) => { this.keys[e.key] = true; };
-    this._keyup = (e) => { this.keys[e.key] = false; };
-    this._touchstart = (e) => {
-      e.preventDefault();
-      const r = this.canvas.getBoundingClientRect();
-      const x = e.touches[0].clientX - r.left;
-      if(x < r.width/2) this.touchLeft = true;
-      else this.touchRight = true;
-    };
-    this._touchend = (e) => { this.touchLeft = false; this.touchRight = false; };
-
-    window.addEventListener('keydown', this._keydown);
-    window.addEventListener('keyup', this._keyup);
-    this.canvas.addEventListener('touchstart', this._touchstart, {passive:false});
-    this.canvas.addEventListener('touchend', this._touchend);
-    this.canvas.addEventListener('click', (e)=>{
-      const r = this.canvas.getBoundingClientRect();
-      if(e.clientX - r.left < r.width/2) this.keys['ArrowLeft'] = true;
-      else this.keys['ArrowRight'] = true;
-      setTimeout(()=>{ this.keys['ArrowLeft']=false; this.keys['ArrowRight']=false; }, 150);
-    });
-
-    this.resize();
-    window.addEventListener('resize', ()=>this.resize());
+    this.W = 0; this.H = 0;
+    this._onKey = e => { this.keys[e.key] = e.type==='keydown'; };
+    window.addEventListener('keydown', this._onKey);
+    window.addEventListener('keyup', this._onKey);
+    this.canvas.addEventListener('touchstart', e=>{ e.preventDefault(); const r=this.canvas.getBoundingClientRect(); this.touchDir = e.touches[0].clientX-r.left < r.width/2 ? -1 : 1; }, {passive:false});
+    this.canvas.addEventListener('touchend', ()=>{ this.touchDir=0; });
+    this.touchDir = 0;
   }
 
   resize(){
-    const w = this.canvas.parentElement.offsetWidth;
-    this.canvas.width = w;
-    this.W = w;
-    this.H = this.canvas.height;
-    this.ball.x = this.W / 2;
-    this.ball.y = this.H * 0.3;
-    this.generateTrack();
-  }
-
-  generateTrack(){
-    this.segments = [];
-    this.obstacles = [];
-    const segH = 60;
-    const numSegs = Math.ceil(this.H / segH) + 4;
-    let trackX = this.W / 2;
-    let trackW = this.W * 0.7;
-
-    for(let i = -2; i < numSegs; i++){
-      const y = i * segH;
-      // Gradually narrow track and drift
-      if(i > 5){
-        trackX += (Math.random()-0.5) * 40;
-        trackW = Math.max(120, trackW - Math.random()*3);
-      }
-      trackX = Math.max(trackW/2+10, Math.min(this.W-trackW/2-10, trackX));
-      this.segments.push({ y, cx: trackX, w: trackW });
-    }
-    this.scrollY = 0;
+    this.W = this.canvas.parentElement.clientWidth || 800;
+    this.H = 420;
+    this.canvas.width = this.W;
+    this.canvas.height = this.H;
   }
 
   start(){
+    this.resize();
     this.running = true;
     this.score = 0;
-    this.speed = 5;
     this.frame = 0;
-    this.ball.x = this.W / 2;
-    this.ball.y = this.H * 0.3;
-    this.ball.vx = 0;
-    this.ball.vy = 0;
-    this.particles = [];
-    this.generateTrack();
-    this.loop();
-  }
+    this.speed = 4;
 
-  stop(){ this.running = false; }
+    // Ball starts in centre top third
+    this.bx = this.W / 2;
+    this.by = this.H * 0.25;
+    this.bvx = 0;
+    this.br = 13;
+
+    // Build initial track tiles (horizontal strips)
+    // Each tile: {y, left, right} in world coords
+    // World scrolls down - tiles move up
+    this.tileH = 55;
+    this.tiles = [];
+    this.obs = [];
+    this.worldY = 0; // how far world has scrolled
+
+    // Seed tiles from top to bottom
+    let cx = this.W/2;
+    let tw = this.W * 0.72;
+    for(let i = -2; i < Math.ceil(this.H/this.tileH)+3; i++){
+      this.tiles.push({ row: i, cx, tw });
+      cx += (Math.random()-0.5)*30;
+      tw = Math.max(130, tw-1);
+      cx = Math.max(tw/2+8, Math.min(this.W-tw/2-8, cx));
+    }
+    this.nextRow = this.tiles[this.tiles.length-1].row + 1;
+
+    this.particles = [];
+    this.requestID = requestAnimationFrame(()=>this.loop());
+  }
 
   loop(){
     if(!this.running) return;
     this.update();
     this.draw();
-    requestAnimationFrame(()=>this.loop());
+    this.requestID = requestAnimationFrame(()=>this.loop());
   }
 
   update(){
     this.frame++;
-    this.score = Math.floor(this.frame / 6);
-    this.speed = 5 + this.score * 0.008;
+    this.score = Math.floor(this.frame/6);
+    this.speed = 4 + this.score * 0.007;
     document.getElementById('gameScore').textContent = this.score;
 
-    // Input
-    const left = this.keys['ArrowLeft']||this.keys['a']||this.keys['A']||this.touchLeft;
-    const right = this.keys['ArrowRight']||this.keys['d']||this.keys['D']||this.touchRight;
-    if(left) this.ball.vx -= 0.7;
-    if(right) this.ball.vx += 0.7;
-    this.ball.vx *= 0.88; // friction
-    this.ball.x += this.ball.vx;
+    // Move world
+    this.worldY += this.speed;
 
-    // Scroll track downward
-    this.scrollY += this.speed;
-
-    // Add new segments at top
-    const segH = 60;
-    const topSeg = this.segments[0];
-    if(topSeg && topSeg.y + this.scrollY > -segH){
-      const lastSeg = this.segments[this.segments.length-1];
-      let newCx = lastSeg.cx + (Math.random()-0.5)*50;
-      let newW = Math.max(90, lastSeg.w - Math.random()*4);
-      newCx = Math.max(newW/2+10, Math.min(this.W-newW/2-10, newCx));
-      const newSeg = {y: lastSeg.y - segH, cx: newCx, w: newW};
-      this.segments.unshift(newSeg);
-
-      // Add obstacle occasionally
-      if(this.score > 10 && Math.random() < 0.35){
-        const ox = newCx + (Math.random()-0.5)*(newW*0.5);
-        const ow = 28 + Math.random()*24;
-        const oh = 18;
-        this.obstacles.unshift({y: newSeg.y - segH*0.3, x: ox, w: ow, h: oh});
+    // Spawn new tiles at top
+    const topRow = this.tiles[0].row;
+    const topWorldY = topRow * this.tileH - this.worldY;
+    if(topWorldY > -this.tileH * 2){
+      // Need more tiles at top (lower row number = higher on screen)
+      const last = this.tiles[this.tiles.length-1];
+      let cx = last.cx + (Math.random()-0.5)*45;
+      let tw = Math.max(110, last.tw - Math.random()*3.5);
+      cx = Math.max(tw/2+8, Math.min(this.W-tw/2-8, cx));
+      const row = last.row + 1;
+      this.tiles.push({ row, cx, tw });
+      // Obstacle
+      if(this.score > 8 && Math.random() < 0.4){
+        const ox = cx + (Math.random()-0.5)*tw*0.45;
+        this.obs.push({ row, ox, ow: 26+Math.random()*22, oh: 16 });
       }
     }
 
-    // Remove off-screen segments and obstacles
-    this.segments = this.segments.filter(s => s.y + this.scrollY < this.H + segH*2);
-    this.obstacles = this.obstacles.filter(o => o.y + this.scrollY < this.H + 60);
+    // Remove tiles/obs that scrolled below screen
+    this.tiles = this.tiles.filter(t => t.row*this.tileH - this.worldY < this.H + this.tileH*2);
+    this.obs = this.obs.filter(o => o.row*this.tileH - this.worldY < this.H + 60);
 
-    // Trail particles
-    if(this.frame%3===0){
-      this.particles.push({x:this.ball.x, y:this.ball.y, life:18, r:this.ball.r*0.6});
-    }
+    // Input
+    const left = this.keys['ArrowLeft']||this.keys['a']||this.keys['A']||this.touchDir===-1;
+    const right = this.keys['ArrowRight']||this.keys['d']||this.keys['D']||this.touchDir===1;
+    if(left) this.bvx -= 0.65;
+    if(right) this.bvx += 0.65;
+    this.bvx *= 0.86;
+    this.bx = Math.max(this.br, Math.min(this.W-this.br, this.bx + this.bvx));
+
+    // Trail
+    if(this.frame%2===0) this.particles.push({x:this.bx, y:this.by, life:14});
     this.particles.forEach(p=>p.life--);
     this.particles = this.particles.filter(p=>p.life>0);
 
-    // Check bounds using current track segment
-    const ballScreenY = this.ball.y;
-    let onTrack = false;
-    let fell = true;
+    // Check if ball is on track
+    // Ball is fixed vertically at this.by; track scrolls up
+    // Find the tile at ball's Y position
+    const ballRow = (this.by + this.worldY) / this.tileH;
+    const rowBelow = Math.floor(ballRow);
+    const rowAbove = rowBelow - 1;
+    const tBelow = this.tiles.find(t=>t.row===rowBelow);
+    const tAbove = this.tiles.find(t=>t.row===rowAbove);
 
-    for(const seg of this.segments){
-      const sy = seg.y + this.scrollY;
-      const nextIdx = this.segments.indexOf(seg)+1;
-      const nextSeg = this.segments[nextIdx];
-      if(!nextSeg) continue;
-      const ny = nextSeg.y + this.scrollY;
-      if(sy <= ballScreenY && ny > ballScreenY){
-        // Interpolate track width at ball Y
-        const t = (ballScreenY - sy)/(ny - sy);
-        const cx = seg.cx + (nextSeg.cx - seg.cx)*t;
-        const w = seg.w + (nextSeg.w - seg.w)*t;
-        const left = cx - w/2;
-        const right = cx + w/2;
-        if(this.ball.x - this.ball.r > left && this.ball.x + this.ball.r < right){
-          onTrack = true;
-        }
-        fell = false;
-        break;
+    if(tBelow && tAbove){
+      const frac = ballRow - rowBelow;
+      // Interpolate between tiles
+      const cx = tAbove.cx + (tBelow.cx - tAbove.cx)*frac;
+      const tw = tAbove.tw + (tBelow.tw - tAbove.tw)*frac;
+      const left2 = cx - tw/2;
+      const right2 = cx + tw/2;
+      if(this.bx - this.br < left2 || this.bx + this.br > right2){
+        this.gameOver(); return;
       }
     }
 
-    if(!onTrack && !fell){
-      this.gameOver(); return;
-    }
-
     // Check obstacles
-    for(const obs of this.obstacles){
-      const oy = obs.y + this.scrollY;
-      if(Math.abs(this.ball.y - oy) < this.ball.r + obs.h/2 &&
-         Math.abs(this.ball.x - obs.x) < this.ball.r + obs.w/2){
+    for(const o of this.obs){
+      const oy = o.row * this.tileH - this.worldY;
+      if(Math.abs(this.by - oy) < this.br + o.oh/2 &&
+         Math.abs(this.bx - o.ox) < this.br + o.ow/2){
         this.gameOver(); return;
       }
     }
@@ -5803,114 +5755,108 @@ class SlopeGame {
   draw(){
     const ctx = this.ctx;
     const W = this.W, H = this.H;
-    ctx.clearRect(0,0,W,H);
 
-    // Background gradient
-    const bg = ctx.createLinearGradient(0,0,0,H);
-    bg.addColorStop(0,'#0f0a2e');
-    bg.addColorStop(1,'#1e1b4b');
-    ctx.fillStyle = bg;
+    // Background
+    ctx.fillStyle = '#0a0820';
     ctx.fillRect(0,0,W,H);
 
-    // Grid lines for depth effect
-    ctx.strokeStyle = 'rgba(99,102,241,0.08)';
+    // Subtle grid
+    ctx.strokeStyle = 'rgba(99,102,241,0.06)';
     ctx.lineWidth = 1;
-    for(let y=this.scrollY%40; y<H; y+=40){
+    const gridOff = this.worldY % 50;
+    for(let y = -gridOff; y < H; y+=50){
       ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
     }
+    for(let x = 0; x < W; x+=60){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
 
-    // Draw track segments
-    if(this.segments.length > 1){
-      // Fill track
+    // Draw track
+    if(this.tiles.length > 1){
+      // Sort by row ascending (top of screen first visually = lower row number = smaller worldY)
+      const sorted = [...this.tiles].sort((a,b)=>a.row-b.row);
+
+      // Build left and right edge paths
       ctx.beginPath();
-      const first = this.segments[0];
-      ctx.moveTo(first.cx - first.w/2, first.y + this.scrollY);
-      for(const seg of this.segments){
-        ctx.lineTo(seg.cx - seg.w/2, seg.y + this.scrollY);
-      }
-      const last = this.segments[this.segments.length-1];
-      ctx.lineTo(last.cx + last.w/2, last.y + this.scrollY);
-      for(let i=this.segments.length-1; i>=0; i--){
-        const seg = this.segments[i];
-        ctx.lineTo(seg.cx + seg.w/2, seg.y + this.scrollY);
+      sorted.forEach((t,i)=>{
+        const y = t.row * this.tileH - this.worldY;
+        const lx = t.cx - t.tw/2;
+        const rx = t.cx + t.tw/2;
+        if(i===0){ ctx.moveTo(lx, y); } else { ctx.lineTo(lx, y); }
+      });
+      for(let i=sorted.length-1; i>=0; i--){
+        const t = sorted[i];
+        const y = t.row * this.tileH - this.worldY;
+        ctx.lineTo(t.cx + t.tw/2, y);
       }
       ctx.closePath();
+
+      // Track fill
       const tg = ctx.createLinearGradient(0,0,W,0);
-      tg.addColorStop(0,'#1e1b4b');
-      tg.addColorStop(0.5,'#312e81');
-      tg.addColorStop(1,'#1e1b4b');
+      tg.addColorStop(0,'#1a1040');
+      tg.addColorStop(0.5,'#2d2060');
+      tg.addColorStop(1,'#1a1040');
       ctx.fillStyle = tg;
       ctx.fill();
 
-      // Track edges glow
+      // Left edge glow
       ctx.beginPath();
-      this.segments.forEach((seg,i)=>{
-        const y = seg.y + this.scrollY;
-        if(i===0) ctx.moveTo(seg.cx - seg.w/2, y);
-        else ctx.lineTo(seg.cx - seg.w/2, y);
+      sorted.forEach((t,i)=>{
+        const y = t.row * this.tileH - this.worldY;
+        if(i===0) ctx.moveTo(t.cx-t.tw/2, y); else ctx.lineTo(t.cx-t.tw/2, y);
       });
-      ctx.strokeStyle = '#6366f1';
+      ctx.strokeStyle = '#818cf8';
       ctx.lineWidth = 3;
-      ctx.shadowColor = '#6366f1';
-      ctx.shadowBlur = 8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.shadowColor = '#6366f1'; ctx.shadowBlur = 10;
+      ctx.stroke(); ctx.shadowBlur = 0;
 
+      // Right edge glow
       ctx.beginPath();
-      this.segments.forEach((seg,i)=>{
-        const y = seg.y + this.scrollY;
-        if(i===0) ctx.moveTo(seg.cx + seg.w/2, y);
-        else ctx.lineTo(seg.cx + seg.w/2, y);
+      sorted.forEach((t,i)=>{
+        const y = t.row * this.tileH - this.worldY;
+        if(i===0) ctx.moveTo(t.cx+t.tw/2, y); else ctx.lineTo(t.cx+t.tw/2, y);
       });
-      ctx.strokeStyle = '#8b5cf6';
+      ctx.strokeStyle = '#a78bfa';
       ctx.lineWidth = 3;
-      ctx.shadowColor = '#8b5cf6';
-      ctx.shadowBlur = 8;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.shadowColor = '#8b5cf6'; ctx.shadowBlur = 10;
+      ctx.stroke(); ctx.shadowBlur = 0;
     }
 
     // Obstacles
-    this.obstacles.forEach(obs=>{
-      const oy = obs.y + this.scrollY;
+    this.obs.forEach(o=>{
+      const oy = o.row * this.tileH - this.worldY;
+      if(oy < -20 || oy > H+20) return;
       ctx.fillStyle = '#ef4444';
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 12;
+      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 14;
       ctx.beginPath();
-      ctx.roundRect(obs.x - obs.w/2, oy - obs.h/2, obs.w, obs.h, 5);
+      ctx.roundRect(o.ox - o.ow/2, oy - o.oh/2, o.ow, o.oh, 5);
       ctx.fill();
       ctx.shadowBlur = 0;
     });
 
     // Trail
     this.particles.forEach(p=>{
-      const alpha = p.life/18 * 0.4;
+      const a = p.life/14 * 0.35;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r*(p.life/18), 0, Math.PI*2);
-      ctx.fillStyle = `rgba(139,92,246,${alpha})`;
+      ctx.arc(p.x, p.y, 8*(p.life/14), 0, Math.PI*2);
+      ctx.fillStyle = `rgba(139,92,246,${a})`;
       ctx.fill();
     });
 
     // Ball
-    const ballGrad = ctx.createRadialGradient(
-      this.ball.x - this.ball.r*0.3, this.ball.y - this.ball.r*0.3, 1,
-      this.ball.x, this.ball.y, this.ball.r
-    );
-    ballGrad.addColorStop(0,'#fff');
-    ballGrad.addColorStop(0.4,'#a5b4fc');
-    ballGrad.addColorStop(1,'#6366f1');
+    const g = ctx.createRadialGradient(this.bx-4, this.by-4, 1, this.bx, this.by, this.br);
+    g.addColorStop(0,'#fff');
+    g.addColorStop(0.3,'#c7d2fe');
+    g.addColorStop(1,'#4f46e5');
     ctx.beginPath();
-    ctx.arc(this.ball.x, this.ball.y, this.ball.r, 0, Math.PI*2);
-    ctx.fillStyle = ballGrad;
-    ctx.shadowColor = '#6366f1';
-    ctx.shadowBlur = 20;
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.arc(this.bx, this.by, this.br, 0, Math.PI*2);
+    ctx.fillStyle = g;
+    ctx.shadowColor = '#6366f1'; ctx.shadowBlur = 22;
+    ctx.fill(); ctx.shadowBlur = 0;
 
-    // Score overlay
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.font = 'bold 13px sans-serif';
-    ctx.fillStyle = 'rgba(165,180,252,0.6)';
+    // Speed indicator
+    ctx.fillStyle = 'rgba(165,180,252,0.5)';
+    ctx.font = '12px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText('Speed: '+this.speed.toFixed(1)+'x', W-12, 22);
     ctx.textAlign = 'left';
@@ -5918,21 +5864,23 @@ class SlopeGame {
 
   gameOver(){
     this.running = false;
+    cancelAnimationFrame(this.requestID);
+    window.removeEventListener('keydown', this._onKey);
+    window.removeEventListener('keyup', this._onKey);
     if(this.score > this.best){
       this.best = this.score;
       localStorage.setItem('slopeBest', this.best);
       document.getElementById('gameBest').textContent = this.best;
     }
-    // Show game over overlay
     const overlay = document.getElementById('gameOverlay');
     if(overlay){
       overlay.style.display = 'flex';
       overlay.innerHTML = `
         <div style="font-size:2.5rem;margin-bottom:8px">💥</div>
-        <div style="color:#fff;font-size:1.4rem;font-weight:700;margin-bottom:4px">Game Over</div>
-        <div style="color:#a5b4fc;font-size:.9rem;margin-bottom:6px">Score: <strong style="color:#fff">${this.score}</strong></div>
+        <div style="color:#fff;font-size:1.5rem;font-weight:700;margin-bottom:4px">Game Over</div>
+        <div style="color:#a5b4fc;font-size:.95rem;margin-bottom:4px">Score: <strong style="color:#fff;font-size:1.2rem">${this.score}</strong></div>
         ${this.score>=this.best?'<div style="color:#fbbf24;font-size:.82rem;margin-bottom:16px">🏆 New Best!</div>':'<div style="color:#6366f1;font-size:.82rem;margin-bottom:16px">Best: '+this.best+'</div>'}
-        <button onclick="startGame()" class="btn btn-primary" style="padding:12px 32px;font-size:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;border-radius:12px">▶ Play Again</button>
+        <button onclick="startGame()" style="padding:12px 36px;font-size:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:12px;cursor:pointer;font-weight:700">▶ Play Again</button>
       `;
     }
   }
