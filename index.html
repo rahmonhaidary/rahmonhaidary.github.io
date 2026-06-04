@@ -973,6 +973,30 @@ body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
   </div>
   <div class="card"><div class="card-header"><h2>📅 Upcoming Deadlines</h2></div><div id="upcomingDeadlines"></div></div>
 
+  <!-- AI STUDY ASSISTANT ON DASHBOARD -->
+  <div class="card" style="border:2px solid #c7d2fe">
+    <div class="card-header">
+      <h2>🤖 AI Study Assistant</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="aiStatus" style="font-size:.75rem;padding:3px 9px;border-radius:8px;background:#f0fdf4;color:#10b981;font-weight:600">Ready</span>
+        <span id="aiPDFCount" style="font-size:.75rem;padding:3px 9px;border-radius:8px;background:#eef2ff;color:#6366f1;font-weight:600"></span>
+        <button class="btn btn-secondary btn-sm" onclick="clearAIChat()">🗑 Clear</button>
+      </div>
+    </div>
+    <div id="aiSuggestions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="ai-suggestion" onclick="sendAISuggestion(this)">📅 What do I have due this week?</button>
+      <button class="ai-suggestion" onclick="sendAISuggestion(this)">📊 How is my semester going?</button>
+      <button class="ai-suggestion" onclick="sendAISuggestion(this)">📖 What should I study today?</button>
+      <button class="ai-suggestion" onclick="sendAISuggestion(this)">🎯 Am I on track to pass?</button>
+      <button class="ai-suggestion" onclick="sendAISuggestion(this)">⏰ Make me a study plan for today</button>
+    </div>
+    <div id="aiMessages" style="min-height:200px;max-height:50vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:4px 0;margin-bottom:14px"></div>
+    <div style="display:flex;gap:10px;align-items:flex-end">
+      <textarea id="aiInput" placeholder="Ask anything about your courses, assignments, exams, study plans…" rows="2" style="flex:1;resize:none;padding:10px 13px;border:2px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMessage();}"></textarea>
+      <button class="btn btn-primary" onclick="sendAIMessage()" id="aiSendBtn" style="height:44px;padding:0 18px">Send</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- COURSES -->
