@@ -4519,8 +4519,8 @@ function openTopicModal(courseId){
 let activeTopic = null;
 function renderTopicList(courseId){
   if(!D.topics) D.topics = {};
-  if(!D.topics[courseId]) D.topics[courseId] = [];
-  const topics = D.topics[courseId];
+  if(!D.topics[courseId] && !D.topics[String(courseId)] && !D.topics[Number(courseId)]) D.topics[courseId] = [];
+  const topics = D.topics[courseId] || D.topics[String(courseId)] || D.topics[Number(courseId)] || [];
   const listEl = el('topicList');
   if(!topics.length){
     listEl.innerHTML = '<p style="color:var(--gray);font-size:.82rem;text-align:center;padding:10px">No topics yet.<br>Upload a course outline to auto-generate.</p>';
@@ -4569,7 +4569,8 @@ function switchTopicToPreview(){
     const modal = el('topicModal');
     const cid = modal?._cid;
     if(cid) {
-      const topic = (D.topics[cid]||[]).find(t=>t.id===activeTopic);
+      const topicList2 = D.topics[cid] || D.topics[String(cid)] || D.topics[Number(cid)] || [];
+      const topic = topicList2.find(t=>String(t.id)===String(activeTopic));
       if(topic?.note) text = topic.note;
     }
   }
@@ -4605,7 +4606,10 @@ function switchTopicToEdit(){
 }
 function selectTopic(id, courseId){
   activeTopic = id;
-  const topic = D.topics[courseId]?.find(t=>t.id===id); if(!topic) return;
+  // Use loose key lookup since courseId might be string or number
+  const topicList = D.topics[courseId] || D.topics[String(courseId)] || D.topics[Number(courseId)] || [];
+  const topic = topicList.find(t=>String(t.id)===String(id));
+  if(!topic){ console.log('Topic not found:', id, courseId, Object.keys(D.topics||{})); return; }
   // Don't show note area for parent week topics that have sub-topics
   const hasChildren = (D.topics[courseId]||[]).some(t=>t.parentId===id);
   el('topicNoteHeader').textContent = topic.name;
