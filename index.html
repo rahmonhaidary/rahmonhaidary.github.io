@@ -4501,7 +4501,7 @@ function openTopicModal(courseId){
           <!-- Edit mode -->
           <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical;display:none" oninput="saveTopicNote()"></textarea>
           <!-- Toggle -->
-          <div style="display:flex;justify-content:flex-end;margin-top:6px;gap:6px" id="topicNoteToggle" style="display:none">
+          <div style="display:none;justify-content:flex-end;margin-top:6px;gap:6px" id="topicNoteToggle">
             <button class="btn btn-secondary btn-sm" id="topicEditBtn" onclick="switchTopicToEdit()" style="display:none;font-size:.75rem">✏️ Edit</button>
             <button class="btn btn-primary btn-sm" id="topicPreviewBtn" onclick="switchTopicToPreview()" style="display:none;font-size:.75rem">👁 Preview</button>
           </div>
@@ -4563,7 +4563,16 @@ function addTopic(isSub){
 }
 
 function switchTopicToPreview(){
-  const text = el('topicNoteText').value;
+  // Get text from textarea OR directly from topic data as fallback
+  let text = el('topicNoteText')?.value || '';
+  if(!text && activeTopic) {
+    const modal = el('topicModal');
+    const cid = modal?._cid;
+    if(cid) {
+      const topic = (D.topics[cid]||[]).find(t=>t.id===activeTopic);
+      if(topic?.note) text = topic.note;
+    }
+  }
   const rendered = el('topicNoteRendered');
   if(!rendered) return;
   rendered.innerHTML = text ? markdownToHTML(text) : '<p style="color:var(--gray);font-style:italic">No notes yet — click Generate Notes or click here to write.</p>';
