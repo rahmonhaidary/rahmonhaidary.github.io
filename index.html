@@ -865,6 +865,27 @@ body.dark-mode .pdf-name{color:#e2e8f0;}
 .katex{font-size:1.1em;}
 .katex-display{margin:0;}
 body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
+
+/* ── COURSE OUTLINE / TOPICS ── */
+.topic-week-card{background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0;margin-bottom:12px;overflow:hidden;}
+.topic-week-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;background:#fff;border-bottom:1px solid #e2e8f0;}
+.topic-week-header:hover{background:#f8fafc;}
+.topic-week-num{font-size:.72rem;font-weight:700;color:#fff;background:var(--primary);padding:2px 9px;border-radius:10px;flex-shrink:0;}
+.topic-week-title{font-weight:600;font-size:.9rem;color:var(--dark);flex:1;margin:0 10px;}
+.topic-week-body{padding:14px 16px;}
+.topic-item-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f1f5f9;}
+.topic-item-row:last-child{border:none;}
+.topic-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:6px;}
+.topic-note-stub{flex:1;}
+.topic-note-title{font-size:.85rem;font-weight:600;color:var(--dark);}
+.topic-note-preview{font-size:.78rem;color:var(--gray);margin-top:2px;line-height:1.4;}
+.topic-edit-btn{background:none;border:1px solid #e2e8f0;border-radius:6px;padding:2px 8px;font-size:.72rem;cursor:pointer;color:var(--gray);flex-shrink:0;}
+.topic-edit-btn:hover{background:#eef2ff;color:var(--primary);border-color:var(--primary);}
+body.dark-mode .topic-week-card{background:#334155;border-color:#475569;}
+body.dark-mode .topic-week-header{background:#1e293b;border-color:#475569;}
+body.dark-mode .topic-week-title{color:#e2e8f0;}
+body.dark-mode .topic-item-row{border-color:#475569;}
+body.dark-mode .topic-note-title{color:#e2e8f0;}
 </style>
 </head>
 <body>
@@ -1406,6 +1427,45 @@ body.dark-mode .ai-math-block{background:#334155;border-color:#475569;}
 </div>
 
 
+
+<!-- COURSE OUTLINE MODAL -->
+<div class="modal" id="outlineModal">
+  <div class="modal-content" style="max-width:680px">
+    <div class="modal-header">
+      <h2 id="outlineModalTitle">📋 Course Outline</h2>
+      <button class="close-btn" onclick="closeModal('outlineModal')">&times;</button>
+    </div>
+    <div style="background:#eef2ff;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.83rem;color:#4f46e5">
+      💡 Upload your course outline (PDF or image). The AI will automatically create week-by-week topics, note stubs, assignments and exams.
+    </div>
+    <!-- Upload area -->
+    <div id="outlineUploadArea" style="border:2px dashed #c7d2fe;border-radius:12px;padding:28px;text-align:center;margin-bottom:16px;cursor:pointer;transition:all .2s" onclick="document.getElementById('outlineFileInput').click()" ondragover="event.preventDefault();this.style.borderColor='#6366f1'" ondragleave="this.style.borderColor='#c7d2fe'" ondrop="event.preventDefault();handleOutlineDrop(event)">
+      <div style="font-size:2rem;margin-bottom:8px">📄</div>
+      <div style="font-weight:600;color:var(--dark);margin-bottom:4px">Drop your course outline here</div>
+      <div style="font-size:.8rem;color:var(--gray)">PDF or image (PNG, JPG) • Max 20MB</div>
+      <input type="file" id="outlineFileInput" accept=".pdf,image/png,image/jpeg" style="display:none" onchange="handleOutlineUpload(event)">
+    </div>
+    <!-- Progress -->
+    <div id="outlineProgress" style="display:none;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span id="outlineProgressLabel" style="font-size:.83rem;color:var(--gray)">Processing…</span>
+        <span id="outlineProgressPct" style="font-size:.83rem;font-weight:600;color:var(--primary)">0%</span>
+      </div>
+      <div style="height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
+        <div id="outlineProgressBar" style="height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:3px;transition:width .3s;width:0%"></div>
+      </div>
+    </div>
+    <!-- Preview of what will be created -->
+    <div id="outlinePreview" style="display:none">
+      <div style="font-weight:700;color:var(--dark);margin-bottom:10px;font-size:.95rem">✅ Ready to import:</div>
+      <div id="outlinePreviewContent"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" style="flex:1" onclick="applyOutline()">✨ Apply to Course</button>
+        <button class="btn btn-secondary" onclick="closeModal('outlineModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ═══ MODALS ═══ -->
 
@@ -2207,6 +2267,7 @@ function renderCourses(){
         <button class="cc-btn" onclick="showCourseWeeks(${co.id})">📅 Weeks</button>
         <button class="cc-btn" onclick="openTopicModal(${co.id})">📋 Topics</button>
         <button class="cc-btn" onclick="openCoursePDFs(${co.id})">📄 PDFs</button>
+        <button class="cc-btn" onclick="openOutlineModal(${co.id})">📋 Outline</button>
       </div>
     </div>`;
   }).join('');}
@@ -4436,11 +4497,35 @@ function renderTopicList(courseId){
   if(!D.topics) D.topics = {};
   if(!D.topics[courseId]) D.topics[courseId] = [];
   const topics = D.topics[courseId];
-  el('topicList').innerHTML = topics.length ? topics.map((t,i)=>`
-    <div class="topic-item${!t.parentId&&activeTopic===t.id?' active':''}${t.parentId?' subtopic':''}${t.parentId&&activeTopic===t.id?' active':''}" onclick="selectTopic(${t.id},'${courseId}')">
-      ${t.parentId?'└ ':'📌 '}<span style="flex:1">${esc(t.name)}</span>
-      <button onclick="event.stopPropagation();deleteTopic(${t.id},'${courseId}')" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.8rem">✕</button>
-    </div>`).join('') : '<p style="color:var(--gray);font-size:.82rem">No topics yet</p>';
+  const listEl = el('topicList');
+  if(!topics.length){
+    listEl.innerHTML = '<p style="color:var(--gray);font-size:.82rem;text-align:center;padding:10px">No topics yet.<br>Upload a course outline to auto-generate.</p>';
+    return;
+  }
+
+  // Group into parents and children
+  const parents = topics.filter(t=>!t.parentId);
+  const children = topics.filter(t=>t.parentId);
+
+  listEl.innerHTML = parents.map(t=>{
+    const subs = children.filter(c=>c.parentId===t.id);
+    const isActive = activeTopic===t.id;
+    const hasNote = t.note&&t.note.trim().length>0;
+    return`<div>
+      <div class="topic-item${isActive?' active':''}" onclick="selectTopic(${t.id},'${courseId}')">
+        <span style="font-size:.8rem">${t.name.startsWith('Week')?'📅':'📌'}</span>
+        <span style="flex:1;font-size:.83rem">${esc(t.name)}</span>
+        ${hasNote?'<span style="font-size:.65rem;background:#f0fdf4;color:#10b981;padding:1px 5px;border-radius:5px">✓</span>':''}
+        <button onclick="event.stopPropagation();deleteTopic(${t.id},'${courseId}')" style="background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:.8rem;margin-left:2px">✕</button>
+      </div>
+      ${subs.map(s=>`<div class="topic-item subtopic${activeTopic===s.id?' active':''}" onclick="selectTopic(${s.id},'${courseId}')">
+        <span style="font-size:.75rem">└</span>
+        <span style="flex:1;font-size:.78rem">${esc(s.name)}</span>
+        ${s.note&&s.note.trim()?'<span style="font-size:.65rem;background:#f0fdf4;color:#10b981;padding:1px 5px;border-radius:5px">✓</span>':''}
+        <button onclick="event.stopPropagation();deleteTopic(${s.id},'${courseId}')" style="background:none;border:none;cursor:pointer;color:#cbd5e1;font-size:.75rem;margin-left:2px">✕</button>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
 }
 function addTopic(isSub){
   const modal = el('topicModal'); if(!modal||!modal._cid) return;
@@ -5538,6 +5623,282 @@ function deletePDFById(courseId, pdfIndex){
   if(path && window.deleteCoursePDF) window.deleteCoursePDF(path).catch(()=>{});
 }
 
+
+
+// ══ COURSE OUTLINE PROCESSOR ══
+let _outlineCourseId = null;
+let _outlineParsed = null;
+
+function openOutlineModal(courseId){
+  _outlineCourseId = courseId;
+  _outlineParsed = null;
+  const course = D.courses.find(c=>c.id===courseId);
+  el('outlineModalTitle').textContent = '📋 ' + (course?course.name:'Course') + ' — Course Outline';
+  el('outlineProgress').style.display = 'none';
+  el('outlinePreview').style.display = 'none';
+  el('outlineUploadArea').style.display = 'block';
+  openModal('outlineModal');
+}
+
+function handleOutlineDrop(event){
+  const file = event.dataTransfer.files[0];
+  if(file) processOutlineFile(file);
+}
+
+function handleOutlineUpload(event){
+  const file = event.target.files[0];
+  if(file) processOutlineFile(file);
+  event.target.value = '';
+}
+
+async function processOutlineFile(file){
+  const apiKey = localStorage.getItem('anthropicKey');
+  if(!apiKey){ alert('Add your Anthropic API key in Settings → AI Assistant first.'); return; }
+
+  el('outlineUploadArea').style.display = 'none';
+  el('outlineProgress').style.display = 'block';
+  el('outlinePreview').style.display = 'none';
+
+  const setProgress = (pct, label) => {
+    el('outlineProgressBar').style.width = pct+'%';
+    el('outlineProgressPct').textContent = pct+'%';
+    el('outlineProgressLabel').textContent = label;
+  };
+
+  setProgress(10, 'Reading file…');
+
+  try {
+    // Get file content
+    let imageData = null;
+    let mediaType = 'image/png';
+    let textContent = null;
+
+    if(file.type === 'application/pdf'){
+      setProgress(20, 'Extracting text from PDF…');
+      try {
+        textContent = await extractPDFText(file);
+        const goodText = textContent.replace(/\[.*?\]/g,'').trim();
+        if(goodText.length < 200){
+          // Try vision
+          setProgress(25, 'PDF appears image-based, using AI vision…');
+          const pdfjsLib = await loadPDFJS();
+          const ab = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
+          const page = await pdf.getPage(1);
+          const vp = page.getViewport({scale:1.5});
+          const cvs = document.createElement('canvas');
+          cvs.width=vp.width; cvs.height=vp.height;
+          await page.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+          imageData = cvs.toDataURL('image/jpeg',0.85).split(',')[1];
+          mediaType = 'image/jpeg';
+          textContent = null;
+        }
+      } catch(e){ textContent = null; }
+    } else {
+      setProgress(20, 'Reading image…');
+      imageData = await fileToBase64(file);
+      mediaType = file.type||'image/png';
+    }
+
+    setProgress(35, 'AI is analysing your course outline…');
+
+    // Build message content
+    const content = [];
+    if(imageData){
+      content.push({type:'image', source:{type:'base64', media_type:mediaType, data:imageData}});
+    }
+
+    const prompt = (textContent ? 'Here is the course outline text:\n\n'+textContent+'\n\n' : '') +
+      'Analyse this course outline and extract a structured JSON response. Return ONLY valid JSON, no other text.\n\n'+
+      'Format:\n'+
+      '{\n'+
+      '  "courseName": "string",\n'+
+      '  "weeks": [\n'+
+      '    {\n'+
+      '      "week": 1,\n'+
+      '      "title": "Week title/topic",\n'+
+      '      "topics": ["topic 1", "topic 2", "topic 3"],\n'+
+      '      "notes": "Brief 2-3 sentence overview of what this week covers"\n'+
+      '    }\n'+
+      '  ],\n'+
+      '  "assessments": [\n'+
+      '    {\n'+
+      '      "title": "Assessment name",\n'+
+      '      "type": "assignment|exam|quiz|project",\n'+
+      '      "dueDate": "YYYY-MM-DD or null",\n'+
+      '      "weight": 20,\n'+
+      '      "description": "brief description"\n'+
+      '    }\n'+
+      '  ]\n'+
+      '}\n\n'+
+      'Extract ALL weeks and ALL assessments. If dates are missing use null. Be thorough.';
+
+    content.push({type:'text', text:prompt});
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:4096,
+        messages:[{role:'user', content}]
+      })
+    });
+
+    if(!resp.ok){
+      const err = await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message||'API error '+resp.status);
+    }
+
+    setProgress(75, 'Parsing course structure…');
+
+    const data = await resp.json();
+    const rawText = (data.content||[]).map(c=>c.text||'').join('');
+
+    // Parse JSON from response
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('Could not parse AI response');
+
+    _outlineParsed = JSON.parse(jsonMatch[0]);
+
+    setProgress(95, 'Building preview…');
+
+    // Show preview
+    showOutlinePreview(_outlineParsed);
+    setProgress(100, 'Done!');
+    setTimeout(()=>{
+      el('outlineProgress').style.display='none';
+      el('outlinePreview').style.display='block';
+    }, 500);
+
+  } catch(e){
+    console.error('Outline processing error:', e);
+    el('outlineProgressLabel').textContent = '❌ Error: '+e.message;
+    el('outlineProgressBar').style.background = '#ef4444';
+    setTimeout(()=>{
+      el('outlineProgress').style.display='none';
+      el('outlineUploadArea').style.display='block';
+    }, 3000);
+  }
+}
+
+function showOutlinePreview(parsed){
+  const weeks = parsed.weeks||[];
+  const assessments = parsed.assessments||[];
+  const c = el('outlinePreviewContent');
+
+  let html = '';
+
+  // Weeks summary
+  html += '<div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1px solid #bbf7d0">';
+  html += '<div style="font-weight:700;color:#059669;margin-bottom:6px">📅 '+weeks.length+' weeks detected</div>';
+  html += weeks.slice(0,3).map(w=>'<div style="font-size:.8rem;color:var(--gray);margin-bottom:3px"><strong>Week '+w.week+':</strong> '+esc(w.title||'')+'</div>').join('');
+  if(weeks.length>3) html += '<div style="font-size:.75rem;color:var(--gray)">+'+( weeks.length-3)+' more weeks…</div>';
+  html += '</div>';
+
+  // Assessments summary
+  if(assessments.length){
+    html += '<div style="background:#fef3c7;border-radius:10px;padding:12px 14px;margin-bottom:10px;border:1px solid #fde68a">';
+    html += '<div style="font-weight:700;color:#d97706;margin-bottom:6px">📝 '+assessments.length+' assessments detected</div>';
+    html += assessments.map(a=>'<div style="font-size:.8rem;color:var(--gray);margin-bottom:3px"><strong>'+esc(a.title||'')+'</strong>'+(a.weight?' · '+a.weight+'%':'')+(a.dueDate?' · Due '+a.dueDate:'')+'</div>').join('');
+    html += '</div>';
+  }
+
+  html += '<div style="font-size:.8rem;color:var(--gray);background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #e2e8f0">'+
+    '✨ Clicking "Apply to Course" will:<br>'+
+    '• Create week-by-week topic notes in the Topics section<br>'+
+    (assessments.length?'• Add '+assessments.length+' assignments/exams to your tracker<br>':'')+
+    '• Everything is editable after import'+
+  '</div>';
+
+  c.innerHTML = html;
+}
+
+function applyOutline(){
+  if(!_outlineParsed||!_outlineCourseId) return;
+  const course = D.courses.find(c=>String(c.id)===String(_outlineCourseId));
+  if(!course) return;
+
+  const weeks = _outlineParsed.weeks||[];
+  const assessments = _outlineParsed.assessments||[];
+
+  // Create topics structure
+  if(!D.topics) D.topics={};
+  if(!D.topics[_outlineCourseId]) D.topics[_outlineCourseId]=[];
+
+  // Clear existing auto-generated topics (keep manual ones)
+  D.topics[_outlineCourseId] = D.topics[_outlineCourseId].filter(t=>!t.autoGenerated);
+
+  // Add week topics
+  weeks.forEach(w=>{
+    const weekTopic = {
+      id: uid(),
+      name: 'Week '+w.week+': '+( w.title||''),
+      parentId: null,
+      note: (w.notes||'')+(w.topics&&w.topics.length?'\n\nKey Topics:\n'+w.topics.map(t=>'• '+t).join('\n'):''),
+      autoGenerated: true
+    };
+    D.topics[_outlineCourseId].push(weekTopic);
+
+    // Add sub-topics
+    (w.topics||[]).forEach(topicName=>{
+      D.topics[_outlineCourseId].push({
+        id: uid(),
+        name: topicName,
+        parentId: weekTopic.id,
+        note: '',
+        autoGenerated: true
+      });
+    });
+  });
+
+  // Create assessments
+  assessments.forEach(a=>{
+    // Check if already exists
+    const exists = D.assignments.find(ex=>ex.title.toLowerCase()===( a.title||'').toLowerCase()&&ex.courseId==_outlineCourseId);
+    if(exists) return;
+
+    if(a.type==='exam'){
+      D.exams.push({
+        id: uid(),
+        name: a.title||'Exam',
+        courseId: _outlineCourseId,
+        date: a.dueDate||null,
+        time: null,
+        location: null,
+        notes: a.description||''
+      });
+    } else {
+      D.assignments.push({
+        id: uid(),
+        title: a.title||'Assignment',
+        courseId: _outlineCourseId,
+        dueDate: a.dueDate||null,
+        priority: 'medium',
+        type: a.type||'assignment',
+        weight: a.weight||0,
+        notes: a.description||'',
+        completed: false
+      });
+    }
+  });
+
+  save();
+  renderCourses();
+  renderAssignments();
+  renderExams();
+  checkReminders();
+  closeModal('outlineModal');
+
+  // Show success
+  const course2 = D.courses.find(c=>String(c.id)===String(_outlineCourseId));
+  alert('✅ Done! '+weeks.length+' weeks of topics created'+(assessments.length?' and '+assessments.length+' assessments added':'')+'. Open Topics on your course to see them.');
+}
 
 // ══ INIT (non-auth setup only) ══
 el('studentName').addEventListener('change',save);
