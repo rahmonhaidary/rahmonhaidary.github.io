@@ -4496,7 +4496,15 @@ function openTopicModal(courseId){
             <div style="font-size:1.5rem;margin-bottom:8px">✨</div>
             <div id="topicNoteLoadingMsg">Generating notes…</div>
           </div>
-          <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical" oninput="saveTopicNote()"></textarea>
+          <!-- Rendered view -->
+          <div id="topicNoteRendered" onclick="switchTopicToEdit()" style="flex:1;min-height:300px;padding:4px 2px;cursor:text;overflow-y:auto;display:none" title="Click to edit"></div>
+          <!-- Edit mode -->
+          <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical;display:none" oninput="saveTopicNote()"></textarea>
+          <!-- Toggle -->
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;gap:6px" id="topicNoteToggle" style="display:none">
+            <button class="btn btn-secondary btn-sm" id="topicEditBtn" onclick="switchTopicToEdit()" style="display:none;font-size:.75rem">✏️ Edit</button>
+            <button class="btn btn-primary btn-sm" id="topicPreviewBtn" onclick="switchTopicToPreview()" style="display:none;font-size:.75rem">👁 Preview</button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -4553,6 +4561,39 @@ function addTopic(isSub){
   el(isSub?'topicNewSub':'topicNewName').value='';
   save(); renderTopicList(cid);
 }
+
+function switchTopicToPreview(){
+  const text = el('topicNoteText').value;
+  const rendered = el('topicNoteRendered');
+  if(!rendered) return;
+  rendered.innerHTML = text ? markdownToHTML(text) : '<p style="color:var(--gray);font-style:italic">No notes yet — click Generate Notes or click here to write.</p>';
+  rendered.style.display = 'block';
+  el('topicNoteText').style.display = 'none';
+  const editBtn = el('topicEditBtn');
+  const previewBtn = el('topicPreviewBtn');
+  const toggle = el('topicNoteToggle');
+  if(toggle) toggle.style.display = 'flex';
+  if(editBtn) editBtn.style.display = 'inline-flex';
+  if(previewBtn) previewBtn.style.display = 'none';
+  // Render KaTeX if available
+  if(window.renderMathInElement && rendered){
+    try{ window.renderMathInElement(rendered, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false}); }catch(e){}
+  }
+}
+
+function switchTopicToEdit(){
+  const rendered = el('topicNoteRendered');
+  const textarea = el('topicNoteText');
+  if(rendered) rendered.style.display = 'none';
+  if(textarea) textarea.style.display = 'block';
+  if(textarea) textarea.focus();
+  const editBtn = el('topicEditBtn');
+  const previewBtn = el('topicPreviewBtn');
+  const toggle = el('topicNoteToggle');
+  if(toggle) toggle.style.display = 'flex';
+  if(editBtn) editBtn.style.display = 'none';
+  if(previewBtn) previewBtn.style.display = 'inline-flex';
+}
 function selectTopic(id, courseId){
   activeTopic = id;
   const topic = D.topics[courseId]?.find(t=>t.id===id); if(!topic) return;
@@ -4560,8 +4601,13 @@ function selectTopic(id, courseId){
   const hasChildren = (D.topics[courseId]||[]).some(t=>t.parentId===id);
   el('topicNoteHeader').textContent = topic.name;
   el('topicNoteText').value = topic.note || '';
-  el('topicNoteText').style.display = 'block';
   el('topicNoteLoading').style.display = 'none';
+  // Show rendered or edit depending on whether notes exist
+  if(topic.note && topic.note.trim().length > 10){
+    switchTopicToPreview();
+  } else {
+    switchTopicToEdit();
+  }
   // Show/hide buttons
   const genBtn = el('genSingleBtn');
   const moreBtn = el('moreDetailBtn');
@@ -4579,6 +4625,7 @@ function saveTopicNote(){
   const topic = D.topics[cid]?.find(t=>t.id===activeTopic); if(!topic) return;
   topic.note = el('topicNoteText').value;
   save();
+  renderTopicList(cid);
 }
 function deleteTopic(id, courseId){
   if(!D.topics[courseId]) return;
@@ -6002,6 +6049,7 @@ async function generateSingleTopicNote(){
     el('moreDetailBtn').style.display = 'inline-flex';
     el('genSingleBtn').textContent = '🔄 Regenerate';
     renderTopicList(courseId);
+    switchTopicToPreview();
 
   } catch(e){
     el('topicNoteLoadingMsg').textContent = '❌ Error: '+e.message;
@@ -6071,6 +6119,7 @@ async function generateMoreDetail(){
     save();
     el('topicNoteText').value = topic.note;
     renderTopicList(courseId);
+    switchTopicToPreview();
 
   } catch(e){
     el('topicNoteLoadingMsg').textContent = '❌ Error: '+e.message;
@@ -6079,7 +6128,7 @@ async function generateMoreDetail(){
       el('topicNoteLoading').style.display = 'none';
     }, 2000);
   } finally {
-    el('topicNoteText').style.display = 'block';
+    switchTopicToPreview();
     el('topicNoteLoading').style.display = 'none';
     if(el('moreDetailBtn')) el('moreDetailBtn').disabled = false;
   }
@@ -6155,6 +6204,14 @@ async function generateAllTopicNotes(){
   }
 
   if(btn){ btn.disabled=false; btn.textContent='✨ Generate All Notes'; }
+  // Refresh the currently selected topic view
+  if(activeTopic && courseId){
+    const topic = (D.topics[courseId]||[]).find(t=>t.id===activeTopic);
+    if(topic && topic.note){
+      el('topicNoteText').value = topic.note;
+      switchTopicToPreview();
+    }
+  }
   alert('✅ Done! Generated notes for '+done+' topics.');
 }
 
