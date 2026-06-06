@@ -4587,9 +4587,30 @@ function switchTopicToPreview(){
   if(editBtn) editBtn.style.display = 'inline-flex';
   if(previewBtn) previewBtn.style.display = 'none';
   // Render KaTeX if available
-  if(window.renderMathInElement && rendered){
-    try{ window.renderMathInElement(rendered, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false}); }catch(e){}
-  }
+  setTimeout(()=>{
+    if(window.renderMathInElement && rendered){
+      try{
+        window.renderMathInElement(rendered, {
+          delimiters:[
+            {left:'$$',right:'$$',display:true},
+            {left:'$',right:'$',display:false},
+            {left:'\\(',right:'\\)',display:false},
+            {left:'\\[',right:'\\]',display:true}
+          ],
+          throwOnError:false,
+          output:'html'
+        });
+      }catch(e){ console.log('KaTeX error:', e); }
+    } else if(window.katex) {
+      // Fallback: manually render .ai-math-block and .ai-math-inline
+      rendered.querySelectorAll('.ai-math-block').forEach(el=>{
+        try{ el.innerHTML = window.katex.renderToString(el.dataset.math,{displayMode:true,throwOnError:false}); }catch(e){}
+      });
+      rendered.querySelectorAll('.ai-math-inline').forEach(el=>{
+        try{ el.innerHTML = window.katex.renderToString(el.dataset.math,{displayMode:false,throwOnError:false}); }catch(e){}
+      });
+    }
+  }, 50);
 }
 
 function switchTopicToEdit(){
@@ -5073,7 +5094,16 @@ function markdownToHTML(text){
       } else if(block.type==='diagram'){
         html += renderAIDiagram(block.content);
       } else if(block.type==='code'){
-        html += '<pre style="background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px;overflow-x:auto;font-size:.82rem;margin:10px 0;line-height:1.5"><code>'+escHTML(block.content)+'</code></pre>';
+        // Check if this looks like equations rather than code
+        const isEquation = !block.lang && block.content.split('\n').every(l=>
+          !l.trim() || l.match(/[=+\-*/^(){}\[\]]/)||l.match(/^[A-Za-z_][A-Za-z0-9_().,\s=+\-*/^{}\[\]]+$/)
+        ) && !block.content.includes('function') && !block.content.includes('import') && !block.content.includes('{');
+        if(isEquation){
+          const mathLines = block.content.split('\n').filter(l=>l.trim());
+          html += mathLines.map(l=>'<div class="ai-math-block" data-math="'+escAttr(l.trim())+'">'+l.trim()+'</div>').join('');
+        } else {
+          html += '<pre style="background:#1e293b;color:#e2e8f0;border-radius:10px;padding:14px;overflow-x:auto;font-size:.82rem;margin:10px 0;line-height:1.5"><code>'+escHTML(block.content)+'</code></pre>';
+        }
       }
       continue;
     }
@@ -6051,7 +6081,7 @@ async function generateSingleTopicNote(){
         max_tokens:1500,
         messages:[{
           role:'user',
-          content: prompt+'\n\nFormat with clear headings, bullet points and examples. Be concise but thorough. Use markdown formatting.'
+          content: prompt+'\n\nFormat with clear headings (##, ###), bullet points and examples. For ALL equations and formulas use LaTeX math notation: inline math with $equation$ and display/block equations with $$equation$$. For example: The transfer function is $$G(s) = \\frac{K}{s+1}$$ Be concise but thorough.'
         }]
       })
     });
@@ -6180,7 +6210,7 @@ async function generateAllTopicNotes(){
       const prompt = (courseCtx
         ? 'Based on these course materials:\n\n'+courseCtx.slice(0,5000)+'\n\nWrite study notes for: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')
         : 'Write study notes for a university student on: "'+topic.name+'" for '+( course?course.name:'')+' \n\nCover key concepts, definitions and examples.'
-      )+'\n\nFormat with markdown headings and bullet points. Be concise but thorough. Max 400 words.';
+      )+'\n\nFormat with markdown headings (##, ###) and bullet points. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Example: $$G(s) = \\frac{K}{Ts+1}$$ Be concise but thorough. Max 400 words.';
 
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
