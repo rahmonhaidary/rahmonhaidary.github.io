@@ -4466,7 +4466,7 @@ function openTopicModal(courseId){
   let modal = el('topicModal');
   if(!modal){
     modal = document.createElement('div'); modal.className='modal'; modal.id='topicModal';
-    modal.innerHTML=`<div class="modal-content" style="max-width:900px;height:85vh;display:flex;flex-direction:column">
+    modal.innerHTML=`<div class="modal-content" style="max-width:1000px;height:92vh;display:flex;flex-direction:column">
       <div class="modal-header">
         <h2 id="topicModalTitle"></h2>
         <div style="display:flex;gap:8px;align-items:center">
@@ -4475,7 +4475,7 @@ function openTopicModal(courseId){
         </div>
       </div>
       <div class="topic-layout" style="flex:1;overflow:hidden;gap:16px">
-        <div class="topic-sidebar" style="overflow-y:auto;max-height:100%">
+        <div class="topic-sidebar" style="overflow-y:auto;max-height:100%;min-width:260px;width:260px">
           <div style="margin-bottom:10px">
             <input type="text" id="topicNewName" placeholder="New topic…" style="width:100%;margin-bottom:6px">
             <input type="text" id="topicNewSub" placeholder="New subtopic…" style="width:100%;margin-bottom:6px">
@@ -4497,9 +4497,9 @@ function openTopicModal(courseId){
             <div id="topicNoteLoadingMsg">Generating notes…</div>
           </div>
           <!-- Rendered view -->
-          <div id="topicNoteRendered" onclick="switchTopicToEdit()" style="flex:1;min-height:300px;padding:8px 4px;cursor:text;overflow-y:auto;display:none;font-size:.88rem;line-height:1.7" title="Click to edit"></div>
+          <div id="topicNoteRendered" onclick="switchTopicToEdit()" style="flex:1;min-height:500px;padding:10px 6px;cursor:text;overflow-y:auto;display:none;font-size:.88rem;line-height:1.75" title="Click to edit"></div>
           <!-- Edit mode -->
-          <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical;display:none" oninput="saveTopicNote()"></textarea>
+          <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:500px;resize:vertical;display:none" oninput="saveTopicNote()"></textarea>
           <!-- Toggle -->
           <div style="display:none;justify-content:flex-end;margin-top:6px;gap:6px" id="topicNoteToggle">
             <button class="btn btn-secondary btn-sm" id="topicEditBtn" onclick="switchTopicToEdit()" style="display:none;font-size:.75rem">✏️ Edit</button>
