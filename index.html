@@ -4467,7 +4467,13 @@ function openTopicModal(courseId){
   if(!modal){
     modal = document.createElement('div'); modal.className='modal'; modal.id='topicModal';
     modal.innerHTML=`<div class="modal-content" style="max-width:900px;height:85vh;display:flex;flex-direction:column">
-      <div class="modal-header"><h2 id="topicModalTitle"></h2><button class="close-btn" onclick="closeModal('topicModal')">&times;</button></div>
+      <div class="modal-header">
+        <h2 id="topicModalTitle"></h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary btn-sm" onclick="generateAllTopicNotes()" id="genAllBtn" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none">✨ Generate All Notes</button>
+          <button class="close-btn" onclick="closeModal('topicModal')">&times;</button>
+        </div>
+      </div>
       <div class="topic-layout" style="flex:1;overflow:hidden;gap:16px">
         <div class="topic-sidebar" style="overflow-y:auto;max-height:100%">
           <div style="margin-bottom:10px">
@@ -4479,7 +4485,17 @@ function openTopicModal(courseId){
           <div id="topicList"></div>
         </div>
         <div class="topic-note-area" style="overflow-y:auto;max-height:100%;display:flex;flex-direction:column">
-          <div id="topicNoteHeader" style="font-weight:700;font-size:1rem;margin-bottom:10px;color:var(--primary)">Select a topic</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+            <div id="topicNoteHeader" style="font-weight:700;font-size:1rem;color:var(--primary)">Select a topic</div>
+            <div style="display:flex;gap:6px" id="topicNoteActions" style="display:none">
+              <button class="btn btn-secondary btn-sm" id="genSingleBtn" onclick="generateSingleTopicNote()" style="display:none">✨ Generate Notes</button>
+              <button class="btn btn-primary btn-sm" id="moreDetailBtn" onclick="generateMoreDetail()" style="display:none">📚 More Detail</button>
+            </div>
+          </div>
+          <div id="topicNoteLoading" style="display:none;text-align:center;padding:20px;color:var(--gray)">
+            <div style="font-size:1.5rem;margin-bottom:8px">✨</div>
+            <div id="topicNoteLoadingMsg">Generating notes…</div>
+          </div>
           <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical" oninput="saveTopicNote()"></textarea>
         </div>
       </div>
@@ -4540,8 +4556,21 @@ function addTopic(isSub){
 function selectTopic(id, courseId){
   activeTopic = id;
   const topic = D.topics[courseId]?.find(t=>t.id===id); if(!topic) return;
+  // Don't show note area for parent week topics that have sub-topics
+  const hasChildren = (D.topics[courseId]||[]).some(t=>t.parentId===id);
   el('topicNoteHeader').textContent = topic.name;
   el('topicNoteText').value = topic.note || '';
+  el('topicNoteText').style.display = 'block';
+  el('topicNoteLoading').style.display = 'none';
+  // Show/hide buttons
+  const genBtn = el('genSingleBtn');
+  const moreBtn = el('moreDetailBtn');
+  const actions = el('topicNoteActions');
+  if(genBtn) genBtn.style.display = 'inline-flex';
+  if(moreBtn) moreBtn.style.display = topic.note&&topic.note.trim().length>50 ? 'inline-flex' : 'none';
+  if(actions) actions.style.display = 'flex';
+  // Update gen button label
+  if(genBtn) genBtn.textContent = topic.note&&topic.note.trim() ? '🔄 Regenerate' : '✨ Generate Notes';
   renderTopicList(courseId);
 }
 function saveTopicNote(){
@@ -5898,6 +5927,235 @@ function applyOutline(){
   // Show success
   const course2 = D.courses.find(c=>String(c.id)===String(_outlineCourseId));
   alert('✅ Done! '+weeks.length+' weeks of topics created'+(assessments.length?' and '+assessments.length+' assessments added':'')+'. Open Topics on your course to see them.');
+}
+
+
+// ══ AI TOPIC NOTE GENERATION ══
+
+function getTopicModalCourseId(){
+  const modal = el('topicModal');
+  return modal?._cid || null;
+}
+
+function buildCourseContext(courseId){
+  const course = D.courses.find(c=>c.id===courseId);
+  if(!course) return '';
+  const pdfs = (course.pdfs||[]).filter(p=>p.text&&p.text.trim().length>100);
+  let ctx = 'Course: '+course.name+' ('+course.code+')';
+  if(pdfs.length){
+    ctx += '\n\nCourse materials (from uploaded PDFs):\n';
+    ctx += pdfs.map(p=>p.text.slice(0,6000)).join('\n\n---\n\n');
+  }
+  return ctx;
+}
+
+async function generateSingleTopicNote(){
+  const courseId = getTopicModalCourseId();
+  if(!courseId || !activeTopic) return;
+  const course = D.courses.find(c=>c.id===courseId);
+  const topic = (D.topics[courseId]||[]).find(t=>t.id===activeTopic);
+  if(!topic) return;
+
+  const apiKey = localStorage.getItem('anthropicKey');
+  if(!apiKey){ alert('Add your API key in Settings → AI Assistant first.'); return; }
+
+  // Show loading
+  el('topicNoteText').style.display = 'none';
+  el('topicNoteLoading').style.display = 'block';
+  el('topicNoteLoadingMsg').textContent = 'Generating notes for "'+topic.name+'"…';
+  el('genSingleBtn').disabled = true;
+
+  try {
+    const courseCtx = buildCourseContext(courseId);
+    const parentTopic = topic.parentId ? (D.topics[courseId]||[]).find(t=>t.id===topic.parentId) : null;
+
+    const prompt = courseCtx
+      ? 'Based on the course materials provided, write comprehensive study notes for the topic: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')+'\n\nCourse context:\n'+courseCtx
+      : 'Write comprehensive study notes for a university student on the topic: "'+topic.name+'" for the course '+( course?course.name:'')+'\n\nInclude: key concepts, definitions, examples, and important formulas if relevant.';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:1500,
+        messages:[{
+          role:'user',
+          content: prompt+'\n\nFormat with clear headings, bullet points and examples. Be concise but thorough. Use markdown formatting.'
+        }]
+      })
+    });
+
+    if(!resp.ok) throw new Error('API error '+resp.status);
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const notes = (data.content||[]).map(c=>c.text||'').join('');
+
+    topic.note = notes;
+    save();
+    el('topicNoteText').value = notes;
+    el('moreDetailBtn').style.display = 'inline-flex';
+    el('genSingleBtn').textContent = '🔄 Regenerate';
+    renderTopicList(courseId);
+
+  } catch(e){
+    el('topicNoteLoadingMsg').textContent = '❌ Error: '+e.message;
+    setTimeout(()=>{
+      el('topicNoteText').style.display = 'block';
+      el('topicNoteLoading').style.display = 'none';
+    }, 2000);
+  } finally {
+    el('topicNoteText').style.display = 'block';
+    el('topicNoteLoading').style.display = 'none';
+    if(el('genSingleBtn')) el('genSingleBtn').disabled = false;
+  }
+}
+
+async function generateMoreDetail(){
+  const courseId = getTopicModalCourseId();
+  if(!courseId || !activeTopic) return;
+  const course = D.courses.find(c=>c.id===courseId);
+  const topic = (D.topics[courseId]||[]).find(t=>t.id===activeTopic);
+  if(!topic) return;
+
+  const apiKey = localStorage.getItem('anthropicKey');
+  if(!apiKey){ alert('Add your API key in Settings → AI Assistant first.'); return; }
+
+  el('topicNoteText').style.display = 'none';
+  el('topicNoteLoading').style.display = 'block';
+  el('topicNoteLoadingMsg').textContent = 'Generating deeper explanation…';
+  el('moreDetailBtn').disabled = true;
+
+  try {
+    const courseCtx = buildCourseContext(courseId);
+    const existing = topic.note || '';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-5',
+        max_tokens:2000,
+        messages:[{
+          role:'user',
+          content:'I already have these notes on "'+topic.name+'" for '+( course?course.name:'')+':'+
+            '\n\n'+existing+'\n\n'+
+            (courseCtx?'Course materials:\n'+courseCtx+'\n\n':'')+
+            'Please expand these notes with:\n'+
+            '- Deeper explanations of complex concepts\n'+
+            '- More worked examples\n'+
+            '- Common exam questions and answers\n'+
+            '- Connections to other topics\n'+
+            '- Any important formulas or derivations\n\n'+
+            'Append the additional content after the existing notes with a "## 📚 Deep Dive" heading.'
+        }]
+      })
+    });
+
+    if(!resp.ok) throw new Error('API error '+resp.status);
+    const data = await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    const extra = (data.content||[]).map(c=>c.text||'').join('');
+
+    topic.note = existing + '\n\n' + extra;
+    save();
+    el('topicNoteText').value = topic.note;
+    renderTopicList(courseId);
+
+  } catch(e){
+    el('topicNoteLoadingMsg').textContent = '❌ Error: '+e.message;
+    setTimeout(()=>{
+      el('topicNoteText').style.display = 'block';
+      el('topicNoteLoading').style.display = 'none';
+    }, 2000);
+  } finally {
+    el('topicNoteText').style.display = 'block';
+    el('topicNoteLoading').style.display = 'none';
+    if(el('moreDetailBtn')) el('moreDetailBtn').disabled = false;
+  }
+}
+
+async function generateAllTopicNotes(){
+  const courseId = getTopicModalCourseId();
+  if(!courseId) return;
+  const course = D.courses.find(c=>c.id===courseId);
+  const topics = (D.topics[courseId]||[]);
+  // Only generate for topics without notes (subtopics + parent topics)
+  const toGenerate = topics.filter(t=>!t.note||!t.note.trim());
+  if(!toGenerate.length){ alert('All topics already have notes!'); return; }
+
+  const apiKey = localStorage.getItem('anthropicKey');
+  if(!apiKey){ alert('Add your API key in Settings → AI Assistant first.'); return; }
+
+  const cost = (toGenerate.length * 0.008).toFixed(2);
+  if(!confirm('Generate notes for '+toGenerate.length+' topics? Estimated cost: ~$'+cost+' in API credits.')) return;
+
+  const btn = el('genAllBtn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Generating…'; }
+
+  const courseCtx = buildCourseContext(courseId);
+  let done = 0;
+
+  for(const topic of toGenerate){
+    if(btn) btn.textContent='⏳ '+done+'/'+toGenerate.length+' done…';
+    const parentTopic = topic.parentId ? topics.find(t=>t.id===topic.parentId) : null;
+
+    try {
+      const prompt = (courseCtx
+        ? 'Based on these course materials:\n\n'+courseCtx.slice(0,5000)+'\n\nWrite study notes for: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')
+        : 'Write study notes for a university student on: "'+topic.name+'" for '+( course?course.name:'')+' \n\nCover key concepts, definitions and examples.'
+      )+'\n\nFormat with markdown headings and bullet points. Be concise but thorough. Max 400 words.';
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({
+          model:'claude-sonnet-4-5',
+          max_tokens:800,
+          messages:[{role:'user', content:prompt}]
+        })
+      });
+
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const data = await resp.json();
+      if(data.error) throw new Error(data.error.message);
+      topic.note = (data.content||[]).map(c=>c.text||'').join('');
+      done++;
+
+      // Save after each to preserve progress
+      save();
+      renderTopicList(courseId);
+
+      // If this is the active topic, update the textarea
+      if(activeTopic===topic.id) el('topicNoteText').value = topic.note;
+
+    } catch(e){
+      console.error('Error generating note for '+topic.name+':', e);
+      topic.note = '[Generation failed: '+e.message+']';
+      done++;
+    }
+
+    // Small delay to avoid rate limiting
+    await new Promise(r=>setTimeout(r, 300));
+  }
+
+  if(btn){ btn.disabled=false; btn.textContent='✨ Generate All Notes'; }
+  alert('✅ Done! Generated notes for '+done+' topics.');
 }
 
 // ══ INIT (non-auth setup only) ══
