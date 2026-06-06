@@ -4497,7 +4497,7 @@ function openTopicModal(courseId){
             <div id="topicNoteLoadingMsg">Generating notes…</div>
           </div>
           <!-- Rendered view -->
-          <div id="topicNoteRendered" onclick="switchTopicToEdit()" style="flex:1;min-height:300px;padding:4px 2px;cursor:text;overflow-y:auto;display:none" title="Click to edit"></div>
+          <div id="topicNoteRendered" onclick="switchTopicToEdit()" style="flex:1;min-height:300px;padding:8px 4px;cursor:text;overflow-y:auto;display:none;font-size:.88rem;line-height:1.7" title="Click to edit"></div>
           <!-- Edit mode -->
           <textarea id="topicNoteText" placeholder="Write notes for this topic…" style="flex:1;min-height:300px;resize:vertical;display:none" oninput="saveTopicNote()"></textarea>
           <!-- Toggle -->
@@ -4578,7 +4578,8 @@ function switchTopicToPreview(){
   if(!rendered) return;
   rendered.innerHTML = text ? markdownToHTML(text) : '<p style="color:var(--gray);font-style:italic">No notes yet — click Generate Notes or click here to write.</p>';
   rendered.style.display = 'block';
-  el('topicNoteText').style.display = 'none';
+  const ta = el('topicNoteText');
+  if(ta){ ta.style.display = 'none'; ta.style.flex = '0'; ta.style.height = '0'; ta.style.minHeight = '0'; }
   const editBtn = el('topicEditBtn');
   const previewBtn = el('topicPreviewBtn');
   const toggle = el('topicNoteToggle');
@@ -4595,8 +4596,7 @@ function switchTopicToEdit(){
   const rendered = el('topicNoteRendered');
   const textarea = el('topicNoteText');
   if(rendered) rendered.style.display = 'none';
-  if(textarea) textarea.style.display = 'block';
-  if(textarea) textarea.focus();
+  if(textarea){ textarea.style.display = 'block'; textarea.style.flex = '1'; textarea.style.height = ''; textarea.style.minHeight = '300px'; textarea.focus(); }
   const editBtn = el('topicEditBtn');
   const previewBtn = el('topicPreviewBtn');
   const toggle = el('topicNoteToggle');
@@ -5082,9 +5082,14 @@ function markdownToHTML(text){
     line = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     // Headings
+    if(line.startsWith('#### ')){
+      if(inList){html+='</'+listType+'>';inList=false;}
+      html += '<h5 style="margin:10px 0 3px;color:var(--dark);font-size:.85rem;font-weight:600">'+formatInline(line.slice(5))+'</h5>';
+      continue;
+    }
     if(line.startsWith('### ')){
       if(inList){html+='</'+listType+'>';inList=false;}
-      html += '<h4 style="margin:12px 0 4px;color:var(--dark);font-size:.92rem">'+formatInline(line.slice(4))+'</h4>';
+      html += '<h4 style="margin:12px 0 4px;color:var(--dark);font-size:.92rem;font-weight:700">'+formatInline(line.slice(4))+'</h4>';
       continue;
     }
     if(line.startsWith('## ')){
@@ -6071,7 +6076,6 @@ async function generateSingleTopicNote(){
       el('topicNoteLoading').style.display = 'none';
     }, 2000);
   } finally {
-    el('topicNoteText').style.display = 'block';
     el('topicNoteLoading').style.display = 'none';
     if(el('genSingleBtn')) el('genSingleBtn').disabled = false;
   }
@@ -6137,7 +6141,7 @@ async function generateMoreDetail(){
   } catch(e){
     el('topicNoteLoadingMsg').textContent = '❌ Error: '+e.message;
     setTimeout(()=>{
-      el('topicNoteText').style.display = 'block';
+      switchTopicToEdit();
       el('topicNoteLoading').style.display = 'none';
     }, 2000);
   } finally {
