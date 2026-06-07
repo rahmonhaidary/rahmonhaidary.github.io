@@ -4625,6 +4625,32 @@ function switchTopicToEdit(){
   if(editBtn) editBtn.style.display = 'none';
   if(previewBtn) previewBtn.style.display = 'inline-flex';
 }
+
+function cleanTruncatedMath(text){
+  if(!text) return text;
+  // Fix unclosed $$ blocks - count $$ occurrences
+  const parts = text.split('$$');
+  // If odd number of parts, last $$ was never closed - remove the incomplete block
+  if(parts.length % 2 === 0){
+    // Odd number of $$ delimiters - last one unclosed
+    // Remove everything from the last $$ onwards
+    const lastOpen = text.lastIndexOf('$$');
+    const lastClose = text.lastIndexOf('$$', lastOpen - 1);
+    if(lastOpen > lastClose){
+      text = text.substring(0, lastOpen).trimEnd();
+      text += '\n\n*(Note: equation truncated — click Regenerate for full content)*';
+    }
+  }
+  // Also fix unclosed single $ inline math
+  const dollarCount = (text.match(/(?<!\$)\$(?!\$)/g)||[]).length;
+  if(dollarCount % 2 !== 0){
+    const lastDollar = text.lastIndexOf('$');
+    if(lastDollar > text.length - 50){
+      text = text.substring(0, lastDollar).trimEnd();
+    }
+  }
+  return text;
+}
 function selectTopic(id, courseId){
   activeTopic = id;
   // Use loose key lookup since courseId might be string or number
@@ -6078,7 +6104,7 @@ async function generateSingleTopicNote(){
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:3000,
+        max_tokens:4096,
         messages:[{
           role:'user',
           content: prompt+'\n\nWrite detailed, comprehensive study notes. Use full paragraphs to explain concepts deeply, not just dot points. Structure with ## and ### headings. For every concept include: a clear explanation, why it matters, a worked example with full steps, and common mistakes. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Aim for thorough university-level notes a student could study from without needing the textbook.'
@@ -6091,9 +6117,10 @@ async function generateSingleTopicNote(){
     if(data.error) throw new Error(data.error.message);
     const notes = (data.content||[]).map(c=>c.text||'').join('');
 
-    topic.note = notes;
+    const cleanedNotes = cleanTruncatedMath(notes);
+    topic.note = cleanedNotes;
     save();
-    el('topicNoteText').value = notes;
+    el('topicNoteText').value = cleanedNotes;
     el('moreDetailBtn').style.display = 'inline-flex';
     el('genSingleBtn').textContent = '🔄 Regenerate';
     renderTopicList(courseId);
@@ -6140,7 +6167,7 @@ async function generateMoreDetail(){
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:2000,
+        max_tokens:4096,
         messages:[{
           role:'user',
           content:'I already have these notes on "'+topic.name+'" for '+( course?course.name:'')+':'+
