@@ -6078,10 +6078,10 @@ async function generateSingleTopicNote(){
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-5',
-        max_tokens:1500,
+        max_tokens:3000,
         messages:[{
           role:'user',
-          content: prompt+'\n\nFormat with clear headings (##, ###), bullet points and examples. For ALL equations and formulas use LaTeX math notation: inline math with $equation$ and display/block equations with $$equation$$. For example: The transfer function is $$G(s) = \\frac{K}{s+1}$$ Be concise but thorough.'
+          content: prompt+'\n\nWrite detailed, comprehensive study notes. Use full paragraphs to explain concepts deeply, not just dot points. Structure with ## and ### headings. For every concept include: a clear explanation, why it matters, a worked example with full steps, and common mistakes. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Aim for thorough university-level notes a student could study from without needing the textbook.'
         }]
       })
     });
@@ -6210,7 +6210,7 @@ async function generateAllTopicNotes(){
       const prompt = (courseCtx
         ? 'Based on these course materials:\n\n'+courseCtx.slice(0,5000)+'\n\nWrite study notes for: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')
         : 'Write study notes for a university student on: "'+topic.name+'" for '+( course?course.name:'')+' \n\nCover key concepts, definitions and examples.'
-      )+'\n\nFormat with markdown headings (##, ###) and bullet points. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Example: $$G(s) = \\frac{K}{Ts+1}$$ Be concise but thorough. Max 400 words.';
+      )+'\n\nWrite detailed study notes in full paragraphs, not just dot points. Use ## and ### headings. For each concept explain: what it is, why it matters, and include a worked example. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Write notes thorough enough to study from without a textbook. Aim for 500-800 words.';
 
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
@@ -6222,7 +6222,7 @@ async function generateAllTopicNotes(){
         },
         body: JSON.stringify({
           model:'claude-sonnet-4-5',
-          max_tokens:800,
+          max_tokens:2000,
           messages:[{role:'user', content:prompt}]
         })
       });
