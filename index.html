@@ -6094,28 +6094,38 @@ async function generateSingleTopicNote(){
       ? 'Based on the course materials provided, write comprehensive study notes for the topic: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')+'\n\nCourse context:\n'+courseCtx
       : 'Write comprehensive study notes for a university student on the topic: "'+topic.name+'" for the course '+( course?course.name:'')+'\n\nInclude: key concepts, definitions, examples, and important formulas if relevant.';
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-5',
-        max_tokens:4096,
-        messages:[{
-          role:'user',
-          content: prompt+'\n\nWrite detailed, comprehensive study notes. Use full paragraphs to explain concepts deeply, not just dot points. Structure with ## and ### headings. For every concept include: a clear explanation, why it matters, a worked example with full steps, and common mistakes. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Aim for thorough university-level notes a student could study from without needing the textbook.'
-        }]
-      })
-    });
+    // Two-pass generation for thorough notes
+    const makeRequest = async(messages) => {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({model:'claude-sonnet-4-5', max_tokens:4096, messages})
+      });
+      if(!r.ok) throw new Error('API error '+r.status);
+      const d = await r.json();
+      if(d.error) throw new Error(d.error.message);
+      return (d.content||[]).map(c=>c.text||'').join('');
+    };
 
-    if(!resp.ok) throw new Error('API error '+resp.status);
-    const data = await resp.json();
-    if(data.error) throw new Error(data.error.message);
-    const notes = (data.content||[]).map(c=>c.text||'').join('');
+    el('topicNoteLoadingMsg').textContent = 'Generating explanation…';
+    const part1 = await makeRequest([{
+      role:'user',
+      content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $$ $$. Stop at a natural midpoint — the examples and applications will be added separately.'
+    }]);
+
+    el('topicNoteLoadingMsg').textContent = 'Generating examples…';
+    const part2 = await makeRequest([
+      {role:'user', content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $$ $$. Stop at a natural midpoint — the examples and applications will be added separately.'},
+      {role:'assistant', content: part1},
+      {role:'user', content: 'Now write the second half: worked examples with full step-by-step solutions, common mistakes to avoid, and practical applications. Continue from where you left off. Use LaTeX for all equations.'}
+    ]);
+
+    const notes = cleanTruncatedMath(part1 + '\n\n' + part2);
 
     const cleanedNotes = cleanTruncatedMath(notes);
     topic.note = cleanedNotes;
