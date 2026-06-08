@@ -3108,8 +3108,8 @@ function fmtTime(t){if(!t)return'';const[h,m]=t.split(':');const hr=parseInt(h);
 // ══ GPA ══
 function updateGPA(){
   const tbody=document.querySelector('#gpaTable tbody');
-  const graded=D.courses.filter(c=>c.grade&&!c.archived);
-  const withMark=D.courses.filter(c=>c.mark!=null&&!c.archived);
+  const graded=D.courses.filter(c=>c.grade);
+  const withMark=D.courses.filter(c=>c.mark!=null);
   const scale=D.student?.gpaScale||'4';
   const max=getGPAMax();
   // WAM calculation (UTS: sum(mark*credits)/sum(credits))
