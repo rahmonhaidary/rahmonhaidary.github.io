@@ -2416,8 +2416,8 @@ function renderAssignments(filter='all'){
 document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderAssignments(b.dataset.filter);}));
 function toggleAssign(id){const a=D.assignments.find(x=>x.id===id);if(a){a.completed=!a.completed;save();renderAssignments();renderDashboard();checkReminders();}}
 function deleteAssign(id){D.assignments=D.assignments.filter(a=>a.id!==id);save();renderAssignments();renderDashboard();}
-function getDueClass(d,done){if(done)return'done';const diff=Math.ceil((new Date(d)-new Date())/864e5);return diff<=2?'urgent':diff<=7?'soon':'later';}
-function getDaysUntil(d){const diff=Math.ceil((new Date(d)-new Date())/864e5);return diff<0?'Overdue':diff===0?'Today':diff===1?'Tomorrow':`${diff} days`;}
+function getDueClass(d,done){if(done)return'done';if(!d)return'later';const diff=Math.ceil((new Date(d)-new Date())/864e5);return diff<=2?'urgent':diff<=7?'soon':'later';}
+function getDaysUntil(d){if(!d)return'No date';const diff=Math.ceil((new Date(d)-new Date())/864e5);return diff<0?'Overdue':diff===0?'Today':diff===1?'Tomorrow':`${diff} days`;}
 
 // ══ PROJECTS ══
 function openProjectModal(){fillCourseSelects();openModal('projectModal');}
