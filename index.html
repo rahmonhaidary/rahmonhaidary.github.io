@@ -1114,9 +1114,22 @@ body.dark-mode .topic-note-title{color:#e2e8f0;}
 
 <!-- GPA -->
 <div id="gpa" class="tab-content">
-  <div class="gpa-hero"><h3 style="opacity:.8;margin-bottom:7px">Cumulative GPA</h3><div class="gpa-val" id="calcGPA">0.00</div><p style="opacity:.8;margin-top:6px">Based on <span id="totalCr">0</span> credits</p></div>
+  <div class="gpa-hero">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center">
+    <div>
+      <h3 style="opacity:.8;margin-bottom:7px;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">Cumulative GPA</h3>
+      <div class="gpa-val" id="calcGPA">0.00</div>
+      <p style="opacity:.8;margin-top:6px;font-size:.82rem">Based on <span id="totalCr">0</span> credit points</p>
+    </div>
+    <div style="border-left:1px solid rgba(255,255,255,.2);padding-left:20px">
+      <h3 style="opacity:.8;margin-bottom:7px;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em">WAM</h3>
+      <div class="gpa-val" id="calcWAM" style="font-size:2.8rem">—</div>
+      <p style="opacity:.8;margin-top:6px;font-size:.82rem">Weighted Average Mark</p>
+    </div>
+  </div>
+</div>
   <div class="card"><div class="card-header"><h2>📊 Grade Breakdown</h2></div>
-    <div style="overflow-x:auto"><table id="gpaTable"><thead><tr><th>Course</th><th>Credits</th><th>Grade</th><th>Grade Points</th></tr></thead><tbody></tbody></table></div>
+    <div style="overflow-x:auto"><table id="gpaTable"><thead><tr><th>Course</th><th>Credits</th><th>Mark %</th><th>Grade</th><th>Grade Points</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -1589,14 +1602,12 @@ body.dark-mode .topic-note-title{color:#e2e8f0;}
         <div class="form-group"><label>Grade</label>
           <select id="cGrade" onchange="updateGPA()">
             <option value="">Not graded</option>
-            <!-- 4.0 scale options -->
             <optgroup label="4.0 Scale" class="grade-opts-4">
               <option value="4.0">A (4.0)</option><option value="3.7">A- (3.7)</option>
               <option value="3.3">B+ (3.3)</option><option value="3.0">B (3.0)</option><option value="2.7">B- (2.7)</option>
               <option value="2.3">C+ (2.3)</option><option value="2.0">C (2.0)</option><option value="1.7">C- (1.7)</option>
               <option value="1.3">D+ (1.3)</option><option value="1.0">D (1.0)</option><option value="0.0">F (0.0)</option>
             </optgroup>
-            <!-- 7-point Australian scale -->
             <optgroup label="7-point Australian Scale" class="grade-opts-7">
               <option value="7">HD – High Distinction (7)</option>
               <option value="6">D – Distinction (6)</option>
@@ -1606,6 +1617,10 @@ body.dark-mode .topic-note-title{color:#e2e8f0;}
               <option value="0">F – Fail (0)</option>
             </optgroup>
           </select>
+        </div>
+        <div class="form-group"><label>Final Mark (%)</label>
+          <input type="number" id="cMark" min="0" max="100" step="0.1" placeholder="e.g. 78.5" onchange="updateGPA()">
+          <p style="font-size:.74rem;color:var(--gray);margin-top:3px">Enter your final percentage mark. Used to calculate WAM.</p>
         </div>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%">Save Course</button>
@@ -2229,7 +2244,8 @@ function closeCourseModal(){el('courseModal').classList.remove('active');el('cEd
 el('courseForm').addEventListener('submit',e=>{
   e.preventDefault();
   const eid=el('cEditId').value;
-  const data={name:el('cName').value.trim(),code:el('cCode').value.trim(),credits:parseInt(el('cCredits').value),instructor:el('cInstructor').value.trim(),grade:el('cGrade').value};
+  const markVal=parseFloat(el('cMark')?.value);
+      const data={name:el('cName').value.trim(),code:el('cCode').value.trim(),credits:parseInt(el('cCredits').value),instructor:el('cInstructor').value.trim(),grade:el('cGrade').value,mark:isNaN(markVal)?null:markVal};
   if(eid){const idx=D.courses.findIndex(c=>String(c.id)===eid);if(idx>-1)D.courses[idx]={...D.courses[idx],...data};}
   else{const id=uid();D.courses.push({id,...data});D.weekNotes[id]={};}
   save();renderCourses();updateGPA();renderDashboard();closeCourseModal();
@@ -2239,6 +2255,7 @@ function editCourse(id){
   el('courseModalTitle').textContent='Edit Course';el('cEditId').value=String(c.id);
   el('cName').value=c.name;el('cCode').value=c.code;el('cCredits').value=c.credits;
   el('cInstructor').value=c.instructor||'';el('cGrade').value=c.grade||'';
+  if(el('cMark'))el('cMark').value=c.mark!=null?c.mark:'';
   el('courseModal').classList.add('active');
 }
 function deleteCourse(id){
@@ -3090,19 +3107,39 @@ function fmtTime(t){if(!t)return'';const[h,m]=t.split(':');const hr=parseInt(h);
 
 // ══ GPA ══
 function updateGPA(){
-  const tbody=document.querySelector('#gpaTable tbody');const graded=D.courses.filter(c=>c.grade&&!c.archived);
+  const tbody=document.querySelector('#gpaTable tbody');
+  const graded=D.courses.filter(c=>c.grade&&!c.archived);
+  const withMark=D.courses.filter(c=>c.mark!=null&&!c.archived);
   const scale=D.student?.gpaScale||'4';
   const max=getGPAMax();
-  if(!graded.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--gray)">No graded courses yet</td></tr>';el('calcGPA').textContent='0.00';el('totalCr').textContent='0';el('dashGPA').textContent='0.00';return;}
+  // WAM calculation (UTS: sum(mark*credits)/sum(credits))
+  if(withMark.length){
+    let wn=0,wd=0;
+    withMark.forEach(c=>{wn+=c.mark*c.credits;wd+=c.credits;});
+    const wam=wd>0?(wn/wd).toFixed(2):'—';
+    const wamEl=el('calcWAM');
+    if(wamEl){
+      wamEl.textContent=wam;
+      const w=parseFloat(wam);
+      wamEl.style.color=w>=85?'#fbbf24':w>=75?'#a5b4fc':w>=65?'#86efac':w>=50?'#fff':'#fca5a5';
+    }
+  } else {
+    const wamEl=el('calcWAM');if(wamEl)wamEl.textContent='—';
+  }
+  if(!graded.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray)">No graded courses yet</td></tr>';
+    el('calcGPA').textContent='0.00';el('totalCr').textContent='0';el('dashGPA').textContent='0.00';return;
+  }
   let tp=0,tc=0;
-  tbody.innerHTML=graded.map(c=>{const p=parseFloat(c.grade);tp+=p*c.credits;tc+=c.credits;return`<tr><td>${c.name}</td><td>${c.credits}</td><td>${gradeLetterAU(p)}</td><td>${p.toFixed(1)} / ${max}</td></tr>`;}).join('');
+  tbody.innerHTML=graded.map(c=>{
+    const p=parseFloat(c.grade);tp+=p*c.credits;tc+=c.credits;
+    const markStr=c.mark!=null?c.mark.toFixed(1)+'%':'—';
+    const mc=c.mark!=null?(c.mark>=85?'#d97706':c.mark>=75?'#6366f1':c.mark>=65?'#10b981':c.mark>=50?'var(--gray)':'#ef4444'):'var(--gray)';
+    return`<tr><td><strong>${c.name}</strong><br><span style="font-size:.75rem;color:var(--gray)">${c.code}</span></td><td>${c.credits} cp</td><td style="font-weight:700;color:${mc}">${markStr}</td><td>${gradeLetterAU(p)}</td><td>${p.toFixed(1)} / ${max}</td></tr>`;
+  }).join('');
   const gpa=tc>0?(tp/tc).toFixed(2):'0.00';
   el('calcGPA').textContent=gpa+' / '+max;el('totalCr').textContent=tc;el('dashGPA').textContent=gpa;
-  // Update GPA hero label
-  const totalCrEl=el('totalCr');if(totalCrEl)totalCrEl.textContent=tc;
 }
-
-// ══ GRADE CALC ══
 function initGC(){
   const s=el('gcCourseSelect');const v=s.value;
   s.innerHTML='<option value="">— Select a course or start fresh —</option>'+D.courses.map(c=>`<option value="${c.id}">${c.name} (${c.code})</option>`).join('');
