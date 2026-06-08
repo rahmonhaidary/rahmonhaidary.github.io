@@ -3051,8 +3051,17 @@ function deleteExam(id){D.exams=D.exams.filter(e=>e.id!==id);save();renderExams(
 // ══ SCHEDULE ══
 el('schedForm').addEventListener('submit',e=>{
   e.preventDefault();
-  D.schedule.push({id:uid(),label:el('sLabel').value.trim(),type:el('sType').value,courseId:el('sCourse').value||null,day:el('sDay').value,startTime:el('sStart').value,endTime:el('sEnd').value,location:el('sLoc').value});
+  const editId = el('schedForm').dataset.editId;
+  const data = {label:el('sLabel').value.trim(),type:el('sType').value,courseId:el('sCourse').value||null,day:el('sDay').value,startTime:el('sStart').value,endTime:el('sEnd').value,location:el('sLoc').value};
+  if(editId){
+    const idx = D.schedule.findIndex(s=>String(s.id)===editId);
+    if(idx>-1) D.schedule[idx]={...D.schedule[idx],...data};
+    el('schedForm').dataset.editId='';
+  } else {
+    D.schedule.push({id:uid(),...data});
+  }
   save();renderSchedule();closeModal('schedModal');e.target.reset();
+  el('schedForm').dataset.editId='';
 });
 function openDayTypeModal(){
   el('dayTypeInputs').innerHTML=DAYS.map((day,i)=>`
@@ -3096,11 +3105,27 @@ function renderSchedule(){
     const items=D.schedule.filter(s=>s.day===day).sort((a,b)=>a.startTime.localeCompare(b.startTime));
     container.innerHTML=items.map(item=>`<div class="sched-item ${typeClass[item.type]||'sched-other'}">
       <button class="si-del" onclick="delSched(${item.id})">✕</button>
+      <button class="si-del" style="right:28px" onclick="editSched(${item.id})">✏️</button>
       <div class="si-time">${fmtTime(item.startTime)}–${fmtTime(item.endTime)}</div>
       <div class="si-name">${esc(item.label)}</div>
       ${item.location?`<div style="font-size:.68rem;opacity:.8">📍 ${item.location}</div>`:''}
     </div>`).join('');
   });
+}
+
+function editSched(id){
+  const item = D.schedule.find(s=>s.id===id); if(!item) return;
+  fillCourseSelects();
+  el('sLabel').value = item.label||'';
+  el('sType').value = item.type||'uni';
+  el('sCourse').value = item.courseId||'';
+  el('sDay').value = item.day||'monday';
+  el('sStart').value = item.startTime||'';
+  el('sEnd').value = item.endTime||'';
+  el('sLoc').value = item.location||'';
+  // Store edit id
+  el('schedForm').dataset.editId = String(id);
+  openModal('schedModal');
 }
 function delSched(id){D.schedule=D.schedule.filter(s=>s.id!==id);save();renderSchedule();}
 function fmtTime(t){if(!t)return'';const[h,m]=t.split(':');const hr=parseInt(h);return`${hr%12||12}:${m} ${hr>=12?'PM':'AM'}`;}
