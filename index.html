@@ -886,6 +886,11 @@ body.dark-mode .topic-week-header{background:#1e293b;border-color:#475569;}
 body.dark-mode .topic-week-title{color:#e2e8f0;}
 body.dark-mode .topic-item-row{border-color:#475569;}
 body.dark-mode .topic-note-title{color:#e2e8f0;}
+
+/* ── CIRCUIT DIAGRAMS ── */
+.circuit-diagram{background:#fff;border-radius:12px;padding:16px;margin:12px 0;border:1px solid #e2e8f0;overflow-x:auto;text-align:center;}
+.circuit-diagram svg{max-width:100%;height:auto;}
+body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 </style>
 </head>
 <body>
@@ -5299,7 +5304,165 @@ function formatInline(text){
   return text;
 }
 
+
+// ══ CIRCUIT DIAGRAM RENDERER ══
+function renderCircuitDiagram(text){
+  // Detect if this looks like a circuit (has component notation)
+  const isCircuit = /\[([\w\dΩμ\.]+)\]/.test(text) || 
+                    /--\[|\]--|\|.*\|/.test(text) ||
+                    text.includes('GND') || text.includes('Vcc') ||
+                    text.includes('resistor') || text.includes('capacitor');
+  
+  if(!isCircuit) return null;
+  
+  // Parse the circuit netlist
+  try {
+    return buildCircuitSVG(text);
+  } catch(e) {
+    return null;
+  }
+}
+
+function buildCircuitSVG(text){
+  const lines = text.trim().split('\n').filter(l=>l.trim());
+  const components = [];
+  const nodes = new Map();
+  let nodeId = 0;
+  
+  const getNode = (name) => {
+    if(!nodes.has(name)){ nodes.set(name, {id:nodeId++, name, x:0, y:0}); }
+    return nodes.get(name);
+  };
+  
+  // Parse component strings like [15V]--[5Ω]--[10Ω]--[GND]
+  const compRegex = /\[([^\]]+)\]/g;
+  const wireRegex = /--|\|/g;
+  
+  let allParsed = [];
+  lines.forEach((line, lineIdx) => {
+    const parts = [];
+    let match;
+    const re = /\[([^\]]+)\]|(-->|--|\|)/g;
+    while((match = re.exec(line)) !== null){
+      if(match[1]) parts.push({type:'comp', val:match[1], pos:match.index});
+      else parts.push({type:'wire', val:match[2], pos:match.index});
+    }
+    if(parts.length > 0) allParsed.push({parts, lineIdx});
+  });
+  
+  // Build a simple grid layout
+  const W = 700, H = 300;
+  const padding = 60;
+  const compW = 80, compH = 40;
+  
+  // Count total components
+  let allComps = [];
+  allParsed.forEach(({parts, lineIdx}) => {
+    parts.filter(p=>p.type==='comp').forEach((p,i) => {
+      allComps.push({val:p.val, row:lineIdx, col:i});
+    });
+  });
+  
+  if(allComps.length === 0) return null;
+  
+  // Layout: spread components horizontally
+  const rows = [...new Set(allComps.map(c=>c.row))];
+  const rowH = (H - padding*2) / Math.max(rows.length, 1);
+  
+  allParsed.forEach(({parts, lineIdx}) => {
+    const rowComps = parts.filter(p=>p.type==='comp');
+    const colW = (W - padding*2) / Math.max(rowComps.length, 1);
+    rowComps.forEach((p,i) => {
+      p.x = padding + colW * i + colW/2;
+      p.y = padding + rowH * rows.indexOf(lineIdx) + rowH/2;
+      p.w = Math.min(compW, colW - 10);
+      p.h = compH;
+    });
+  });
+  
+  // Generate SVG
+  let svgParts = [];
+  
+  // Draw wires first
+  allParsed.forEach(({parts}) => {
+    const comps = parts.filter(p=>p.type==='comp');
+    for(let i=0; i<comps.length-1; i++){
+      const a = comps[i], b = comps[i+1];
+      if(a.x && b.x){
+        svgParts.push(`<line x1="${a.x + a.w/2}" y1="${a.y}" x2="${b.x - b.w/2}" y2="${b.y}" stroke="#6366f1" stroke-width="2"/>`);
+      }
+    }
+  });
+  
+  // Draw components
+  allParsed.forEach(({parts}) => {
+    parts.filter(p=>p.type==='comp').forEach(p => {
+      if(!p.x) return;
+      const val = p.val;
+      const isGND = val==='GND' || val==='0';
+      const isVcc = val.includes('V') && !val.includes('Ω');
+      const isR = val.includes('Ω') || val.toLowerCase().startsWith('r');
+      const isC = val.toLowerCase().startsWith('c') && !val.toLowerCase().startsWith('co');
+      const isL = val.toLowerCase().startsWith('l') && val.length <= 3;
+      const isSource = isVcc || val.includes('A') || val.includes('source');
+      
+      const x = p.x - p.w/2, y = p.y - p.h/2, w = p.w, h = p.h;
+      const cx = p.x, cy = p.y;
+      
+      if(isGND){
+        // Ground symbol
+        svgParts.push(`
+          <line x1="${cx}" y1="${cy-10}" x2="${cx}" y2="${cy+5}" stroke="#334155" stroke-width="2"/>
+          <line x1="${cx-12}" y1="${cy+5}" x2="${cx+12}" y2="${cy+5}" stroke="#334155" stroke-width="2.5"/>
+          <line x1="${cx-8}" y1="${cy+10}" x2="${cx+8}" y2="${cy+10}" stroke="#334155" stroke-width="2"/>
+          <line x1="${cx-4}" y1="${cy+15}" x2="${cx+4}" y2="${cy+15}" stroke="#334155" stroke-width="1.5"/>
+        `);
+      } else if(isR){
+        // Resistor - zigzag
+        const zx = cx - 20, zy = cy;
+        const pts = [[zx,zy],[zx+5,zy-8],[zx+10,zy+8],[zx+15,zy-8],[zx+20,zy+8],[zx+25,zy-8],[zx+30,zy+8],[zx+35,zy-8],[zx+40,zy]];
+        const path = pts.map((pt,i)=>(i===0?'M':'L')+pt[0]+','+pt[1]).join(' ');
+        svgParts.push(`
+          <line x1="${cx-w/2}" y1="${cy}" x2="${zx}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+          <path d="${path}" fill="none" stroke="#ef4444" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="${zx+40}" y1="${cy}" x2="${cx+w/2}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+          <text x="${cx}" y="${cy+20}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#1e293b" font-weight="600">${esc(val)}</text>
+        `);
+      } else if(isC){
+        // Capacitor - two parallel lines
+        svgParts.push(`
+          <line x1="${cx-w/2}" y1="${cy}" x2="${cx-6}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+          <line x1="${cx-6}" y1="${cy-14}" x2="${cx-6}" y2="${cy+14}" stroke="#10b981" stroke-width="3"/>
+          <line x1="${cx+6}" y1="${cy-14}" x2="${cx+6}" y2="${cy+14}" stroke="#10b981" stroke-width="3"/>
+          <line x1="${cx+6}" y1="${cy}" x2="${cx+w/2}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+          <text x="${cx}" y="${cy+24}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#1e293b" font-weight="600">${esc(val)}</text>
+        `);
+      } else if(isSource){
+        // Voltage/current source - circle
+        svgParts.push(`
+          <line x1="${cx-w/2}" y1="${cy}" x2="${cx-16}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="${cx}" cy="${cy}" r="16" fill="none" stroke="#f59e0b" stroke-width="2"/>
+          <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#1e293b" font-weight="700">${esc(val)}</text>
+          <line x1="${cx+16}" y1="${cy}" x2="${cx+w/2}" y2="${cy}" stroke="#6366f1" stroke-width="2"/>
+        `);
+      } else {
+        // Generic component - rectangle with label
+        svgParts.push(`
+          <rect x="${cx-w/2+2}" y="${cy-h/2+4}" width="${w-4}" height="${h-8}" rx="6" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+          <text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#1e293b" font-weight="600">${esc(val)}</text>
+        `);
+      }
+    });
+  });
+  
+  return `<div class="circuit-diagram"><svg viewBox="0 0 ${W} ${H}" style="width:100%;max-height:280px">${svgParts.join('')}</svg></div>`;
+}
+
 function renderAIDiagram(content){
+  // Try circuit renderer first
+  const circuitSVG = renderCircuitDiagram(content);
+  if(circuitSVG) return circuitSVG;
+  
   // Check if it's an arrow-flow diagram: A --> B --> C style
   const isFlow = content.includes('-->') || content.includes('->') || content.includes('=>');
 
@@ -6179,12 +6342,12 @@ async function generateSingleTopicNote(){
     el('topicNoteLoadingMsg').textContent = 'Generating explanation…';
     const part1 = await makeRequest([{
       role:'user',
-      content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\nA --> B --> C\n``` format for flows or [Block] --> [Block] for system diagrams. Stop at a natural midpoint.'
+      content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\n[Component1]--[Component2]--[GND]\n``` for circuits, or A --> B --> C for flows/block diagrams. For circuits use [15V], [5Ω], [C1], [GND] etc. Stop at a natural midpoint.'
     }]);
 
     el('topicNoteLoadingMsg').textContent = 'Generating examples…';
     const part2 = await makeRequest([
-      {role:'user', content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\nA --> B --> C\n``` format for flows or [Block] --> [Block] for system diagrams. Stop at a natural midpoint.'},
+      {role:'user', content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\n[Component1]--[Component2]--[GND]\n``` for circuits, or A --> B --> C for flows/block diagrams. For circuits use [15V], [5Ω], [C1], [GND] etc. Stop at a natural midpoint.'},
       {role:'assistant', content: part1},
       {role:'user', content: 'Now write the second half: worked examples with full step-by-step solutions, common mistakes to avoid, and practical applications. Continue from where you left off. Use LaTeX for all equations. Add diagrams using ```diagram\nStep1 --> Step2\n``` where they help explain the process.'}
     ]);
