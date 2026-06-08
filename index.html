@@ -2218,7 +2218,7 @@ function fillCourseSelects(){
 function checkReminders(){
   const banner=el('reminderBanner');const now=new Date();
   const urgent=[],warn=[];
-  D.assignments.filter(a=>!a.completed).forEach(a=>{
+  D.assignments.filter(a=>!a.completed&&a.dueDate).forEach(a=>{
     const diff=Math.ceil((new Date(a.dueDate)-now)/864e5);
     if(diff<0)urgent.push(`⚠️ OVERDUE: "${a.title}"`);
     else if(diff<=2)urgent.push(`🔴 "${a.title}" due ${diff===0?'TODAY':diff===1?'tomorrow':'in '+diff+' days'}`);
