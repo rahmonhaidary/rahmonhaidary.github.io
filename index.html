@@ -2202,7 +2202,9 @@ function fillCourseSelects(){
   ['aCourse','sCourse','exCourse','nCourse','pCourse'].forEach(id=>{
     const s=el(id);if(!s)return;const v=s.value;
     const blank=id==='aCourse'?'Select course':'None / Not linked';
-    s.innerHTML=`<option value="">${blank}</option>`+D.courses.map(c=>`<option value="${c.id}">${c.name} (${c.code})</option>`).join('');
+    // Exclude archived courses from schedule, assignment, exam, note, project selects
+    const courses = id==='sCourse' ? D.courses.filter(c=>!c.archived) : D.courses;
+    s.innerHTML=`<option value="">${blank}</option>`+courses.map(c=>`<option value="${c.id}">${c.name} (${c.code})</option>`).join('');
     if(v)s.value=v;
   });
 }
