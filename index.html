@@ -6179,14 +6179,14 @@ async function generateSingleTopicNote(){
     el('topicNoteLoadingMsg').textContent = 'Generating explanation…';
     const part1 = await makeRequest([{
       role:'user',
-      content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $$ $$. Stop at a natural midpoint — the examples and applications will be added separately.'
+      content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\nA --> B --> C\n``` format for flows or [Block] --> [Block] for system diagrams. Stop at a natural midpoint.'
     }]);
 
     el('topicNoteLoadingMsg').textContent = 'Generating examples…';
     const part2 = await makeRequest([
-      {role:'user', content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $$ $$. Stop at a natural midpoint — the examples and applications will be added separately.'},
+      {role:'user', content: prompt+'\n\nWrite the first half of comprehensive study notes covering: key concepts, definitions, theory and derivations. Use ## and ### headings, full paragraphs. For ALL equations use LaTeX $inline$ and $$block$$. Where helpful add diagrams using ```diagram\nA --> B --> C\n``` format for flows or [Block] --> [Block] for system diagrams. Stop at a natural midpoint.'},
       {role:'assistant', content: part1},
-      {role:'user', content: 'Now write the second half: worked examples with full step-by-step solutions, common mistakes to avoid, and practical applications. Continue from where you left off. Use LaTeX for all equations.'}
+      {role:'user', content: 'Now write the second half: worked examples with full step-by-step solutions, common mistakes to avoid, and practical applications. Continue from where you left off. Use LaTeX for all equations. Add diagrams using ```diagram\nStep1 --> Step2\n``` where they help explain the process.'}
     ]);
 
     const notes = cleanTruncatedMath(part1 + '\n\n' + part2);
@@ -6311,7 +6311,7 @@ async function generateAllTopicNotes(){
       const prompt = (courseCtx
         ? 'Based on these course materials:\n\n'+courseCtx.slice(0,5000)+'\n\nWrite study notes for: "'+topic.name+'"'+(parentTopic?' (part of '+parentTopic.name+')':'')
         : 'Write study notes for a university student on: "'+topic.name+'" for '+( course?course.name:'')+' \n\nCover key concepts, definitions and examples.'
-      )+'\n\nWrite detailed study notes in full paragraphs, not just dot points. Use ## and ### headings. For each concept explain: what it is, why it matters, and include a worked example. For ALL equations use LaTeX: inline $equation$ and block $$equation$$. Write notes thorough enough to study from without a textbook. Aim for 500-800 words.';
+      )+'\n\nWrite detailed study notes with:\n1. ## and ### headings, full paragraphs\n2. ALL equations in LaTeX: $inline$ and $$block$$\n3. Diagrams where helpful using ```diagram\nA --> B --> C\n``` format\n4. Worked examples with steps\nAim for thorough notes a student can study from.';
 
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method:'POST',
