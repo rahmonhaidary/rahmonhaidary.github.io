@@ -894,6 +894,149 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 
 /* ════ REDESIGN CSS ════ */
+body { background: #f1f5f9 !important; margin: 0; }
+
+/* ── Header ── */
+header {
+  background: #fff !important;
+  border-bottom: 0.5px solid #e5e7eb !important;
+  padding: 0 20px !important;
+  height: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 200 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
+  gap: 16px !important;
+}
+.logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  flex-shrink: 0 !important;
+}
+.logo-icon {
+  width: 30px !important;
+  height: 30px !important;
+  background: #6366f1 !important;
+  border-radius: 7px !important;
+  font-size: 15px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+header h1 {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+}
+header p { display: none !important; }
+.user-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+#studentName {
+  width: 120px !important;
+  padding: 5px 9px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  background: #f8fafc !important;
+  color: #1e293b !important;
+}
+#semester {
+  width: 150px !important;
+  padding: 5px 9px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 7px !important;
+  font-size: 12px !important;
+  background: #f8fafc !important;
+  color: #1e293b !important;
+}
+.sync-status { font-size: 12px !important; }
+.user-avatar {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+}
+
+/* ── Nav (underline style like Option 1) ── */
+nav {
+  background: #fff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 0 20px !important;
+  display: flex !important;
+  gap: 0 !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  box-shadow: none !important;
+  flex-wrap: nowrap !important;
+  position: sticky !important;
+  top: 52px !important;
+  z-index: 100 !important;
+}
+nav::-webkit-scrollbar { display: none !important; }
+.nav-btn {
+  padding: 13px 14px !important;
+  border-radius: 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 400 !important;
+  color: #64748b !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  background: none !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: color .15s, border-color .15s !important;
+  font-family: inherit !important;
+  margin-bottom: -1px !important;
+}
+.nav-btn:hover { color: #1e293b !important; background: none !important; }
+.nav-btn.active {
+  color: #4f46e5 !important;
+  border-bottom-color: #4f46e5 !important;
+  font-weight: 600 !important;
+  background: none !important;
+}
+
+/* ── Container ── */
+.container {
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: 24px 20px !important;
+  background: transparent !important;
+}
+
+/* ── Cards ── */
+.card {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+.card-header h2 {
+  font-size: .95rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+}
+
+/* ── Dark mode ── */
+body.dark-mode { background: #0f172a !important; }
+body.dark-mode header { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
+body.dark-mode header h1 { color: #f1f5f9 !important; }
+body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; }
+body.dark-mode .nav-btn { color: #94a3b8 !important; }
+body.dark-mode .nav-btn:hover { color: #e2e8f0 !important; }
+body.dark-mode .nav-btn.active { color: #818cf8 !important; border-bottom-color: #818cf8 !important; }
+body.dark-mode .card { background: #1e293b !important; border-color: #334155 !important; }
+body.dark-mode .card-header h2 { color: #f1f5f9 !important; }
+body.dark-mode #studentName, body.dark-mode #semester { background: #334155 !important; border-color: #475569 !important; color: #e2e8f0 !important; }
 body { background: #f8fafc !important; }
 
 header {
