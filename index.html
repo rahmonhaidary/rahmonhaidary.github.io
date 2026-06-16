@@ -1265,20 +1265,75 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 <!-- BUDGET -->
 <div id="budget" class="tab-content">
-  <div class="budget-top">
-    <div class="bc bc-income"><h4>💵 Total Income</h4><div class="amt" id="budIncome">$0.00</div></div>
-    <div class="bc bc-exp"><h4>💸 Expenses</h4><div class="amt" id="budExp">$0.00</div></div>
-    <div class="bc bc-rem"><h4>💰 Net Balance</h4><div class="amt" id="budRem">$0.00</div></div>
-    <div class="bc bc-bud"><h4>📋 Monthly Budget</h4><div class="amt" id="budSet">$0.00</div></div>
+  <!-- FY Selector + Summary -->
+  <div class="card" style="background:linear-gradient(135deg,#1e293b,#334155);border:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+      <div>
+        <h2 style="color:#fff;margin:0;font-size:1.1rem">💰 Financial Overview</h2>
+        <p style="color:#94a3b8;font-size:.8rem;margin-top:2px">Australian Financial Year (July–June)</p>
+      </div>
+      <select id="fySelector" onchange="renderBudget()" style="background:#334155;color:#e2e8f0;border:1px solid #475569;border-radius:8px;padding:6px 12px;font-size:.85rem">
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px">
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Gross Income</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#fff" id="budGross">$0</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Tax Paid</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#ef4444" id="budTax">$0</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Super</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#f59e0b" id="budSuper">$0</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Net Income</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#10b981" id="budIncome">$0</div>
+      </div>
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-size:.72rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Expenses</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#f87171" id="budExp">$0</div>
+      </div>
+      <div style="background:rgba(99,102,241,.3);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(99,102,241,.5)">
+        <div style="font-size:.72rem;color:#a5b4fc;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Net Balance</div>
+        <div style="font-size:1.4rem;font-weight:700;color:#fff" id="budRem">$0</div>
+      </div>
+    </div>
   </div>
+
+  <!-- Charts -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-header"><h2>📈 Income vs Expenses</h2></div>
+      <canvas id="budgetIncomeChart" height="200"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-header"><h2>🥧 Breakdown</h2></div>
+      <canvas id="budgetBreakdownChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Paychecks -->
   <div class="card">
-    <div class="card-header"><h2>💵 Paychecks</h2><button class="btn btn-success" onclick="openModal('paycheckModal')">+ Paycheck</button></div>
+    <div class="card-header">
+      <h2>💵 Paychecks</h2>
+      <div style="display:flex;gap:8px">
+        <select id="budgetInput" onchange="setBudget()" style="padding:7px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:.83rem;display:none">
+          <option value="">Monthly budget...</option>
+        </select>
+        <button class="btn btn-success" onclick="openModal('paycheckModal')">+ Paycheck</button>
+      </div>
+    </div>
     <div id="paycheckList"><div class="empty"><div class="ei">💵</div><p>No paychecks yet</p></div></div>
   </div>
+
+  <!-- Expenses -->
   <div class="card">
     <div class="card-header"><h2>📝 Expenses</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input type="number" id="budgetInput" placeholder="Monthly budget $" style="padding:8px;border:2px solid #e2e8f0;border-radius:8px;font-size:.85rem;width:165px" onchange="setBudget()">
+        <input type="number" id="budgetLimitInput" placeholder="Monthly budget $" style="padding:8px;border:2px solid #e2e8f0;border-radius:8px;font-size:.85rem;width:165px" onchange="setBudget()">
         <button class="btn btn-primary" onclick="openModal('expenseModal')">+ Expense</button>
       </div>
     </div>
@@ -1781,15 +1836,47 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 </div>
 
 <div class="modal" id="paycheckModal">
-  <div class="modal-content">
-    <div class="modal-header"><h2>Add Paycheck</h2><button class="close-btn" onclick="closeModal('paycheckModal')">&times;</button></div>
+  <div class="modal-content" style="max-width:500px">
+    <div class="modal-header"><h2>💵 Add Paycheck</h2><button class="close-btn" onclick="closeModal('paycheckModal')">&times;</button></div>
     <form id="paycheckForm">
-      <div class="form-group"><label>Employer</label><input type="text" id="pcEmp" required placeholder="Part-time job…"></div>
-      <div class="form-row">
-        <div class="form-group"><label>Gross Pay ($)</label><input type="number" id="pcGross" step="0.01" min="0" placeholder="0.00"></div>
-        <div class="form-group"><label>Net Pay ($)</label><input type="number" id="pcNet" required step="0.01" min="0" placeholder="0.00"></div>
+      <div class="form-group">
+        <label>Employer</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="pcEmp" required placeholder="e.g. Woolworths" style="flex:1" list="employerList" oninput="calcPayslip()">
+          <datalist id="employerList"></datalist>
+        </div>
       </div>
-      <div class="form-group"><label>Pay Date</label><input type="date" id="pcDate" required></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gross Pay ($)</label>
+          <input type="number" id="pcGross" step="0.01" min="0" placeholder="0.00" oninput="calcPayslip()" required>
+        </div>
+        <div class="form-group">
+          <label>Hours Worked</label>
+          <input type="number" id="pcHours" step="0.5" min="0" placeholder="e.g. 20" oninput="calcPayslip()">
+        </div>
+      </div>
+      <!-- Auto-calculated breakdown -->
+      <div id="payslipPreview" style="display:none;background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:14px;border:1px solid #e2e8f0">
+        <div style="font-size:.78rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Payslip Breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:7px;font-size:.87rem">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--gray)">Gross Pay</span><span id="psGross" style="font-weight:600">$0.00</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#ef4444">Tax Withheld</span><span id="psTax" style="font-weight:600;color:#ef4444">-$0.00</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#f59e0b">Superannuation (11.5%)</span><span id="psSuper" style="font-weight:600;color:#f59e0b">$0.00</span></div>
+          <div style="border-top:1px solid #e2e8f0;padding-top:7px;display:flex;justify-content:space-between"><span style="font-weight:700;color:var(--dark)">Net Pay</span><span id="psNet" style="font-weight:700;color:#10b981;font-size:1rem">$0.00</span></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Pay Date</label><input type="date" id="pcDate" required></div>
+        <div class="form-group"><label>Pay Period</label>
+          <select id="pcPeriod">
+            <option value="weekly">Weekly</option>
+            <option value="fortnightly" selected>Fortnightly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes (optional)</label><input type="text" id="pcNotes" placeholder="e.g. Overtime included"></div>
       <button type="submit" class="btn btn-success" style="width:100%">Save Paycheck</button>
     </form>
   </div>
@@ -2174,6 +2261,7 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='jobs')renderJobs();
   if(t==='settings'){renderBgOptions();}
   if(t==='calendar'){renderCalendar();}
+  if(t==='budget'){renderBudget();updateEmployerDatalist();}
 
   if(t==='attendance'){renderAttendance();}
 }));
@@ -3421,11 +3509,78 @@ function deleteNote(id){D.notes=D.notes.filter(n=>n.id!==id);save();renderNotes(
 
 
 // ══ BUDGET ══
-el('paycheckForm').addEventListener('submit',e=>{e.preventDefault();D.paychecks.push({id:uid(),employer:el('pcEmp').value,gross:parseFloat(el('pcGross').value)||0,net:parseFloat(el('pcNet').value)||0,payDate:el('pcDate').value});save();renderPaychecks();updateBudgetDisplay();closeModal('paycheckModal');e.target.reset();});
+el('paycheckForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const gross = parseFloat(el('pcGross').value)||0;
+  const tax = calcAustralianTax(gross, el('pcPeriod').value);
+  const superAmt = Math.round(gross * 0.115 * 100)/100;
+  const net = Math.round((gross - tax)*100)/100;
+  const employer = el('pcEmp').value.trim();
+  // Save employer for autocomplete
+  if(!D.employers) D.employers=[];
+  if(employer && !D.employers.includes(employer)) D.employers.push(employer);
+  D.paychecks.push({
+    id:uid(),
+    employer,
+    gross,
+    tax,
+    super:superAmt,
+    net,
+    hours:parseFloat(el('pcHours').value)||0,
+    payDate:el('pcDate').value,
+    period:el('pcPeriod').value,
+    notes:el('pcNotes').value.trim()
+  });
+  save();renderPaychecks();updateBudgetDisplay();renderBudget();closeModal('paycheckModal');e.target.reset();
+  el('payslipPreview').style.display='none';
+  updateEmployerDatalist();
+});
 el('expenseForm').addEventListener('submit',e=>{e.preventDefault();D.expenses.push({id:uid(),desc:el('eDesc').value,amount:parseFloat(el('eAmount').value),category:el('eCat').value,date:el('eDate').value});save();renderExpenses();updateBudgetDisplay();closeModal('expenseModal');e.target.reset();});
 function setBudget(){D.budget=parseFloat(el('budgetInput').value)||0;save();updateBudgetDisplay();}
-function updateBudgetDisplay(){const inc=D.paychecks.reduce((s,p)=>s+(p.net||0),0);const exp=D.expenses.reduce((s,e)=>s+e.amount,0);el('budIncome').textContent=`$${inc.toFixed(2)}`;el('budExp').textContent=`$${exp.toFixed(2)}`;el('budRem').textContent=`$${(inc-exp).toFixed(2)}`;el('budSet').textContent=`$${D.budget.toFixed(2)}`;}
-function renderPaychecks(){const c=el('paycheckList');if(!D.paychecks.length){c.innerHTML='<div class="empty"><div class="ei">💵</div><p>No paychecks yet</p></div>';return;}c.innerHTML=D.paychecks.slice().reverse().map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px;background:#f8fafc;border-radius:9px;margin-bottom:7px;border-left:4px solid var(--secondary)"><div><div style="font-weight:600">${esc(p.employer)}</div><div style="font-size:.76rem;color:var(--gray)">${p.payDate?new Date(p.payDate).toLocaleDateString():''}</div></div><div style="display:flex;align-items:center;gap:9px"><span style="font-size:1.2rem;font-weight:700;color:var(--secondary)">$${(p.net||0).toFixed(2)}</span><button class="btn btn-danger btn-sm" onclick="delPC(${p.id})">🗑️</button></div></div>`).join('');}
+function updateBudgetDisplay(){
+  renderBudget();
+  renderPaychecks();
+  renderExpenses();
+}
+
+function renderPaychecks(){
+  const c=el('paycheckList');
+  // Update employer datalist
+  updateEmployerDatalist();
+  const fyStr = el('fySelector')?.value || getCurrentFY();
+  const {start, end: fyEnd} = getFYRange(fyStr);
+  const list = D.paychecks.filter(p=>!p.payDate||new Date(p.payDate)>=start&&new Date(p.payDate)<=fyEnd);
+  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">💵</div><p>No paychecks for this period</p></div>';return;}
+  c.innerHTML=list.slice().reverse().map(p=>{
+    const gross=p.gross||0;
+    const tax=p.tax||calcAustralianTax(gross,p.period||'fortnightly');
+    const superAmt=p.super||(gross*0.115);
+    const net=p.net||(gross-tax);
+    const fmt=n=>'$'+n.toFixed(2);
+    return`<div style="background:#f8fafc;border-radius:10px;margin-bottom:8px;border:1px solid #e2e8f0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f1f5f9">
+        <div>
+          <div style="font-weight:600;font-size:.9rem;color:var(--dark)">${esc(p.employer||'')}</div>
+          <div style="font-size:.74rem;color:var(--gray);margin-top:2px">${p.payDate?new Date(p.payDate).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):''} ${p.period?'· '+p.period:''} ${p.hours?'· '+p.hours+'h':''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-weight:700;color:#10b981;font-size:1rem">${fmt(net)}</div>
+            <div style="font-size:.7rem;color:var(--gray)">net pay</div>
+          </div>
+          <button onclick="D.paychecks=D.paychecks.filter(x=>x.id!==${p.id});save();renderPaychecks();updateBudgetDisplay();renderBudget();" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.85rem;padding:4px">✕</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:8px 14px;gap:8px">
+        <div style="font-size:.75rem"><span style="color:var(--gray)">Gross:</span> <span style="font-weight:600">${fmt(gross)}</span></div>
+        <div style="font-size:.75rem"><span style="color:#ef4444">Tax:</span> <span style="font-weight:600;color:#ef4444">-${fmt(tax)}</span></div>
+        <div style="font-size:.75rem"><span style="color:#f59e0b">Super:</span> <span style="font-weight:600;color:#f59e0b">${fmt(superAmt)}</span></div>
+      </div>
+      ${p.notes?`<div style="padding:0 14px 8px;font-size:.74rem;color:var(--gray);font-style:italic">${esc(p.notes)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
 function delPC(id){D.paychecks=D.paychecks.filter(p=>p.id!==id);save();renderPaychecks();updateBudgetDisplay();}
 function renderExpenses(){const c=el('expenseList');if(!D.expenses.length){c.innerHTML='<div class="empty"><div class="ei">💸</div><p>No expenses yet</p></div>';return;}const icons={food:'🍔',books:'📚',transport:'🚗',entertainment:'🎮',supplies:'✏️',rent:'🏠',other:'📦'};const clrs={food:'#f59e0b',books:'#8b5cf6',transport:'#3b82f6',entertainment:'#ec4899',supplies:'#10b981',rent:'#ef4444',other:'#6b7280'};c.innerHTML=D.expenses.slice().reverse().map(e=>`<div class="exp-item"><div class="exp-cat"><div class="exp-icon" style="background:${clrs[e.category]}20;color:${clrs[e.category]}">${icons[e.category]}</div><div><div style="font-weight:600">${esc(e.desc)}</div><div style="font-size:.75rem;color:var(--gray)">${new Date(e.date).toLocaleDateString()} • ${e.category}</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;color:var(--danger)">-$${e.amount.toFixed(2)}</span><button class="btn btn-danger btn-sm" onclick="delExp(${e.id})">🗑️</button></div></div>`).join('');}
 function delExp(id){D.expenses=D.expenses.filter(e=>e.id!==id);save();renderExpenses();updateBudgetDisplay();}
@@ -6524,6 +6679,177 @@ async function generateAllTopicNotes(){
     }
   }
   alert('✅ Done! Generated notes for '+done+' topics.');
+}
+
+
+// ══ AUSTRALIAN BUDGET ══
+
+function calcAustralianTax(gross, period){
+  // Annualise gross based on pay period
+  const periods = {weekly:52, fortnightly:26, monthly:12};
+  const annualGross = gross * (periods[period]||26);
+  let annualTax = 0;
+  // 2024-25 ATO tax brackets
+  if(annualGross <= 18200) annualTax = 0;
+  else if(annualGross <= 45000) annualTax = (annualGross - 18200) * 0.19;
+  else if(annualGross <= 120000) annualTax = 5092 + (annualGross - 45000) * 0.325;
+  else if(annualGross <= 180000) annualTax = 29467 + (annualGross - 120000) * 0.37;
+  else annualTax = 51667 + (annualGross - 180000) * 0.45;
+  // Also apply 2% Medicare levy (above threshold)
+  if(annualGross > 26000) annualTax += annualGross * 0.02;
+  // LITO offset
+  if(annualGross <= 37500) annualTax = Math.max(0, annualTax - 700);
+  else if(annualGross <= 45000) annualTax = Math.max(0, annualTax - (700 - (annualGross-37500)*0.05));
+  else if(annualGross <= 66667) annualTax = Math.max(0, annualTax - (325 - (annualGross-45000)*0.015));
+  // Convert back to pay period tax
+  return Math.round((annualTax / (periods[period]||26))*100)/100;
+}
+
+function calcPayslip(){
+  const gross = parseFloat(el('pcGross')?.value)||0;
+  const period = el('pcPeriod')?.value||'fortnightly';
+  if(gross<=0){ el('payslipPreview').style.display='none'; return; }
+  const tax = calcAustralianTax(gross, period);
+  const superAmt = Math.round(gross*0.115*100)/100;
+  const net = Math.round((gross-tax)*100)/100;
+  const fmt = n=>'$'+n.toFixed(2);
+  el('psGross').textContent = fmt(gross);
+  el('psTax').textContent = '-'+fmt(tax);
+  el('psSuper').textContent = fmt(superAmt);
+  el('psNet').textContent = fmt(net);
+  el('payslipPreview').style.display = 'block';
+}
+
+function updateEmployerDatalist(){
+  const dl = el('employerList');
+  if(!dl) return;
+  const employers = D.employers||[];
+  dl.innerHTML = employers.map(e=>`<option value="${esc(e)}">`).join('');
+}
+
+function getCurrentFY(){
+  const now = new Date();
+  const year = now.getMonth()>=6 ? now.getFullYear() : now.getFullYear()-1;
+  return `FY${year}-${String(year+1).slice(-2)}`;
+}
+
+function getFYRange(fyStr){
+  // e.g. "FY2024-25" -> {start: Date, end: Date}
+  const year = parseInt(fyStr.replace('FY','').split('-')[0]);
+  return {
+    start: new Date(year, 6, 1), // July 1
+    end: new Date(year+1, 5, 30, 23, 59, 59) // June 30
+  };
+}
+
+function populateFYSelector(){
+  const sel = el('fySelector'); if(!sel) return;
+  const currentFY = getCurrentFY();
+  // Get all FYs from paychecks and expenses
+  const fySet = new Set([currentFY]);
+  D.paychecks.forEach(p=>{
+    if(p.payDate){
+      const d=new Date(p.payDate);
+      const yr = d.getMonth()>=6?d.getFullYear():d.getFullYear()-1;
+      fySet.add(`FY${yr}-${String(yr+1).slice(-2)}`);
+    }
+  });
+  D.expenses.forEach(e=>{
+    if(e.date){
+      const d=new Date(e.date);
+      const yr = d.getMonth()>=6?d.getFullYear():d.getFullYear()-1;
+      fySet.add(`FY${yr}-${String(yr+1).slice(-2)}`);
+    }
+  });
+  const sorted=[...fySet].sort().reverse();
+  sel.innerHTML=sorted.map(fy=>`<option value="${fy}" ${fy===currentFY?'selected':''}>${fy}</option>`).join('');
+}
+
+function renderBudget(){
+  populateFYSelector();
+  const fyStr = el('fySelector')?.value || getCurrentFY();
+  const {start, end} = getFYRange(fyStr);
+
+  const paychecks = D.paychecks.filter(p=>p.payDate&&new Date(p.payDate)>=start&&new Date(p.payDate)<=end);
+  const expenses = D.expenses.filter(e=>e.date&&new Date(e.date)>=start&&new Date(e.date)<=end);
+
+  const totalGross = paychecks.reduce((s,p)=>s+(p.gross||0),0);
+  const totalTax = paychecks.reduce((s,p)=>s+(p.tax||0),0);
+  const totalSuper = paychecks.reduce((s,p)=>s+(p.super||0),0);
+  const totalNet = paychecks.reduce((s,p)=>s+(p.net||0),0);
+  const totalExp = expenses.reduce((s,e)=>s+e.amount,0);
+  const balance = totalNet - totalExp;
+
+  const fmt = n=>'$'+Math.abs(n).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0});
+  el('budGross').textContent = fmt(totalGross);
+  el('budTax').textContent = fmt(totalTax);
+  el('budSuper').textContent = fmt(totalSuper);
+  el('budIncome').textContent = fmt(totalNet);
+  el('budExp').textContent = fmt(totalExp);
+  el('budRem').textContent = (balance<0?'-':'')+fmt(balance);
+  el('budRem').style.color = balance>=0?'#fff':'#ef4444';
+
+  renderBudgetCharts(paychecks, expenses, start);
+}
+
+function renderBudgetCharts(paychecks, expenses, fyStart){
+  // Build monthly data
+  const months = [];
+  for(let i=0;i<12;i++){
+    const d = new Date(fyStart);
+    d.setMonth(d.getMonth()+i);
+    months.push({
+      label: d.toLocaleString('default',{month:'short',year:'2-digit'}),
+      net: 0, expenses: 0, tax: 0, super: 0
+    });
+  }
+  paychecks.forEach(p=>{
+    const d=new Date(p.payDate);
+    const mIdx = (d.getMonth()-6+12)%12;
+    if(months[mIdx]){months[mIdx].net+=(p.net||0);months[mIdx].tax+=(p.tax||0);months[mIdx].super+=(p.super||0);}
+  });
+  expenses.forEach(e=>{
+    const d=new Date(e.date);
+    const mIdx=(d.getMonth()-6+12)%12;
+    if(months[mIdx]) months[mIdx].expenses+=e.amount;
+  });
+
+  // Income vs Expenses chart
+  const ctx1=el('budgetIncomeChart');
+  if(ctx1){
+    if(ctx1._chart)ctx1._chart.destroy();
+    ctx1._chart=new Chart(ctx1,{
+      type:'bar',
+      data:{
+        labels:months.map(m=>m.label),
+        datasets:[
+          {label:'Net Income',data:months.map(m=>m.net),backgroundColor:'rgba(16,185,129,.7)',borderRadius:4},
+          {label:'Expenses',data:months.map(m=>m.expenses),backgroundColor:'rgba(239,68,68,.6)',borderRadius:4}
+        ]
+      },
+      options:{responsive:true,plugins:{legend:{labels:{font:{size:11}}}},scales:{y:{ticks:{callback:v=>'$'+v.toLocaleString()}}}}
+    });
+  }
+
+  // Breakdown pie chart
+  const ctx2=el('budgetBreakdownChart');
+  if(ctx2){
+    if(ctx2._chart)ctx2._chart.destroy();
+    const totalGross=paychecks.reduce((s,p)=>s+(p.gross||0),0);
+    const totalTax=paychecks.reduce((s,p)=>s+(p.tax||0),0);
+    const totalSuper=paychecks.reduce((s,p)=>s+(p.super||0),0);
+    const totalNet=paychecks.reduce((s,p)=>s+(p.net||0),0);
+    const totalExp=expenses.reduce((s,e)=>s+e.amount,0);
+    const saved=Math.max(0,totalNet-totalExp);
+    ctx2._chart=new Chart(ctx2,{
+      type:'doughnut',
+      data:{
+        labels:['Tax','Super','Expenses','Saved'],
+        datasets:[{data:[totalTax,totalSuper,totalExp,saved],backgroundColor:['#ef4444','#f59e0b','#f87171','#10b981'],borderWidth:0}]
+      },
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}
+    });
+  }
 }
 
 // ══ INIT (non-auth setup only) ══
