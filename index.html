@@ -2546,19 +2546,19 @@ window._refreshAll = function(){
 };
 window._doRefreshAll = function(){
   renderBgOptions();renderSemProgress();renderWeeklyReview();updateGPAScaleUI();
-  // Only apply background on first load, not on every Firebase sync
-  if(!window._bgApplied){
-    const savedBg = D.bgTheme || 'linear-gradient(135deg,#667eea,#764ba2)';
-    document.documentElement.style.background = savedBg;
-    document.body.style.background = 'transparent';
-    window._bgApplied = true;
-  }
+  // Background handled separately via applyBg()
   renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
   renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
   renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
   refreshSwCourses();fillGymExSelect();
   renderAttendance();renderCalendar();initDarkMode();loadApiKeyUI();applyNewDesign();
+      // Apply background once after auth - never touch again unless user changes it
+      (function(){
+        const bg = window.D?.bgTheme || 'linear-gradient(135deg,#667eea,#764ba2)';
+        document.documentElement.style.background = bg;
+        document.body.style.background = 'transparent';
+      })();
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
