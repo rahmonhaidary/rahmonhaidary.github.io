@@ -22,7 +22,7 @@
   --warning:#f59e0b;--danger:#ef4444;--dark:#1e1b4b;
   --gray:#64748b;--card-bg:#fff;--shadow:0 4px 6px -1px rgba(0,0,0,.1);
 }
-body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:0;background-attachment:fixed;background-size:cover;}
+html{min-height:100%;background:linear-gradient(135deg,#667eea,#764ba2);}body{font-family:'Segoe UI',sans-serif;background:transparent;min-height:100%;padding:0;}
 .container{max-width:1400px;margin:0 auto;}
 header{background:var(--card-bg);border-radius:20px;padding:20px 28px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 .logo{display:flex;align-items:center;gap:12px;}
@@ -895,7 +895,7 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 
 /* ════ REDESIGN CSS ════ */
-body { margin: 0; background-attachment: fixed !important; background-size: cover !important; }
+body { margin: 0; }
 
 /* ── Header ── */
 header {
@@ -1039,7 +1039,7 @@ body.dark-mode .nav-btn.active { color: #818cf8 !important; border-bottom-color:
 body.dark-mode .card { background: #1e293b !important; border-color: #334155 !important; }
 body.dark-mode .card-header h2 { color: #f1f5f9 !important; }
 body.dark-mode #studentName, body.dark-mode #semester { background: #334155 !important; border-color: #475569 !important; color: #e2e8f0 !important; }
-body { }
+
 
 header {
   background: #fff !important;
@@ -2549,8 +2549,8 @@ window._doRefreshAll = function(){
   // Only apply background on first load, not on every Firebase sync
   if(!window._bgApplied){
     const savedBg = D.bgTheme || 'linear-gradient(135deg,#667eea,#764ba2)';
-    document.body.style.background = savedBg;
-    document.body.style.backgroundAttachment = 'fixed';
+    document.documentElement.style.background = savedBg;
+    document.body.style.background = 'transparent';
     window._bgApplied = true;
   }
   renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
@@ -4621,8 +4621,8 @@ function renderBgOptions(){
   c.innerHTML=BG_OPTIONS.map((bg,i)=>`<div class="bg-option ${(D.bgTheme||BG_OPTIONS[0].value)===bg.value?'active':''}" style="background:${bg.value}" title="${bg.label}" onclick="applyBg('${bg.value}',this)"></div>`).join('');
 }
 function applyBg(gradient,target){
-  document.body.style.background = gradient;
-  document.body.style.backgroundAttachment = 'fixed';
+  document.documentElement.style.background = gradient;
+  document.body.style.background = 'transparent';
   window._bgApplied = true;
   D.bgTheme=gradient;save();
   document.querySelectorAll('.bg-option').forEach(o=>o.classList.remove('active'));
