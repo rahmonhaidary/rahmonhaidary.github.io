@@ -37,7 +37,7 @@ nav{background:var(--card-bg);border-radius:13px;padding:7px;margin-bottom:20px;
 .nav-btn:hover{background:#f1f5f9;}
 .nav-btn.active{background:var(--primary);color:#fff;}
 .tab-content{display:none;}
-.tab-content.active{display:block;}
+.tab-content.active{display:block;min-height:calc(100vh - 120px);}
 .card{background:var(--card-bg);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:18px;}
 .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
 .card-header h2{color:var(--dark);font-size:1.28rem;}
@@ -1011,8 +1011,9 @@ nav::-webkit-scrollbar { display: none !important; }
 .container {
   max-width: 1180px !important;
   margin: 0 auto !important;
-  padding: 20px !important;
+  padding: 16px 20px 40px !important;
   background: transparent !important;
+  min-height: calc(100vh - 100px) !important;
 }
 
 /* ── Cards ── */
