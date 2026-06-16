@@ -891,6 +891,68 @@ body.dark-mode .topic-note-title{color:#e2e8f0;}
 .circuit-diagram{background:#fff;border-radius:12px;padding:16px;margin:12px 0;border:1px solid #e2e8f0;overflow-x:auto;text-align:center;}
 .circuit-diagram svg{max-width:100%;height:auto;}
 body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
+
+/* ════════ REDESIGN — OPTION 1 ════════ */
+#appShell { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+/* Top nav pills */
+#topNav::-webkit-scrollbar { display: none; }
+.tn-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 13px; border-radius: 7px; font-size: 13px;
+  color: #64748b; border: none; background: none; cursor: pointer;
+  white-space: nowrap; transition: all .15s; font-family: inherit;
+}
+.tn-btn:hover { background: #f1f5f9; color: #1e293b; }
+.tn-btn.active { background: #eef2ff; color: #4f46e5; font-weight: 600; }
+.tn-btn .tn-icon { font-size: 14px; }
+
+/* Content cards in new shell */
+#appContent .card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: none;
+}
+#appContent .card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+#appContent .card-header h2 {
+  font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0;
+}
+
+/* Stat cards row */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+}
+.stat-box-label { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.stat-box-val { font-size: 1.6rem; font-weight: 700; color: #1e293b; }
+.stat-box-sub { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+
+/* Dark mode */
+body.dark-mode #appShell { background: #0f172a; }
+body.dark-mode #topBar { background: #1e293b; border-color: #334155; }
+body.dark-mode .tn-btn { color: #94a3b8; }
+body.dark-mode .tn-btn:hover { background: #334155; color: #e2e8f0; }
+body.dark-mode .tn-btn.active { background: #312e81; color: #a5b4fc; }
+body.dark-mode #appContent .card { background: #1e293b; border-color: #334155; }
+body.dark-mode #appContent .card-header { border-color: #334155; }
+body.dark-mode #appContent .card-header h2 { color: #e2e8f0; }
+body.dark-mode .stat-box { background: #0f172a; border-color: #334155; }
+body.dark-mode .stat-box-val { color: #e2e8f0; }
 </style>
 </head>
 <body>
@@ -919,7 +981,7 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 </div>
 
 <div class="container" style="display:none">
-<header>
+<header id="appHeader" style="display:none">
   <div class="logo">
     <div class="logo-icon">🎓</div>
     <div><h1>UniTracker</h1><p>Your University Life Companion</p></div>
@@ -938,8 +1000,30 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
     </div>
   </div>
 </header>
+
+<!-- NEW APP SHELL -->
+<div id="appShell" style="display:none;min-height:100vh;background:#f8fafc">
+  <!-- Top bar -->
+  <div id="topBar" style="position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid #e5e7eb;height:56px;display:flex;align-items:center;padding:0 20px;gap:16px">
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <div style="width:32px;height:32px;background:#6366f1;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700">U</div>
+      <span style="font-size:15px;font-weight:700;color:#1e293b">UniTracker</span>
+    </div>
+    <div style="flex:1;overflow-x:auto;display:flex;gap:2px;scrollbar-width:none" id="topNav">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <span id="syncStatus2" style="display:none;font-size:.75rem;color:#10b981;font-weight:600;cursor:pointer" onclick="window.syncFromCloud&&window.syncFromCloud(window.currentUser?.uid)">✓ Synced</span>
+      <div style="position:relative">
+        <div id="userAvatarNew" onclick="toggleUserMenu()" style="width:32px;height:32px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none">R</div>
+      </div>
+    </div>
+  </div>
+  <!-- Content area -->
+  <div id="appContent" style="max-width:1200px;margin:0 auto;padding:24px 20px">
+  </div>
+</div>
 <div id="reminderBanner" style="display:none"></div>
-<nav style="display:none">
+<nav id="legacyNav" style="display:none">
   <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
   <button class="nav-btn" data-tab="courses">📚 Courses</button>
   <button class="nav-btn" data-tab="assignments">📝 Assignments</button>
@@ -2213,7 +2297,7 @@ window._refreshAll = function(){
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
   renderBody();renderGymLog();renderGymExercises();renderGymCharts();renderJobs();
   refreshSwCourses();fillGymExSelect();
-  renderAttendance();renderCalendar();initDarkMode();loadApiKeyUI();
+  renderAttendance();renderCalendar();initDarkMode();loadApiKeyUI();initAppShell();hookLegacyNav();
 };
 const COLORS=['linear-gradient(135deg,#6366f1,#8b5cf6)','linear-gradient(135deg,#10b981,#059669)','linear-gradient(135deg,#f59e0b,#d97706)','linear-gradient(135deg,#ef4444,#dc2626)','linear-gradient(135deg,#3b82f6,#2563eb)','linear-gradient(135deg,#ec4899,#db2777)','linear-gradient(135deg,#14b8a6,#0d9488)','linear-gradient(135deg,#f97316,#ea580c)'];
 const SOLID=['#6366f1','#10b981','#f59e0b','#ef4444','#3b82f6','#ec4899','#14b8a6','#f97316'];
@@ -6849,6 +6933,109 @@ function renderBudgetCharts(paychecks, expenses, fyStart){
       },
       options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}
     });
+  }
+}
+
+
+// ══ NEW APP SHELL ══
+const NAV_ITEMS = [
+  {tab:'dashboard', icon:'📊', label:'Dashboard'},
+  {tab:'courses', icon:'📚', label:'Courses'},
+  {tab:'assignments', icon:'📝', label:'Assignments'},
+  {tab:'exams', icon:'📅', label:'Exams'},
+  {tab:'schedule', icon:'🗓️', label:'Schedule'},
+  {tab:'gpa', icon:'🎯', label:'GPA'},
+  {tab:'gradecalc', icon:'🧮', label:'Grade Calc'},
+  {tab:'timer', icon:'⏱️', label:'Timer'},
+  {tab:'notes', icon:'🗒️', label:'Notes'},
+  {tab:'budget', icon:'💰', label:'Budget'},
+  {tab:'body', icon:'⚖️', label:'Body'},
+  {tab:'gym', icon:'🏋️', label:'Gym'},
+  {tab:'jobs', icon:'💼', label:'Jobs'},
+  {tab:'calendar', icon:'📅', label:'Calendar'},
+  {tab:'attendance', icon:'✅', label:'Attendance'},
+  {tab:'settings', icon:'⚙️', label:'Settings'},
+];
+
+function initAppShell(){
+  // Build top nav
+  const topNav = el('topNav');
+  if(topNav){
+    topNav.innerHTML = NAV_ITEMS.map(item=>
+      `<button class="tn-btn${item.tab==='dashboard'?' active':''}" data-tab="${item.tab}" onclick="switchToTab('${item.tab}')">
+        <span class="tn-icon">${item.icon}</span>${item.label}
+      </button>`
+    ).join('');
+  }
+
+  // Move tab content into appContent
+  const appContent = el('appContent');
+  if(appContent){
+    NAV_ITEMS.forEach(item=>{
+      const tabEl = el(item.tab);
+      if(tabEl) appContent.appendChild(tabEl);
+    });
+  }
+
+  // Show shell, hide old UI
+  el('appShell').style.display = 'block';
+  el('appHeader').style.display = 'none';
+  
+  // Sync avatar
+  const user = window.currentUser;
+  if(user){
+    const av = el('userAvatarNew');
+    if(av){
+      av.style.display='flex';
+      const initials=(user.displayName||'R').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      if(user.photoURL){
+        av.innerHTML=`<img src="${user.photoURL}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">`;
+      } else {
+        av.textContent=initials;
+      }
+    }
+  }
+}
+
+function switchToTab(tab){
+  // Update nav active state
+  document.querySelectorAll('.tn-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===tab);
+  });
+  // Also keep legacy nav in sync for JS that depends on it
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab===tab);
+  });
+  // Show/hide tab content
+  document.querySelectorAll('.tab-content').forEach(t=>{
+    t.classList.toggle('active', t.id===tab);
+  });
+  // Trigger tab-specific render
+  if(tab==='calendar') renderCalendar();
+  if(tab==='budget') { renderBudget(); updateEmployerDatalist(); }
+  if(tab==='ai') { loadApiKeyUI(); initAITab(); }
+  if(tab==='attendance') renderAttendance();
+  if(tab==='gym') { if(typeof renderGymLog==='function') renderGymLog(); }
+  // Scroll to top
+  el('appContent').scrollTop = 0;
+  window.scrollTo(0,0);
+}
+
+// Sync old nav clicks with new nav
+function hookLegacyNav(){
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.addEventListener('click', ()=> switchToTab(b.dataset.tab));
+  });
+}
+
+// Update syncStatus in new header
+const origSetSync = window.setSyncStatus;
+function updateNewSync(status, text){
+  const s2 = el('syncStatus2');
+  if(s2){
+    s2.style.display = status==='ok'?'inline':'none';
+    s2.textContent = text||'✓ Synced';
+    s2.style.color = status==='ok'?'#10b981':'#f59e0b';
   }
 }
 
