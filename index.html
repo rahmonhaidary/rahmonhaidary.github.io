@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -894,7 +895,7 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 
 /* ════ REDESIGN CSS ════ */
-body { background: #f1f5f9; margin: 0; }
+body { margin: 0; }
 
 /* ── Header ── */
 header {
@@ -1016,7 +1017,7 @@ nav::-webkit-scrollbar { display: none !important; }
 
 /* ── Cards ── */
 .card {
-  background: #fff !important;
+  background: #fff;
   border: 1px solid #e5e7eb !important;
   border-radius: 12px !important;
   box-shadow: none !important;
@@ -1038,7 +1039,7 @@ body.dark-mode .nav-btn.active { color: #818cf8 !important; border-bottom-color:
 body.dark-mode .card { background: #1e293b !important; border-color: #334155 !important; }
 body.dark-mode .card-header h2 { color: #f1f5f9 !important; }
 body.dark-mode #studentName, body.dark-mode #semester { background: #334155 !important; border-color: #475569 !important; color: #e2e8f0 !important; }
-body { background: #f8fafc !important; }
+body { }
 
 header {
   background: #fff !important;
@@ -1100,7 +1101,7 @@ nav::-webkit-scrollbar { display: none !important; }
 }
 
 .card {
-  background: #fff !important;
+  background: #fff;
   border: 1px solid #e5e7eb !important;
   border-radius: 12px !important;
   box-shadow: none !important;
@@ -1130,7 +1131,7 @@ body.dark-mode header { background: #1e293b !important; border-color: #334155 !i
 body.dark-mode header h1 { color: #e2e8f0 !important; }
 body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
 body.dark-mode .nav-btn { color: #94a3b8 !important; }
-body.dark-mode .nav-btn:hover { background: #334155 !important; color: #e2e8f0 !important; }
+body.dark-mode .nav-btn:hover { color: #e2e8f0 !important; }
 body.dark-mode .nav-btn.active { color: #a5b4fc !important; border-bottom-color: #6366f1 !important; }
 body.dark-mode .card { background: #1e293b !important; border-color: #334155 !important; }
 body.dark-mode .card-header { border-color: #334155 !important; }
@@ -2537,6 +2538,8 @@ window.D = D;
 window.migrateProjects = function(arr){return(arr||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[],members:Array.isArray(p.members)?p.members:[],log:Array.isArray(p.log)?p.log:[]}));};
 window._refreshAll = function(){
   renderBgOptions();renderSemProgress();renderWeeklyReview();updateGPAScaleUI();
+  if(D.bgTheme) applyBg(D.bgTheme, null);
+  else document.body.style.cssText='background:#f1f5f9;margin:0;';
   renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
   renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
@@ -4605,7 +4608,7 @@ function renderBgOptions(){
   c.innerHTML=BG_OPTIONS.map((bg,i)=>`<div class="bg-option ${(D.bgTheme||BG_OPTIONS[0].value)===bg.value?'active':''}" style="background:${bg.value}" title="${bg.label}" onclick="applyBg('${bg.value}',this)"></div>`).join('');
 }
 function applyBg(gradient,target){
-  document.body.style.background=gradient;document.body.style.backgroundAttachment='fixed';
+  document.body.style.cssText = 'background:'+gradient+';background-attachment:fixed;margin:0;';
   D.bgTheme=gradient;save();
   document.querySelectorAll('.bg-option').forEach(o=>o.classList.remove('active'));
   if(target)target.classList.add('active');
