@@ -22,7 +22,7 @@
   --warning:#f59e0b;--danger:#ef4444;--dark:#1e1b4b;
   --gray:#64748b;--card-bg:#fff;--shadow:0 4px 6px -1px rgba(0,0,0,.1);
 }
-body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:0;background-attachment:fixed;background-size:cover;}
 .container{max-width:1400px;margin:0 auto;}
 header{background:var(--card-bg);border-radius:20px;padding:20px 28px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 .logo{display:flex;align-items:center;gap:12px;}
@@ -895,7 +895,7 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 
 /* ════ REDESIGN CSS ════ */
-body { margin: 0; }
+body { margin: 0; background-attachment: fixed !important; background-size: cover !important; }
 
 /* ── Header ── */
 header {
@@ -1011,7 +1011,7 @@ nav::-webkit-scrollbar { display: none !important; }
 .container {
   max-width: 1180px !important;
   margin: 0 auto !important;
-  padding: 24px 20px !important;
+  padding: 20px !important;
   background: transparent !important;
 }
 
@@ -2536,7 +2536,15 @@ let D={
 // Expose D and render functions to window so Firebase module can access them
 window.D = D;
 window.migrateProjects = function(arr){return(arr||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[],members:Array.isArray(p.members)?p.members:[],log:Array.isArray(p.log)?p.log:[]}));};
+window._refreshAllDebounced = null;
 window._refreshAll = function(){
+  // Debounce to prevent rapid successive refreshes
+  if(window._refreshAllDebounced) clearTimeout(window._refreshAllDebounced);
+  window._refreshAllDebounced = setTimeout(function(){
+    window._doRefreshAll();
+  }, 50);
+};
+window._doRefreshAll = function(){
   renderBgOptions();renderSemProgress();renderWeeklyReview();updateGPAScaleUI();
   // Only apply background on first load, not on every Firebase sync
   if(!window._bgApplied){
