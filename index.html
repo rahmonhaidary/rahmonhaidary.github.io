@@ -2538,10 +2538,13 @@ window.D = D;
 window.migrateProjects = function(arr){return(arr||[]).map(p=>({...p,subtasks:Array.isArray(p.subtasks)?p.subtasks:[],members:Array.isArray(p.members)?p.members:[],log:Array.isArray(p.log)?p.log:[]}));};
 window._refreshAll = function(){
   renderBgOptions();renderSemProgress();renderWeeklyReview();updateGPAScaleUI();
-  // Apply background - use saved theme or default gradient
-  const savedBg = D.bgTheme || 'linear-gradient(135deg,#667eea,#764ba2)';
-  document.body.style.background = savedBg;
-  document.body.style.backgroundAttachment = 'fixed';
+  // Only apply background on first load, not on every Firebase sync
+  if(!window._bgApplied){
+    const savedBg = D.bgTheme || 'linear-gradient(135deg,#667eea,#764ba2)';
+    document.body.style.background = savedBg;
+    document.body.style.backgroundAttachment = 'fixed';
+    window._bgApplied = true;
+  }
   renderCourses();renderAssignments();renderProjects();renderSchedule();renderExams();
   renderLog();renderExpenses();renderPaychecks();updateBudgetDisplay();updateGPA();
   renderDashboard();renderNotes();renderStandards();showTimer();checkReminders();
@@ -4610,7 +4613,9 @@ function renderBgOptions(){
   c.innerHTML=BG_OPTIONS.map((bg,i)=>`<div class="bg-option ${(D.bgTheme||BG_OPTIONS[0].value)===bg.value?'active':''}" style="background:${bg.value}" title="${bg.label}" onclick="applyBg('${bg.value}',this)"></div>`).join('');
 }
 function applyBg(gradient,target){
-  document.body.style.cssText = 'background:'+gradient+';background-attachment:fixed;margin:0;';
+  document.body.style.background = gradient;
+  document.body.style.backgroundAttachment = 'fixed';
+  window._bgApplied = true;
   D.bgTheme=gradient;save();
   document.querySelectorAll('.bg-option').forEach(o=>o.classList.remove('active'));
   if(target)target.classList.add('active');
@@ -7166,8 +7171,9 @@ function renderBudgetCharts(paychecks, expenses, fyStart){
     if(ctx1._chart){
       // Update existing chart data instead of destroying
       ctx1._chart.data.labels = months.map(m=>m.label);
-      ctx1._chart.data.datasets[0].data = months.map(m=>m.net);
-      ctx1._chart.data.datasets[1].data = months.map(m=>m.expenses);
+      ctx1._chart.data.datasets[0].data = months.map(m=>Math.max(0, m.net - m.expenses));
+      ctx1._chart.data.datasets[1].data = months.map(m=>m.net + m.tax);
+      if(ctx1._chart.data.datasets[2]) ctx1._chart.data.datasets[2].data = months.map(m=>m.expenses);
       ctx1._chart.update('none');
     } else {
       ctx1._chart=new Chart(ctx1,{
@@ -7176,25 +7182,37 @@ function renderBudgetCharts(paychecks, expenses, fyStart){
           labels:months.map(m=>m.label),
           datasets:[
             {
-              label:'Net Income',
-              data:months.map(m=>m.net),
+              label:'Take-home (after tax & expenses)',
+              data:months.map(m=>Math.max(0, m.net - m.expenses)),
               borderColor:'#10b981',
               backgroundColor:'rgba(16,185,129,.1)',
-              borderWidth:2,
+              borderWidth:2.5,
               fill:true,
               tension:0.4,
               pointRadius:4,
               pointBackgroundColor:'#10b981'
             },
             {
+              label:'Gross Income',
+              data:months.map(m=>m.net + m.tax),
+              borderColor:'#6366f1',
+              backgroundColor:'rgba(99,102,241,.05)',
+              borderWidth:1.5,
+              fill:false,
+              tension:0.4,
+              pointRadius:3,
+              borderDash:[4,3],
+              pointBackgroundColor:'#6366f1'
+            },
+            {
               label:'Expenses',
               data:months.map(m=>m.expenses),
               borderColor:'#ef4444',
-              backgroundColor:'rgba(239,68,68,.08)',
-              borderWidth:2,
-              fill:true,
+              backgroundColor:'rgba(239,68,68,.06)',
+              borderWidth:1.5,
+              fill:false,
               tension:0.4,
-              pointRadius:4,
+              pointRadius:3,
               pointBackgroundColor:'#ef4444'
             }
           ]
