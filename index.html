@@ -894,21 +894,21 @@ body.dark-mode .circuit-diagram{background:#1e293b;border-color:#475569;}
 
 
 /* ════ REDESIGN CSS ════ */
-body { background: #f1f5f9 !important; margin: 0; }
+body { background: #f1f5f9; margin: 0; }
 
 /* ── Header ── */
 header {
   background: #fff !important;
-  border-bottom: 0.5px solid #e5e7eb !important;
+  border-bottom: none !important;
   padding: 0 20px !important;
-  height: 52px !important;
+  height: 48px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   position: sticky !important;
   top: 0 !important;
   z-index: 200 !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
+  box-shadow: none !important;
   gap: 16px !important;
 }
 .logo {
@@ -969,16 +969,17 @@ header p { display: none !important; }
 /* ── Nav (underline style like Option 1) ── */
 nav {
   background: #fff !important;
+  border-top: none !important;
   border-bottom: 1px solid #e5e7eb !important;
   padding: 0 20px !important;
   display: flex !important;
   gap: 0 !important;
   overflow-x: auto !important;
   scrollbar-width: none !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06) !important;
   flex-wrap: nowrap !important;
   position: sticky !important;
-  top: 52px !important;
+  top: 48px !important;
   z-index: 100 !important;
 }
 nav::-webkit-scrollbar { display: none !important; }
@@ -1027,10 +1028,10 @@ nav::-webkit-scrollbar { display: none !important; }
 }
 
 /* ── Dark mode ── */
-body.dark-mode { background: #0f172a !important; }
+body.dark-mode { background: #0f172a; }
 body.dark-mode header { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
 body.dark-mode header h1 { color: #f1f5f9 !important; }
-body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; }
+body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
 body.dark-mode .nav-btn { color: #94a3b8 !important; }
 body.dark-mode .nav-btn:hover { color: #e2e8f0 !important; }
 body.dark-mode .nav-btn.active { color: #818cf8 !important; border-bottom-color: #818cf8 !important; }
@@ -1124,10 +1125,10 @@ nav::-webkit-scrollbar { display: none !important; }
 .user-avatar { width: 32px !important; height: 32px !important; border-radius: 50% !important; cursor: pointer !important; }
 
 /* Dark mode overrides */
-body.dark-mode { background: #0f172a !important; }
+body.dark-mode { background: #0f172a; }
 body.dark-mode header { background: #1e293b !important; border-color: #334155 !important; }
 body.dark-mode header h1 { color: #e2e8f0 !important; }
-body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; }
+body.dark-mode nav { background: #1e293b !important; border-color: #334155 !important; box-shadow: 0 1px 3px rgba(0,0,0,.3) !important; }
 body.dark-mode .nav-btn { color: #94a3b8 !important; }
 body.dark-mode .nav-btn:hover { background: #334155 !important; color: #e2e8f0 !important; }
 body.dark-mode .nav-btn.active { color: #a5b4fc !important; border-bottom-color: #6366f1 !important; }
@@ -7121,6 +7122,17 @@ function renderBudget(){
 }
 
 function renderBudgetCharts(paychecks, expenses, fyStart){
+  // Check Chart.js is loaded
+  if(typeof Chart === 'undefined') {
+    console.log('Chart.js not loaded yet');
+    setTimeout(()=>renderBudgetCharts(paychecks, expenses, fyStart), 500);
+    return;
+  }
+  // Check canvas elements exist
+  if(!el('budgetIncomeChart') || !el('budgetBreakdownChart')) {
+    console.log('Budget chart canvases not found');
+    return;
+  }
   // Build monthly data
   const months = [];
   for(let i=0;i<12;i++){
