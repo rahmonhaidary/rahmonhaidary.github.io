@@ -22,7 +22,7 @@
   --warning:#f59e0b;--danger:#ef4444;--dark:#1e1b4b;
   --gray:#64748b;--card-bg:#fff;--shadow:0 4px 6px -1px rgba(0,0,0,.1);
 }
-html{min-height:100%;background:linear-gradient(135deg,#667eea,#764ba2);}body{font-family:'Segoe UI',sans-serif;background:transparent;min-height:100%;padding:0;}
+html{min-height:100%;background:linear-gradient(135deg,#667eea,#764ba2);}body{font-family:'Segoe UI',sans-serif;background:transparent!important;min-height:100%;padding:0;}html .container{background:transparent!important;}
 .container{max-width:1400px;margin:0 auto;}
 header{background:var(--card-bg);border-radius:20px;padding:20px 28px;margin-bottom:20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;}
 .logo{display:flex;align-items:center;gap:12px;}
@@ -7268,44 +7268,15 @@ function renderBudgetCharts(paychecks, expenses, fyStart){
 
 // ══ APPLY NEW DESIGN ══
 function applyNewDesign(){
-  // Style the header
-  const header = document.querySelector('header');
-  if(header){
-    header.style.cssText = 'background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:none;';
-    const logo = header.querySelector('.logo');
-    if(logo) logo.style.cssText = 'display:flex;align-items:center;gap:10px;';
-    const logoIcon = header.querySelector('.logo-icon');
-    if(logoIcon) logoIcon.style.cssText = 'width:32px;height:32px;background:#6366f1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;';
-    const h1 = header.querySelector('h1');
-    if(h1) h1.style.cssText = 'font-size:15px;font-weight:700;color:#1e293b;margin:0;';
-    const p = header.querySelector('p');
-    if(p) p.style.display='none';
-  }
-
-  // Style the nav
-  const nav = document.querySelector('nav');
-  if(nav){
-    nav.style.cssText = 'background:#fff;border-bottom:1px solid #e5e7eb;padding:0 20px;display:flex!important;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;';
-    nav.querySelectorAll('.nav-btn').forEach(btn=>{
-      btn.style.cssText = 'padding:12px 13px;border-radius:0;font-size:13px;color:#64748b;border:none;background:none;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;';
-      btn.classList.contains('active') && (btn.style.cssText += 'color:#4f46e5;border-bottom-color:#4f46e5;font-weight:600;');
-    });
-  }
-
-  // Style the container
+  // CSS handles all styling - just remove conflicting inline styles
   const container = document.querySelector('.container');
-  if(container) container.style.cssText = 'max-width:1180px;margin:0 auto;padding:16px 20px 60px;background:transparent;min-height:calc(100vh - 100px);';
-
-  // Style cards
-  document.querySelectorAll('.card').forEach(card=>{
-    card.style.background = '#fff';
-    card.style.border = '1px solid #e5e7eb';
-    card.style.borderRadius = '12px';
-    card.style.boxShadow = 'none';
-  });
-
-  // Set page background
-  document.body.style.background = '#f8fafc';
+  if(container){ container.removeAttribute('style'); }
+  const header = document.querySelector('header');
+  if(header){ 
+    header.removeAttribute('style');
+    header.querySelector('p')?.style && (header.querySelector('p').style.display='none');
+  }
+  // Don't touch body background here - handled separately
 }
 
 // Re-apply styles when nav tabs switch (to style new active button)
