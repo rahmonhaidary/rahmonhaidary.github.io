@@ -1294,7 +1294,7 @@ body > * { background: transparent; }
   <button class="nav-btn" data-tab="attendance">✅ Attendance</button>
   <button class="nav-btn" data-tab="settings">⚙️ Settings</button>
 </nav>
-<div id="tabsWrapper" style="min-height:100vh;padding:20px;box-sizing:border-box;background:transparent;">
+<div id="tabsWrapper" style="min-height:100vh;padding:20px;box-sizing:border-box;background:transparent;display:none;">
 
 
 <!-- DASHBOARD -->
@@ -2406,9 +2406,12 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     window.currentUser = user;
     loginScreen.style.display = 'none';
-    container.style.display = 'block';
+    // Don't show old container (it's the unused appShell)
+    // Show the actual content wrapper
+    const tabsWrapper = document.getElementById('tabsWrapper');
+    if(tabsWrapper) tabsWrapper.style.display = 'block';
     nav.style.display = 'flex';
-    if(reminderBanner) reminderBanner.style.display = 'block';
+    if(reminderBanner) reminderBanner.style.display = 'none'; // handled by checkReminders
 
     // Update avatar
     const avatar = document.getElementById('userAvatar');
@@ -2492,7 +2495,8 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     currentUser = null;
     loginScreen.style.display = 'flex';
-    container.style.display = 'none';
+    const tabsWrapper2 = document.getElementById('tabsWrapper');
+    if(tabsWrapper2) tabsWrapper2.style.display = 'none';
     nav.style.display = 'none';
     if(reminderBanner) reminderBanner.style.display = 'none';
   }
