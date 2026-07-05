@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UniTracker</title>
-<meta name="description" content="Your University Life Companion">
-<meta name="theme-color" content="#6366f1">
+<meta name="description" content="Uni, money, health and work — your whole week in one place.">
+<meta name="theme-color" content="#1D2433">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="UniTracker">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
@@ -1211,6 +1214,137 @@ body.dark-mode .stat-box-val { color: #e2e8f0; }
 #tabsWrapper > div { background: transparent !important; }
 .tab-content { background: transparent !important; }
 body > * { background: transparent; }
+/* ═══════════════ REDESIGN: HIGHLIGHTER & INK ═══════════════ */
+:root{
+  --paper:#F7F6F2; --card:#FFFFFF; --ink:#1D2433; --ink-soft:#5A6172;
+  --line:#E5E3DB; --biro:#2B59C3; --biro-deep:#1E4090;
+  --marker:#FFD84D; --marker-soft:#FFF3C4;
+  --redpen:#DE4B36; --greenmk:#2E9E6B; --amber:#E8A317;
+  --radius:12px; --radius-lg:16px;
+  --shadow:0 1px 2px rgba(29,36,51,.05), 0 4px 14px rgba(29,36,51,.06);
+  /* remap legacy vars so the whole app inherits the new palette */
+  --primary:var(--biro); --primary-dark:var(--biro-deep); --secondary:var(--greenmk);
+  --warning:var(--amber); --danger:var(--redpen); --dark:var(--ink);
+  --gray:var(--ink-soft); --card-bg:var(--card);
+}
+html{background:var(--paper)!important;}
+body{font-family:'Instrument Sans','Segoe UI',sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;}
+h1,h2,h3,.logo h1,.card-header h2,.stat-card .val,.login-card h1{font-family:'Bricolage Grotesque','Instrument Sans',sans-serif;letter-spacing:-.01em;}
+
+/* App layout: sidebar + content */
+.container{max-width:none;display:grid;grid-template-columns:236px minmax(0,1fr);align-items:start;}
+.container>header,.container>#appShell,.container>#reminderBanner,.container>#tabsWrapper{grid-column:2;}
+nav#legacyNav{grid-column:1;grid-row:1/span 6;position:sticky;top:0;height:100vh;overflow-y:auto;
+  flex-direction:column;align-items:stretch;gap:2px;padding:18px 14px 14px;
+  background:var(--card);border-right:1px solid var(--line);border-radius:0;box-shadow:none;scrollbar-width:thin;}
+#tabsWrapper{padding:26px 30px 60px!important;max-width:1220px;}
+
+/* Sidebar pieces */
+.side-brand{padding:2px 10px 14px;}
+.side-logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.32rem;color:var(--ink);}
+.side-logo mark{background:linear-gradient(104deg,transparent .5%,var(--marker) 3%,var(--marker) 96%,transparent 99%);padding:0 3px;border-radius:2px;color:var(--ink);}
+.side-tag{font-size:.72rem;color:var(--ink-soft);margin-top:2px;}
+.quick-switch-btn{display:flex;justify-content:space-between;align-items:center;margin:0 4px 14px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:9px;background:var(--paper);color:var(--ink-soft);font-size:.82rem;cursor:pointer;font-family:inherit;}
+.quick-switch-btn:hover{border-color:var(--biro);color:var(--ink);}
+.quick-switch-btn kbd{font-family:inherit;font-size:.7rem;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink-soft);}
+.nav-group{padding:6px 0;}
+.nav-group+.nav-group{border-top:1px dashed var(--line);}
+.nav-group-bottom{margin-top:auto;}
+.nav-label{font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);padding:8px 12px 5px;}
+nav .nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 12px;margin:1px 0;
+  border-radius:9px;font-size:.88rem;font-weight:500;color:var(--ink-soft);position:relative;transition:background .15s,color .15s;}
+nav .nav-btn .ni{width:18px;text-align:center;font-size:.85rem;opacity:.75;}
+nav .nav-btn:hover{background:var(--paper);color:var(--ink);}
+nav .nav-btn.active{background:transparent;color:var(--ink);font-weight:700;}
+nav .nav-btn.active::before{content:'';position:absolute;inset:3px 2px;background:var(--marker);border-radius:6px;
+  transform:skewX(-6deg) rotate(-.6deg);z-index:-1;opacity:.9;}
+nav .nav-btn.active .ni{opacity:1;}
+.side-version{font-size:.68rem;color:var(--ink-soft);padding:10px 12px 2px;opacity:.8;}
+
+/* Cards, buttons, forms */
+.card{border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow);}
+.card-header h2{font-size:1.14rem;font-weight:700;}
+.btn{border-radius:9px;font-weight:600;transition:background .15s,transform .05s;}
+.btn:active{transform:translateY(1px);}
+.btn-secondary{background:var(--paper);border:1px solid var(--line);color:var(--ink);}
+.btn-secondary:hover{background:#EFEDE6;}
+.form-group input,.form-group select,.form-group textarea,.user-info input{border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--biro);box-shadow:0 0 0 3px rgba(43,89,195,.13);}
+.inner-tab{border:1.5px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink-soft);}
+.inner-tab.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+.modal{background:rgba(29,36,51,.45);backdrop-filter:blur(2px);}
+.modal-content{border-radius:var(--radius-lg);border:1px solid var(--line);}
+.stat-card{border:1px solid var(--line);}
+.stat-card .val{font-size:2.1rem;font-weight:800;display:inline-block;position:relative;z-index:0;}
+.stat-card .val::after{content:'';position:absolute;left:-4px;right:-6px;bottom:2px;height:.42em;
+  background:var(--marker);opacity:.55;z-index:-1;transform:skewX(-8deg) rotate(-1deg);border-radius:2px;}
+.s-gpa .val,.s-courses .val,.s-tasks .val,.s-study .val{color:var(--ink);}
+.empty{color:var(--ink-soft);}
+.empty .ei{filter:grayscale(.2);opacity:.85;}
+
+/* Login screen */
+#loginScreen{background:var(--paper);}
+.login-card{border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);}
+.login-card h1{font-weight:800;}
+
+/* Quick switcher */
+#quickSwitch{display:none;position:fixed;inset:0;background:rgba(29,36,51,.45);z-index:5000;align-items:flex-start;justify-content:center;padding:12vh 16px 16px;backdrop-filter:blur(2px);}
+#quickSwitch.active{display:flex;}
+.qs-panel{background:var(--card);border:1px solid var(--line);border-radius:14px;width:100%;max-width:460px;box-shadow:0 20px 50px rgba(29,36,51,.25);overflow:hidden;}
+.qs-panel input{width:100%;border:none;outline:none;padding:15px 18px;font-size:1rem;font-family:inherit;background:transparent;color:var(--ink);border-bottom:1px solid var(--line);}
+.qs-list{max-height:320px;overflow-y:auto;padding:6px;}
+.qs-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:.9rem;color:var(--ink);}
+.qs-item .qs-group{margin-left:auto;font-size:.7rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;}
+.qs-item.sel{background:var(--marker-soft);}
+.qs-item.sel::before{content:'→';color:var(--biro);font-weight:700;}
+
+/* Responsive grids */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:900px){
+  .container{grid-template-columns:1fr;}
+  .container>header,.container>#appShell,.container>#reminderBanner,.container>#tabsWrapper{grid-column:1;}
+  nav#legacyNav{grid-column:1;grid-row:auto;position:sticky;top:0;height:auto;max-height:none;z-index:200;
+    flex-direction:row;align-items:center;overflow-x:auto;overflow-y:hidden;padding:10px 12px;gap:4px;
+    border-right:none;border-bottom:1px solid var(--line);}
+  .side-brand{padding:0 8px 0 2px;flex-shrink:0;}
+  .side-tag,.nav-label,.side-version{display:none;}
+  .quick-switch-btn{margin:0 6px 0 0;flex-shrink:0;}
+  .quick-switch-btn span{display:none;}
+  .quick-switch-btn kbd{display:none;}
+  .quick-switch-btn::after{content:'⌕';font-size:1rem;}
+  .nav-group{display:flex;padding:0;gap:2px;flex-shrink:0;}
+  .nav-group+.nav-group{border-top:none;border-left:1px dashed var(--line);padding-left:6px;margin-left:4px;}
+  nav .nav-btn{width:auto;white-space:nowrap;padding:7px 11px;font-size:.84rem;}
+  #tabsWrapper{padding:16px 14px 50px!important;}
+  .grid-2{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+/* Dark mode: late-night study */
+body.dark-mode{
+  --paper:#12151F; --card:#1B2030; --ink:#E8EAF0; --ink-soft:#9AA1B5;
+  --line:#2A3044; --marker:#E8BF2A; --marker-soft:#3A3320;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.3);
+  --card-bg:var(--card); --dark:var(--ink); --gray:var(--ink-soft);
+}
+body.dark-mode .card,body.dark-mode .modal-content,body.dark-mode .stat-card{background:var(--card);color:var(--ink);border-color:var(--line);}
+body.dark-mode nav#legacyNav,body.dark-mode header{background:var(--card);border-color:var(--line);}
+body.dark-mode nav .nav-btn.active{color:#12151F;}
+body.dark-mode nav .nav-btn.active .ni{color:#12151F;}
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#232941;color:var(--ink);border-color:var(--line);}
+body.dark-mode .inner-tab{background:var(--card);color:var(--ink-soft);border-color:var(--line);}
+body.dark-mode .inner-tab.active{background:var(--marker);border-color:var(--marker);color:#12151F;}
+body.dark-mode .qs-panel,body.dark-mode .quick-switch-btn{background:var(--card);border-color:var(--line);}
+body.dark-mode .btn-secondary{background:#232941;border-color:var(--line);color:var(--ink);}
+body.dark-mode #loginScreen{background:var(--paper);}
+body.dark-mode .login-card{background:var(--card);color:var(--ink);}
+
+/* Quality floor */
+:focus-visible{outline:2px solid var(--biro);outline-offset:2px;border-radius:4px;}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
+}
 </style>
 </head>
 <body>
@@ -1219,6 +1353,14 @@ body > * { background: transparent; }
   <span>🆕 New version available!</span>
   <button onclick="applyUpdate()" style="background:#6366f1;color:#fff;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem">Update Now</button>
   <button onclick="document.getElementById('updateBanner').style.display='none'" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem">✕</button>
+</div>
+
+<!-- QUICK SWITCHER -->
+<div id="quickSwitch">
+  <div class="qs-panel">
+    <input id="qsInput" type="text" placeholder="Jump to a section…" autocomplete="off">
+    <div class="qs-list" id="qsList"></div>
+  </div>
 </div>
 
 <!-- LOGIN SCREEN -->
@@ -1282,22 +1424,43 @@ body > * { background: transparent; }
 </div>
 <div id="reminderBanner" style="display:none"></div>
 <nav id="legacyNav" style="display:none">
-  <button class="nav-btn active" data-tab="dashboard">📊 Dashboard</button>
-  <button class="nav-btn" data-tab="courses">📚 Courses</button>
-  <button class="nav-btn" data-tab="assignments">📝 Assignments</button>
-  <button class="nav-btn" data-tab="exams">📅 Exams</button>
-  <button class="nav-btn" data-tab="schedule">🗓️ Schedule</button>
-  <button class="nav-btn" data-tab="gpa">🎯 GPA</button>
-  <button class="nav-btn" data-tab="gradecalc">🧮 Grade Calc</button>
-  <button class="nav-btn" data-tab="timer">⏱️ Timer</button>
-  <button class="nav-btn" data-tab="notes">🗒️ Notes</button>
-  <button class="nav-btn" data-tab="budget">💰 Budget</button>
-  <button class="nav-btn" data-tab="body">⚖️ Body</button>
-  <button class="nav-btn" data-tab="gym">🏋️ Gym</button>
-  <button class="nav-btn" data-tab="jobs">💼 Jobs</button>
-  <button class="nav-btn" data-tab="calendar">📅 Calendar</button>
-  <button class="nav-btn" data-tab="attendance">✅ Attendance</button>
-  <button class="nav-btn" data-tab="settings">⚙️ Settings</button>
+  <div class="side-brand">
+    <div class="side-logo">Uni<mark>Tracker</mark></div>
+    <div class="side-tag">Your week, one place</div>
+  </div>
+  <button class="quick-switch-btn" type="button" onclick="openQuickSwitch()">
+    <span>Jump to…</span><kbd>⌘K</kbd>
+  </button>
+  <div class="nav-group">
+    <button class="nav-btn active" data-tab="dashboard"><span class="ni">◫</span>Dashboard</button>
+    <button class="nav-btn" data-tab="calendar"><span class="ni">▤</span>Calendar</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">University</div>
+    <button class="nav-btn" data-tab="courses"><span class="ni">▣</span>Courses</button>
+    <button class="nav-btn" data-tab="assignments"><span class="ni">✎</span>Assignments</button>
+    <button class="nav-btn" data-tab="exams"><span class="ni">◈</span>Exams</button>
+    <button class="nav-btn" data-tab="schedule"><span class="ni">▦</span>Schedule</button>
+    <button class="nav-btn" data-tab="attendance"><span class="ni">✓</span>Attendance</button>
+    <button class="nav-btn" data-tab="gpa"><span class="ni">◎</span>GPA</button>
+    <button class="nav-btn" data-tab="gradecalc"><span class="ni">∑</span>Grade Calc</button>
+    <button class="nav-btn" data-tab="notes"><span class="ni">≡</span>Notes</button>
+    <button class="nav-btn" data-tab="timer"><span class="ni">◷</span>Study Timer</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Money &amp; Work</div>
+    <button class="nav-btn" data-tab="budget"><span class="ni">$</span>Budget</button>
+    <button class="nav-btn" data-tab="jobs"><span class="ni">◪</span>Jobs</button>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Health</div>
+    <button class="nav-btn" data-tab="gym"><span class="ni">▲</span>Gym</button>
+    <button class="nav-btn" data-tab="body"><span class="ni">◉</span>Body</button>
+  </div>
+  <div class="nav-group nav-group-bottom">
+    <button class="nav-btn" data-tab="settings"><span class="ni">⚙</span>Settings</button>
+    <div class="side-version" id="sideVersion"></div>
+  </div>
 </nav>
 <div id="tabsWrapper" style="padding:12px 20px 40px;box-sizing:border-box;background:transparent;display:none;">
 
@@ -1648,7 +1811,7 @@ body > * { background: transparent; }
   </div>
 
   <!-- Charts -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+  <div class="grid-2">
     <div class="card">
       <div class="card-header"><h2>📈 Income vs Expenses</h2></div>
       <canvas id="budgetIncomeChart" height="200"></canvas>
@@ -1779,6 +1942,11 @@ body > * { background: transparent; }
 
 <!-- SETTINGS -->
 <div id="settings" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>📆 Calendar export</h2></div>
+    <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Download your assignment due dates and exams as a calendar file (.ics) you can import into Google Calendar, Apple Calendar or Outlook.</p>
+    <button class="btn btn-primary" onclick="exportICS()">Download .ics file</button>
+  </div>
   <div class="card">
     <div class="card-header"><h2>🎓 GPA Scale</h2></div>
     <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Choose your university's grading scale.</p>
@@ -7406,21 +7574,93 @@ function applyNewDesign(){
   // Don't touch body background here - handled separately
 }
 
-// Re-apply styles when nav tabs switch (to style new active button)
-const _origNavClick = document.querySelectorAll.bind(document);
-document.addEventListener('click', e=>{
-  const btn = e.target.closest('.nav-btn');
-  if(btn){
-    document.querySelectorAll('.nav-btn').forEach(b=>{
-      b.style.color = '#64748b';
-      b.style.borderBottomColor = 'transparent';
-      b.style.fontWeight = 'normal';
-    });
-    btn.style.color = '#4f46e5';
-    btn.style.borderBottomColor = '#4f46e5';
-    btn.style.fontWeight = '600';
+// ══ VERSION ══
+const APP_VERSION = '2.0.0';
+if(el('sideVersion')) el('sideVersion').textContent = 'v'+APP_VERSION;
+
+// ══ QUICK SWITCHER (⌘K / Ctrl+K / "/") ══
+let qsIndex = 0;
+function qsTabs(){
+  return [...document.querySelectorAll('nav .nav-btn')].map(b=>({
+    tab:b.dataset.tab,
+    label:[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim()||b.textContent.trim(),
+    group:b.closest('.nav-group')?.querySelector('.nav-label')?.textContent||'',
+    btn:b
+  }));
+}
+function openQuickSwitch(){
+  const o=el('quickSwitch'); if(!o) return;
+  o.classList.add('active'); qsIndex=0;
+  const inp=el('qsInput'); inp.value=''; renderQsList(''); inp.focus();
+}
+function closeQuickSwitch(){ el('quickSwitch')?.classList.remove('active'); }
+function renderQsList(q){
+  const list=el('qsList'); if(!list) return;
+  const items=qsTabs().filter(t=>t.label.toLowerCase().includes(q.toLowerCase()));
+  qsIndex=Math.min(qsIndex, Math.max(0,items.length-1));
+  list.innerHTML = items.length
+    ? items.map((t,i)=>`<div class="qs-item${i===qsIndex?' sel':''}" data-tab="${t.tab}">${esc(t.label)}<span class="qs-group">${esc(t.group)}</span></div>`).join('')
+    : '<div class="qs-item" style="color:var(--ink-soft);cursor:default">No matching section</div>';
+  list.querySelectorAll('.qs-item[data-tab]').forEach((elm,i)=>{
+    elm.addEventListener('mouseenter',()=>{qsIndex=i;renderQsList(el('qsInput').value);});
+    elm.addEventListener('click',()=>qsGo(elm.dataset.tab));
+  });
+}
+function qsGo(tab){
+  closeQuickSwitch();
+  document.querySelector(`nav .nav-btn[data-tab="${tab}"]`)?.click();
+}
+document.addEventListener('keydown', e=>{
+  const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)||document.activeElement?.isContentEditable;
+  if(((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k') || (e.key==='/'&&!typing)){
+    e.preventDefault(); openQuickSwitch(); return;
   }
+  const o=el('quickSwitch');
+  if(!o || !o.classList.contains('active')) return;
+  const items=[...document.querySelectorAll('.qs-item[data-tab]')];
+  if(e.key==='Escape'){ closeQuickSwitch(); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); qsIndex=Math.min(qsIndex+1,items.length-1); renderQsList(el('qsInput').value); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); qsIndex=Math.max(qsIndex-1,0); renderQsList(el('qsInput').value); }
+  else if(e.key==='Enter' && items[qsIndex]){ qsGo(items[qsIndex].dataset.tab); }
 });
+el('qsInput')?.addEventListener('input', e=>{ qsIndex=0; renderQsList(e.target.value); });
+el('quickSwitch')?.addEventListener('click', e=>{ if(e.target.id==='quickSwitch') closeQuickSwitch(); });
+
+// ══ CALENDAR (.ics) EXPORT ══
+function exportICS(){
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const dtUTC=d=>d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';
+  const icsEsc=s=>String(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+  const events=[];
+  (D.assignments||[]).filter(a=>a.dueDate&&!a.completed).forEach(a=>{
+    const c=(D.courses||[]).find(x=>x.id===a.courseId);
+    const due=new Date(a.dueDate+'T23:59:00');
+    if(isNaN(due)) return;
+    events.push(['BEGIN:VEVENT','UID:ut-assign-'+a.id+'@unitracker','DTSTAMP:'+dtUTC(now),
+      'DTSTART:'+dtUTC(new Date(due.getTime()-30*60000)),'DTEND:'+dtUTC(due),
+      'SUMMARY:'+icsEsc('Due: '+a.title+(c?' ('+c.code+')':'')),
+      'DESCRIPTION:'+icsEsc(a.notes||''),'END:VEVENT'].join('\r\n'));
+  });
+  (D.exams||[]).forEach(x=>{
+    if(!x.date) return;
+    const c=(D.courses||[]).find(q=>q.id===x.courseId);
+    const start=new Date(x.date+'T'+(x.time||'09:00'));
+    if(isNaN(start)) return;
+    const end=new Date(start.getTime()+2*3600000);
+    events.push(['BEGIN:VEVENT','UID:ut-exam-'+x.id+'@unitracker','DTSTAMP:'+dtUTC(now),
+      'DTSTART:'+dtUTC(start),'DTEND:'+dtUTC(end),
+      'SUMMARY:'+icsEsc('Exam: '+x.name+(c?' ('+c.code+')':'')),
+      (x.location?'LOCATION:'+icsEsc(x.location):''),
+      'DESCRIPTION:'+icsEsc(x.notes||''),'END:VEVENT'].filter(Boolean).join('\r\n'));
+  });
+  if(!events.length){ alert('Nothing to export yet — add assignments with due dates or exams first.'); return; }
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//UniTracker//EN\r\nCALSCALE:GREGORIAN\r\n'+events.join('\r\n')+'\r\nEND:VCALENDAR';
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='unitracker-calendar.ics'; a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 // ══ INIT (non-auth setup only) ══
 el('studentName').addEventListener('change',save);
