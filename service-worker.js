@@ -1,4 +1,4 @@
-const CACHE_NAME = 'unitracker-v4';
+const CACHE_NAME = 'unitracker-v5';
 const ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -15,11 +15,17 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Network first, cache fallback
+// Network first, cache fallback.
+// For page loads, bypass the browser HTTP cache (cache:'no-cache' forces
+// revalidation with the server) so new deploys show up on the next reload
+// instead of after the 10-minute GitHub Pages max-age expires.
 self.addEventListener('fetch', e => {
   if(e.request.method !== 'GET') return;
+  const req = e.request.mode === 'navigate'
+    ? new Request(e.request.url, {cache: 'no-cache'})
+    : e.request;
   e.respondWith(
-    fetch(e.request)
+    fetch(req)
       .then(res => {
         const clone = res.clone();
         caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
