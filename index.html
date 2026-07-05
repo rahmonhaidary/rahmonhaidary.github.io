@@ -1659,6 +1659,13 @@ body > * { background: transparent; }
     </div>
   </div>
 
+  <!-- Savings Projection -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-header"><h2>💰 Savings Projection</h2></div>
+    <div id="savingsProjSummary" style="font-size:.85rem;color:#64748b;margin-bottom:10px;line-height:1.5"></div>
+    <canvas id="savingsProjectionChart" height="220"></canvas>
+  </div>
+
   <!-- Paychecks -->
   <div class="card">
     <div class="card-header">
@@ -7287,8 +7294,103 @@ function renderBudgetCharts(paychecks, expenses, fyStart){
       });
     }
   }
+
+  renderSavingsProjection(paychecks, expenses);
 }
 
+function renderSavingsProjection(paychecks, expenses){
+  const ctx = el('savingsProjectionChart');
+  const summary = el('savingsProjSummary');
+  if(!ctx) return;
+
+  if(!paychecks.length){
+    if(summary) summary.textContent = 'Add a paycheck and your expenses to see how much you can viably save.';
+    if(ctx._chart){ ctx._chart.destroy(); ctx._chart = null; }
+    return;
+  }
+
+  // Average weekly take-home: normalise each paycheck by its pay period length
+  const periodWeeks = {weekly:1, fortnightly:2, monthly:52/12};
+  let totalNet = 0, weeksCovered = 0;
+  paychecks.forEach(p=>{
+    totalNet += (p.net||0);
+    weeksCovered += periodWeeks[p.period] || 2;
+  });
+  weeksCovered = Math.max(1, weeksCovered);
+  const weeklyNet = totalNet / weeksCovered;
+  const weeklyExp = expenses.reduce((s,e)=>s+e.amount,0) / weeksCovered;
+  const viableWeekly = Math.max(0, weeklyNet - weeklyExp);
+  const viablePct = weeklyNet > 0 ? viableWeekly / weeklyNet : 0;
+
+  // Summary line
+  const fmt = n=>'$'+Math.round(n).toLocaleString('en-AU');
+  if(summary){
+    if(viablePct <= 0){
+      summary.innerHTML = `Your expenses (<b>${fmt(weeklyExp)}/wk</b>) currently match or exceed your take-home pay (<b>${fmt(weeklyNet)}/wk</b>), so there's no viable savings rate yet. The dashed lines below show what common savings targets would grow to once spending drops.`;
+    } else {
+      summary.innerHTML = `Based on your average take-home of <b>${fmt(weeklyNet)}/wk</b> and expenses of <b>${fmt(weeklyExp)}/wk</b>, you can viably save up to <b>${Math.round(viablePct*100)}%</b> of your pay — about <b>${fmt(viableWeekly)}/wk</b>, or <b>${fmt(viableWeekly*52)}</b> over a year.`;
+    }
+  }
+
+  // Project cumulative savings over the next 12 months
+  const WEEKS_PER_MONTH = 52/12;
+  const labels = ['Now'];
+  const d = new Date();
+  for(let i=1;i<=12;i++){
+    const m = new Date(d.getFullYear(), d.getMonth()+i, 1);
+    labels.push(m.toLocaleString('default',{month:'short',year:'2-digit'}));
+  }
+  const cumulative = pct => labels.map((_,i)=>Math.round(weeklyNet*pct*WEEKS_PER_MONTH*i));
+
+  const presetColors = {0.05:'#a7f3d0', 0.10:'#34d399', 0.15:'#10b981', 0.20:'#047857'};
+  const datasets = [0.05, 0.10, 0.15, 0.20].map(rate=>{
+    const affordable = rate <= viablePct + 0.005;
+    return {
+      label: Math.round(rate*100)+'% of pay' + (affordable ? '' : ' (over budget)'),
+      data: cumulative(rate),
+      borderColor: affordable ? presetColors[rate] : '#cbd5e1',
+      borderWidth: affordable ? 2 : 1.5,
+      borderDash: affordable ? [] : [5,4],
+      fill: false, tension: 0.2, pointRadius: 2,
+      pointBackgroundColor: affordable ? presetColors[rate] : '#cbd5e1'
+    };
+  });
+  // Your personal maximum viable rate, highlighted (skip if ~equal to a preset or zero)
+  const nearPreset = [0.05,0.10,0.15,0.20].some(r=>Math.abs(r-viablePct)<0.005);
+  if(viablePct > 0.005 && !nearPreset){
+    datasets.push({
+      label: 'Max viable ('+Math.round(viablePct*100)+'%)',
+      data: cumulative(viablePct),
+      borderColor: '#6366f1',
+      backgroundColor: 'rgba(99,102,241,.08)',
+      borderWidth: 3, fill: true, tension: 0.2,
+      pointRadius: 3, pointBackgroundColor: '#6366f1'
+    });
+  }
+
+  if(ctx._chart){
+    ctx._chart.data.labels = labels;
+    ctx._chart.data.datasets = datasets;
+    ctx._chart.update('none');
+  } else {
+    ctx._chart = new Chart(ctx,{
+      type:'line',
+      data:{labels, datasets},
+      options:{
+        responsive:true,
+        interaction:{intersect:false,mode:'index'},
+        plugins:{
+          legend:{labels:{font:{size:11},usePointStyle:true}},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': $'+c.parsed.y.toLocaleString('en-AU')}}
+        },
+        scales:{
+          y:{ticks:{callback:v=>'$'+v.toLocaleString()},grid:{color:'rgba(0,0,0,.05)'},title:{display:true,text:'Cumulative savings',font:{size:11}}},
+          x:{grid:{display:false}}
+        }
+      }
+    });
+  }
+}
 
 
 // ══ APPLY NEW DESIGN ══
