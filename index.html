@@ -1340,6 +1340,13 @@ body.dark-mode .btn-secondary{background:#232941;border-color:var(--line);color:
 body.dark-mode #loginScreen{background:var(--paper);}
 body.dark-mode .login-card{background:var(--card);color:var(--ink);}
 
+/* Kanban drag & drop */
+.kanban-task{cursor:grab;user-select:none;}
+.kanban-task:active{cursor:grabbing;}
+.kanban-task.dragging{opacity:.45;transform:rotate(-1.5deg);}
+.kanban-col{transition:background .15s;border-radius:10px;}
+.kanban-col.drag-over{outline:2px dashed var(--biro);outline-offset:-2px;background:rgba(43,89,195,.06);}
+
 /* Quality floor */
 :focus-visible{outline:2px solid var(--biro);outline-offset:2px;border-radius:4px;}
 @media (prefers-reduced-motion:reduce){
@@ -1581,7 +1588,14 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
           <option value="on-hold">⏸ On Hold</option>
           <option value="completed">✅ Completed</option>
         </select>
+        <select id="projectSort" onchange="renderProjects()" style="padding:8px 12px;border:2px solid #e2e8f0;border-radius:9px;font-size:.85rem;background:#fff">
+          <option value="due">Sort: Due date</option>
+          <option value="priority">Sort: Priority</option>
+          <option value="progress">Sort: Least progress</option>
+          <option value="newest">Sort: Newest</option>
+        </select>
       </div>
+      <div id="myTasksWrap"></div>
       <div id="projectList"><div class="empty"><div class="ei">🗂️</div><p>No projects yet. Click "+ Project" above.</p></div></div>
     </div>
     <div class="inner-panel" id="panel-gantt">
@@ -2233,8 +2247,9 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
 
 <div class="modal" id="projectModal">
   <div class="modal-content">
-    <div class="modal-header"><h2>Create Project</h2><button class="close-btn" onclick="closeModal('projectModal')">&times;</button></div>
+    <div class="modal-header"><h2 id="projectModalTitle">Create Project</h2><button class="close-btn" onclick="closeModal('projectModal')">&times;</button></div>
     <form id="projectForm">
+      <input type="hidden" id="pEditId">
       <div class="form-group"><label>Project Title</label><input type="text" id="pTitle" required placeholder="e.g. Group Research Project"></div>
       <div class="form-group"><label>Course</label><select id="pCourse"><option value="">Not linked</option></select></div>
       <div class="form-row">
@@ -2248,8 +2263,8 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
         <div class="form-group"><label>Weight (%)</label><input type="number" id="pWeight" min="0" max="100" placeholder="30"></div>
       </div>
       <div class="form-group"><label>Description</label><textarea id="pDesc" rows="3" placeholder="What is this project about?"></textarea></div>
-      <div class="form-group"><label>Initial Subtasks (one per line)</label><textarea id="pSubtasks" rows="4" placeholder="Research topic&#10;Write outline&#10;Create slides"></textarea></div>
-      <button type="submit" class="btn btn-warning" style="width:100%">Create Project</button>
+      <div class="form-group" id="pSubtasksGroup"><label>Initial Subtasks (one per line)</label><textarea id="pSubtasks" rows="4" placeholder="Research topic&#10;Write outline&#10;Create slides"></textarea></div>
+      <button type="submit" id="projectSubmitBtn" class="btn btn-warning" style="width:100%">Create Project</button>
     </form>
   </div>
 </div>
@@ -3049,24 +3064,70 @@ function getDueClass(d,done){if(done)return'done';if(!d||d==='null'||d==='undefi
 function getDaysUntil(d){if(!d||d==='null'||d==='undefined')return'No date';const dt=new Date(d);if(isNaN(dt.getTime())||dt.getFullYear()<2020)return'No date';const diff=Math.ceil((dt-new Date())/864e5);return diff<0?'Overdue':diff===0?'Today':diff===1?'Tomorrow':`${diff} days`;}
 
 // ══ PROJECTS ══
-function openProjectModal(){fillCourseSelects();openModal('projectModal');}
+function openProjectModal(){
+  fillCourseSelects();
+  el('pEditId').value='';
+  el('projectModalTitle').textContent='Create Project';
+  el('projectSubmitBtn').textContent='Create Project';
+  el('pSubtasksGroup').style.display='';
+  el('projectForm').reset();
+  openModal('projectModal');
+}
+function editProject(id){
+  const p=getProject(id);if(!p)return;
+  fillCourseSelects();
+  el('pEditId').value=String(p.id);
+  el('projectModalTitle').textContent='Edit Project';
+  el('projectSubmitBtn').textContent='Save Changes';
+  el('pSubtasksGroup').style.display='none'; // tasks are managed in the project view
+  el('pTitle').value=p.title||p.name||'';
+  el('pCourse').value=p.courseId||'';
+  el('pDue').value=p.dueDate||'';
+  el('pStatus').value=p.status||'planning';
+  el('pPriority').value=p.priority||'medium';
+  el('pWeight').value=p.weight||'';
+  el('pDesc').value=p.desc||'';
+  openModal('projectModal');
+}
 el('projectForm').addEventListener('submit',e=>{
   e.preventDefault();
-  const lines=el('pSubtasks').value.split('\n').filter(l=>l.trim());
-  D.projects.push({
-    id:uid(),title:el('pTitle').value.trim(),courseId:el('pCourse').value||null,
+  const editId=el('pEditId').value;
+  const data={
+    title:el('pTitle').value.trim(),courseId:el('pCourse').value||null,
     dueDate:el('pDue').value,status:el('pStatus').value,priority:el('pPriority').value,
-    weight:parseFloat(el('pWeight').value)||0,desc:el('pDesc').value.trim(),
-    subtasks:lines.map(t=>({id:uid(),title:t.trim(),done:false})),
-    members:[],log:[],createdAt:new Date().toISOString()
-  });
+    weight:parseFloat(el('pWeight').value)||0,desc:el('pDesc').value.trim()
+  };
+  if(editId){
+    const p=D.projects.find(x=>String(x.id)===editId);
+    if(p){Object.assign(p,data);addProjectLogEntry(p,'Project details updated');}
+  } else {
+    const lines=el('pSubtasks').value.split('\n').filter(l=>l.trim());
+    D.projects.push({
+      id:uid(),...data,
+      subtasks:lines.map(t=>({id:uid(),title:t.trim(),done:false})),
+      members:[],log:[],createdAt:new Date().toISOString()
+    });
+  }
   save();renderProjects();renderDashboard();closeModal('projectModal');e.target.reset();
+  el('pEditId').value='';
 });
 function getProject(id){return D.projects.find(p=>p.id===id);}
 function renderProjects(){
   const container=el('projectList');
   const filter=(el('projectFilter')?.value)||'all';
+  const sort=(el('projectSort')?.value)||'due';
   let list=D.projects.filter(p=>filter==='all'||p.status===filter);
+  const prioOrder={high:0,medium:1,low:2};
+  const pctOf=p=>{const t=p.subtasks||[];const d=t.filter(x=>x.completed||x.done).length;return t.length?d/t.length:1;};
+  list=list.slice().sort((a,b)=>{
+    if(sort==='priority')return (prioOrder[a.priority]??1)-(prioOrder[b.priority]??1);
+    if(sort==='progress')return pctOf(a)-pctOf(b);
+    if(sort==='newest')return new Date(b.createdAt||0)-new Date(a.createdAt||0);
+    // due date: soonest first, no-date last
+    const ad=a.dueDate?new Date(a.dueDate):null, bd=b.dueDate?new Date(b.dueDate):null;
+    if(ad&&bd)return ad-bd; if(ad)return -1; if(bd)return 1; return 0;
+  });
+  renderMyTasks();
   if(!list.length){container.innerHTML='<div class="empty"><div class="ei">🗂️</div><p>'+(D.projects.length?'No projects match filter':'No projects yet. Click "+ Project" above.')+'</p></div>';return;}
   const statusColors={'planning':'#94a3b8','in-progress':'#6366f1','on-hold':'#f59e0b','completed':'#10b981'};
   const statusLabels={'planning':'📋 Planning','in-progress':'🚧 In Progress','on-hold':'⏸ On Hold','completed':'✅ Completed'};
@@ -3090,6 +3151,7 @@ function renderProjects(){
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           <button class="btn btn-primary btn-sm" onclick="openProjectDetail(${p.id})">🗂 Open</button>
+          <button class="btn btn-secondary btn-sm" onclick="editProject(${p.id})">✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProject(${p.id})">🗑️</button>
         </div>
       </div>
@@ -3101,6 +3163,83 @@ function renderProjects(){
       ${members.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${members.slice(0,5).map(m=>`<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${col};color:#fff;font-weight:700;font-size:.72rem;title='${esc(m.name)}'">${(m.name||'?')[0].toUpperCase()}</span>`).join('')}${members.length>5?`<span style="font-size:.72rem;color:var(--gray);padding:6px">+${members.length-5}</span>`:''}</div>`:''}
     </div>`;
   }).join('');
+}
+
+// ══ MY TASKS ACROSS PROJECTS ══
+function renderMyTasks(){
+  const wrap=el('myTasksWrap');if(!wrap)return;
+  const rows=[];
+  D.projects.filter(p=>p.status!=='completed').forEach(p=>{
+    (p.subtasks||[]).filter(t=>!t.completed&&!t.done).forEach(t=>rows.push({p,t}));
+  });
+  if(!rows.length){wrap.innerHTML='';return;}
+  rows.sort((a,b)=>{
+    const ad=a.t.dueDate?new Date(a.t.dueDate):null, bd=b.t.dueDate?new Date(b.t.dueDate):null;
+    if(ad&&bd)return ad-bd; if(ad)return -1; if(bd)return 1; return 0;
+  });
+  const shown=rows.slice(0,12);
+  wrap.innerHTML=`<details open class="card" style="padding:16px 18px;margin-bottom:14px">
+    <summary style="cursor:pointer;font-weight:700;font-size:.95rem;font-family:'Bricolage Grotesque',sans-serif">📌 My tasks across projects <span style="font-weight:500;color:var(--gray);font-size:.8rem">(${rows.length} open)</span></summary>
+    <div style="margin-top:12px">
+    ${shown.map(({p,t})=>{
+      const overdue=t.dueDate&&new Date(t.dueDate)<new Date();
+      return`<div class="task-row">
+        <input type="checkbox" onchange="toggleProjectTask(${p.id},${t.id},this.checked,false)" style="width:16px;height:16px;cursor:pointer">
+        <div class="task-priority-dot" style="background:${t.priority==='high'?'var(--redpen)':t.priority==='medium'?'var(--amber)':'var(--greenmk)'}"></div>
+        <span style="flex:1;font-size:.85rem">${esc(t.name||t.title||'')}</span>
+        <span onclick="openProjectDetail(${p.id})" style="font-size:.7rem;background:var(--marker-soft);color:var(--ink);padding:2px 8px;border-radius:7px;cursor:pointer;font-weight:600">${esc(p.title||p.name||'Project')}</span>
+        ${t.dueDate?`<span style="font-size:.7rem;color:${overdue?'var(--redpen)':'var(--gray)'};font-weight:${overdue?'700':'400'}">${overdue?'Overdue · ':''}${new Date(t.dueDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</span>`:''}
+      </div>`;
+    }).join('')}
+    ${rows.length>shown.length?`<div style="font-size:.75rem;color:var(--gray);text-align:center;padding:6px">+${rows.length-shown.length} more — open a project to see all</div>`:''}
+    </div>
+  </details>`;
+}
+
+// ══ KANBAN DRAG & DROP ══
+let _pdDrag=null;
+function pdDragStart(e,pid,tid){
+  _pdDrag={pid,tid};
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  try{e.dataTransfer.setData('text/plain',String(tid));}catch(_){}
+}
+function pdDragEnd(e){
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.kanban-col.drag-over').forEach(c=>c.classList.remove('drag-over'));
+}
+function pdDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drag-over');}
+function pdDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function pdDrop(e,col,pid){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!_pdDrag)return;
+  const p=D.projects.find(x=>x.id===_pdDrag.pid);if(!p){_pdDrag=null;return;}
+  const t=(p.subtasks||[]).find(x=>x.id===_pdDrag.tid);if(!t){_pdDrag=null;return;}
+  const prev=t.kanbanCol||((t.completed||t.done)?'done':'todo');
+  if(prev!==col){
+    t.kanbanCol=col;
+    t.completed=col==='done'; t.done=col==='done';
+    addProjectLogEntry(p,'Moved "'+(t.name||t.title||'')+'" to '+col.replace('-',' '));
+    save();
+    renderPdSection('kanban',p.id);renderPdSection('overview',p.id);renderProjects();
+  }
+  _pdDrag=null;
+}
+
+// ══ TASK EDITING ══
+let _pdEditTaskId=null;
+function editProjectTask(tid){
+  const modal=el('projectDetailModal');if(!modal||!modal._pid)return;
+  const p=D.projects.find(x=>x.id===modal._pid);if(!p)return;
+  const t=(p.subtasks||[]).find(x=>x.id===tid);if(!t)return;
+  _pdEditTaskId=tid;
+  el('pdNewTask').value=t.name||t.title||'';
+  if(el('pdTaskPriority'))el('pdTaskPriority').value=t.priority||'medium';
+  if(el('pdTaskDue'))el('pdTaskDue').value=t.dueDate||'';
+  if(el('pdTaskAssignee'))el('pdTaskAssignee').value=t.assigneeId||'';
+  const btn=el('pdAddTaskBtn');if(btn)btn.textContent='💾 Save Task';
+  el('pdNewTask').focus();
 }
 
 function openProjectDetail(id){
@@ -3115,6 +3254,7 @@ function openProjectDetail(id){
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
           <div><h2 id="pdTitle" style="margin-bottom:4px"></h2><div id="pdMeta" style="font-size:.8rem;color:#64748b"></div></div>
           <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-secondary btn-sm" id="pdEditBtn">✏️ Edit</button>
             <select id="pdStatusSelect" onchange="updateProjectStatus()" style="padding:6px 10px;border:2px solid #e2e8f0;border-radius:8px;font-size:.82rem">
               <option value="planning">📋 Planning</option>
               <option value="in-progress">🚧 In Progress</option>
@@ -3170,6 +3310,8 @@ function switchPdSection(name,btn){
 
 function renderProjectDetail(id){
   const p=D.projects.find(x=>x.id===id);if(!p)return;
+  const pdEditBtn=el('pdEditBtn');
+  if(pdEditBtn)pdEditBtn.onclick=()=>{closeModal('projectDetailModal');editProject(id);};
   el('pdTitle').textContent=p.title||p.name||'Project';
   const course=p.courseId?D.courses.find(c=>c.id==p.courseId):null;
   el('pdMeta').textContent=[course?course.name:null,p.dueDate?'Due '+new Date(p.dueDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'}):null].filter(Boolean).join(' • ');
@@ -3209,6 +3351,7 @@ function renderPdSection(name,id){
     `;
   }
   else if(name==='tasks'){
+    _pdEditTaskId=null;
     el('pd-tasks').innerHTML=`
       <div style="background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:16px">
         <h4 style="margin-bottom:10px">Add Task</h4>
@@ -3221,7 +3364,7 @@ function renderPdSection(name,id){
             }
             <select id="pdTaskPriority" style="flex:1;min-width:100px"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select>
             <input type="date" id="pdTaskDue" style="flex:1;min-width:120px">
-            <button class="btn btn-primary" onclick="addProjectTask()">+ Add Task</button>
+            <button class="btn btn-primary" id="pdAddTaskBtn" onclick="addProjectTask()">+ Add Task</button>
           </div>
         </div>
       </div>
@@ -3238,11 +3381,11 @@ function renderPdSection(name,id){
     const colLabels={todo:'📋 To Do',  'in-progress':'🚧 In Progress',review:'👀 Review',done:'✅ Done'};
     const colColors={todo:'#94a3b8','in-progress':'#6366f1',review:'#f59e0b',done:'#10b981'};
     // Map old tasks to kanban columns: no kanbanCol = todo, completed = done
-    el('pd-kanban').innerHTML=`<div class="kanban-board">${cols.map(col=>`
-      <div class="kanban-col">
+    el('pd-kanban').innerHTML=`<div style="font-size:.75rem;color:var(--gray);margin-bottom:8px">Drag tasks between columns · tap to cycle on touch screens</div><div class="kanban-board">${cols.map(col=>`
+      <div class="kanban-col" ondragover="pdDragOver(event)" ondragleave="pdDragLeave(event)" ondrop="pdDrop(event,'${col}',${p.id})">
         <div class="kanban-col-header" style="color:${colColors[col]};background:${colColors[col]}22">${colLabels[col]}</div>
         ${tasks.filter(t=>(t.kanbanCol||((t.completed||t.done)?'done':'todo'))===col).map(t=>`
-          <div class="kanban-task" onclick="cycleKanbanTask(${p.id},${t.id})">
+          <div class="kanban-task" draggable="true" ondragstart="pdDragStart(event,${p.id},${t.id})" ondragend="pdDragEnd(event)" onclick="cycleKanbanTask(${p.id},${t.id})">
             <div style="font-weight:600;font-size:.8rem;margin-bottom:3px">${esc(t.name||t.title||'')}</div>
             ${t.assigneeId?`<span style="font-size:.65rem;background:${col==='done'?'#f0fdf4':'#eef2ff'};color:${col==='done'?'#10b981':'var(--primary)'};padding:1px 6px;border-radius:6px">${esc((members.find(m=>m.id==t.assigneeId)||{}).name||'')}</span>`:''}
           </div>`).join('') || `<div style="font-size:.75rem;color:var(--gray);text-align:center;padding:10px">Empty</div>`}
@@ -3348,6 +3491,7 @@ function renderTaskList(tasks,members,filter){
       <span class="task-name" style="flex:1;font-size:.85rem">${esc(t.name||t.title||'')}</span>
       ${member?`<span class="task-assignee">${esc(member.name)}</span>`:''}
       ${t.dueDate?`<span style="font-size:.7rem;color:${new Date(t.dueDate)<new Date()&&!isDone?'#ef4444':'var(--gray)'}">${new Date(t.dueDate).toLocaleDateString()}</span>`:''}
+      <button onclick="editProjectTask(${t.id})" title="Edit task" style="background:none;border:none;cursor:pointer;color:var(--gray);font-size:.85rem">✏️</button>
       <button onclick="deleteProjectTask(0,${t.id},true)" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:.9rem">✕</button>
     </div>`;
   }).join('');
@@ -3381,9 +3525,20 @@ function addProjectTask(){
     assigneeId=member.id;
     if(assignText)assignText.value='';
   }
-  p.subtasks.push({id:uid(),name,assigneeId,priority,dueDate,completed:false,kanbanCol:'todo'});
+  if(_pdEditTaskId){
+    const t=p.subtasks.find(x=>x.id===_pdEditTaskId);
+    if(t){
+      t.name=name; delete t.title;
+      t.priority=priority; t.dueDate=dueDate;
+      if(assigneeId!==null||el('pdTaskAssignee')) t.assigneeId=assigneeId;
+      addProjectLogEntry(p,'Task updated: '+name);
+    }
+    _pdEditTaskId=null;
+  } else {
+    p.subtasks.push({id:uid(),name,assigneeId,priority,dueDate,completed:false,kanbanCol:'todo'});
+    addProjectLogEntry(p,'Task added: '+name+(assigneeName?' → '+assigneeName:''));
+  }
   el('pdNewTask').value='';
-  addProjectLogEntry(p,'Task added: '+name+(assigneeName?' → '+assigneeName:''));
   save();renderPdSection('tasks',p.id);renderPdSection('overview',p.id);renderProjects();
 }
 function deleteProjectTask(pid,tid,fromDetail){
