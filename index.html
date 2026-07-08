@@ -1386,6 +1386,37 @@ body.dark-mode .fiq-rate-btns button{background:#1e293b;border-color:#334155;}
 body.dark-mode .fiq-cell{color:#e2e8f0;}
 body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
 @media(max-width:768px){.fiq-wrap{grid-template-columns:1fr;gap:16px;}.fiq-cell{height:23px;font-size:.58rem;}.fiq-rl{font-size:.62rem;}}
+/* ══ PLANNER / FLASHCARDS / QS extras ══ */
+.plan-day{margin-bottom:14px;}
+.plan-day h4{font-size:.8rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray);margin:0 0 7px;}
+.plan-slot{display:flex;align-items:center;gap:12px;padding:9px 13px;border:1px solid var(--line,#e2e8f0);border-radius:9px;margin-bottom:6px;background:var(--paper,#f8fafc);flex-wrap:wrap;}
+.plan-slot .ps-time{font-weight:700;font-size:.86rem;min-width:118px;}
+.plan-slot .ps-course{flex:1;font-size:.86rem;min-width:140px;}
+.plan-slot .ps-why{font-size:.72rem;color:var(--gray);}
+.plan-slot .ps-score{font-weight:800;font-size:.95rem;}
+.plan-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;font-size:.85rem;color:var(--gray);}
+.plan-summary b{color:var(--dark);}
+.crunch-item{border:1px solid var(--line,#e2e8f0);border-radius:11px;padding:13px 15px;margin-bottom:11px;background:var(--paper,#f8fafc);}
+.crunch-item h4{margin:0 0 4px;font-size:.95rem;}
+.crunch-bar{height:8px;border-radius:5px;background:var(--line,#e2e8f0);overflow:hidden;margin:8px 0 6px;}
+.crunch-bar>div{height:100%;border-radius:5px;background:linear-gradient(90deg,#10b981,#34d399);}
+.crunch-windows{font-size:.78rem;color:var(--gray);margin-top:5px;line-height:1.6;}
+.fc-deck{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px solid var(--line,#e2e8f0);border-radius:10px;margin-bottom:8px;background:var(--paper,#f8fafc);}
+.fc-deck b{font-size:.9rem;}
+.fc-deck .fd-meta{font-size:.76rem;color:var(--gray);}
+.fc-due{background:rgba(239,68,68,.12);color:#dc2626;font-weight:700;font-size:.72rem;padding:3px 9px;border-radius:12px;}
+.fc-card{max-width:560px;margin:0 auto;text-align:center;}
+.fc-face{border:1.5px solid var(--line,#e2e8f0);border-radius:14px;padding:30px 22px;font-size:1.05rem;line-height:1.6;background:var(--card-bg,#fff);min-height:110px;display:flex;align-items:center;justify-content:center;white-space:pre-wrap;margin-bottom:8px;}
+.fc-face.fc-back{background:var(--paper,#f8fafc);}
+.fc-meta{font-size:.74rem;color:var(--gray);margin-bottom:12px;}
+.fc-grade-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.fc-grade-btns button{padding:9px 16px;border-radius:10px;border:1.5px solid var(--line,#e2e8f0);background:var(--card-bg,#fff);cursor:pointer;font-weight:700;font-size:.85rem;font-family:inherit;}
+.fc-grade-btns button small{display:block;font-weight:500;font-size:.64rem;color:var(--gray);}
+.fc-grade-btns .g-again{color:#dc2626;}.fc-grade-btns .g-hard{color:#d97706;}.fc-grade-btns .g-good{color:#059669;}.fc-grade-btns .g-easy{color:#2563eb;}
+.qs-group{float:right;font-size:.68rem;color:var(--gray);}
+.qs-icon{margin-right:8px;}
+body.dark-mode .plan-slot,body.dark-mode .crunch-item,body.dark-mode .fc-deck,body.dark-mode .fc-face.fc-back{background:#0f172a;border-color:#334155;}
+body.dark-mode .fc-face,body.dark-mode .fc-grade-btns button{background:#1e293b;border-color:#334155;}
 </style>
 </head>
 <body>
@@ -1399,7 +1430,7 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
 <!-- QUICK SWITCHER -->
 <div id="quickSwitch">
   <div class="qs-panel">
-    <input id="qsInput" type="text" placeholder="Jump to a section…" autocomplete="off">
+    <input id="qsInput" type="text" placeholder="Search sections, assignments, notes, exams, expenses…" autocomplete="off">
     <div class="qs-list" id="qsList"></div>
   </div>
 </div>
@@ -1487,6 +1518,8 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
     <button class="nav-btn" data-tab="gradecalc"><span class="ni">∑</span>Grade Calc</button>
     <button class="nav-btn" data-tab="notes"><span class="ni">≡</span>Notes</button>
     <button class="nav-btn" data-tab="timer"><span class="ni">◷</span>Study Timer</button>
+    <button class="nav-btn" data-tab="planner"><span class="ni">✦</span>Study Planner</button>
+    <button class="nav-btn" data-tab="flashcards"><span class="ni">▤</span>Flashcards</button>
   </div>
   <div class="nav-group">
     <div class="nav-label">Money &amp; Work</div>
@@ -1815,6 +1848,44 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
   </div>
 </div>
 
+<!-- STUDY PLANNER -->
+<div id="planner" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>✦ Smart Study Planner</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="generatePlan()">⚡ Generate this week's plan</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearPlannedBlocks()">🧹 Remove planned blocks</button>
+      </div>
+    </div>
+    <p style="color:var(--gray);font-size:.86rem;margin-bottom:12px">Combines your <b>free gaps</b> (from your timetable), your <b>Focus IQ</b> best windows, and each course's <b>need</b> (upcoming exams, pending assignments, hours behind target) into a concrete weekly plan. Add blocks straight to your timetable.</p>
+    <div id="plannerResult"><div class="empty"><div class="ei">✦</div><p>Hit "Generate" to build your plan for the next 7 days</p></div></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>🎓 Exam Crunch</h2></div>
+    <p style="color:var(--gray);font-size:.86rem;margin-bottom:12px">For every exam in the next 3 weeks: how much prep you've logged, how much is suggested, and your best focus windows before the date.</p>
+    <div id="examCrunch"></div>
+  </div>
+</div>
+
+<!-- FLASHCARDS -->
+<div id="flashcards" class="tab-content">
+  <div class="card">
+    <div class="card-header">
+      <h2>▤ Flashcards</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="fcOpenAdd()">+ New Card</button>
+        <button class="btn btn-secondary btn-sm" onclick="fcOpenAI()">🤖 Generate from note</button>
+      </div>
+    </div>
+    <div id="fcDecks"></div>
+  </div>
+  <div class="card" style="margin-top:18px" id="fcReviewCard">
+    <div class="card-header"><h2>🔁 Review</h2><span id="fcDueBadge" class="fiq-learn"></span></div>
+    <div id="fcReview"></div>
+  </div>
+</div>
+
 <!-- NOTES -->
 <div id="notes" class="tab-content">
   <div class="card">
@@ -1999,6 +2070,16 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
 
 <!-- SETTINGS -->
 <div id="settings" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>🔔 Notifications</h2><span id="notifPermBadge" class="fiq-learn"></span></div>
+    <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Get reminders while UniTracker is open or installed as an app: assignments due, exams approaching, classes starting soon, and when one of your <b>best focus windows</b> is about to begin.</p>
+    <div style="display:flex;flex-direction:column;gap:9px;font-size:.88rem">
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer"><input type="checkbox" id="ntEnable" onchange="notifToggle(this.checked)" style="width:16px;height:16px"> <b>Enable notifications</b></label>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding-left:24px"><input type="checkbox" id="ntDeadlines" onchange="notifPref('deadlines',this.checked)" style="width:15px;height:15px"> Assignment &amp; exam deadlines</label>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding-left:24px"><input type="checkbox" id="ntClasses" onchange="notifPref('classes',this.checked)" style="width:15px;height:15px"> Class starting soon (30 min heads-up)</label>
+      <label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding-left:24px"><input type="checkbox" id="ntWindows" onchange="notifPref('windows',this.checked)" style="width:15px;height:15px"> Best focus window starting (15 min heads-up)</label>
+    </div>
+  </div>
   <div class="card">
     <div class="card-header"><h2>📆 Calendar export</h2></div>
     <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Download your assignment due dates and exams as a calendar file (.ics) you can import into Google Calendar, Apple Calendar or Outlook.</p>
@@ -2361,6 +2442,28 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
   </div>
 </div>
 
+<div class="modal" id="fcModal">
+  <div class="modal-content" style="max-width:520px">
+    <div class="modal-header"><h2 id="fcModalTitle">New Flashcard</h2><button class="close-btn" onclick="closeModal('fcModal')">&times;</button></div>
+    <input type="hidden" id="fcEditId">
+    <div class="form-group"><label>Front (question)</label><textarea id="fcFront" rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:.9rem"></textarea></div>
+    <div class="form-group"><label>Back (answer)</label><textarea id="fcBack" rows="4" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-family:inherit;font-size:.9rem"></textarea></div>
+    <div class="form-group"><label>Course</label><select id="fcCourse"><option value="">General</option></select></div>
+    <button class="btn btn-primary" onclick="fcSave()">Save Card</button>
+  </div>
+</div>
+
+<div class="modal" id="fcAIModal">
+  <div class="modal-content" style="max-width:520px">
+    <div class="modal-header"><h2>🤖 Generate flashcards from a note</h2><button class="close-btn" onclick="closeModal('fcAIModal')">&times;</button></div>
+    <p style="color:var(--gray);font-size:.85rem;margin-bottom:12px">Pick one of your notes — Claude will turn it into question/answer cards (uses your API key from Settings).</p>
+    <div class="form-group"><label>Note</label><select id="fcAINote"></select></div>
+    <div class="form-group"><label>How many cards</label><select id="fcAICount"><option>5</option><option selected>8</option><option>12</option></select></div>
+    <button class="btn btn-primary" id="fcAIGo" onclick="fcGenerateFromNote()">✨ Generate</button>
+    <div id="fcAIStatus" style="margin-top:10px;font-size:.84rem;color:var(--gray)"></div>
+  </div>
+</div>
+
 <div class="modal" id="fiqRateModal">
   <div class="modal-content" style="max-width:430px">
     <div class="modal-header"><h2>🧠 How focused were you?</h2><button class="close-btn" onclick="fiqSkipRate()">&times;</button></div>
@@ -2688,7 +2791,7 @@ onAuthStateChanged(auth, async (user) => {
         if(!window.D.bodyLog)window.D.bodyLog=[];if(!window.D.gymExercises)window.D.gymExercises=[];if(!window.D.gymWorkouts)window.D.gymWorkouts=[];
         if(!window.D.jobs)window.D.jobs=[];if(!window.D.semSettings)window.D.semSettings=null;if(!window.D.bgTheme)window.D.bgTheme=null;
         if(!window.D.weekNotes)window.D.weekNotes={};if(!window.D.paychecks)window.D.paychecks=[];if(!window.D.gcData)window.D.gcData={};
-        if(!window.D.exams)window.D.exams=[];if(!window.D.notes)window.D.notes=[];if(!window.D.studyHistory)window.D.studyHistory={};
+        if(!window.D.exams)window.D.exams=[];if(!window.D.notes)window.D.notes=[];if(!window.D.studyHistory)window.D.studyHistory={};if(!window.D.flashcards)window.D.flashcards=[];if(!window.D.notifySettings)window.D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};
       } else {
         // First time — migrate localStorage data to cloud
         const local = localStorage.getItem('UT7');
@@ -2801,6 +2904,7 @@ let D={
   standards:{daily:0,weekly:0,credits:0,reminderDays:2},
   studyHistory:{},
   bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
+  flashcards:[],notifySettings:{enabled:false,classes:true,deadlines:true,windows:true},
   semSettings:null,bgTheme:null
 };
 // Expose D and render functions to window so Firebase module can access them
@@ -2848,7 +2952,7 @@ function load(){
     if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
     if(!D.dayTypes)D.dayTypes={monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'};
     if(!D.standards)D.standards={daily:0,weekly:0,credits:0,reminderDays:2};
-    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;if(!D.topics)D.topics={};if(!D.attendance)D.attendance={};if(D.darkMode===undefined)D.darkMode=false;
+    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;if(!D.topics)D.topics={};if(!D.attendance)D.attendance={};if(D.darkMode===undefined)D.darkMode=false;if(!D.flashcards)D.flashcards=[];if(!D.notifySettings)D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};
     el('studentName').value=D.student.name||'';el('semester').value=D.student.semester||'';el('budgetInput').value=D.budget||'';
   }
 }
@@ -2866,6 +2970,8 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   const t=b.dataset.tab;
   if(t==='dashboard')renderDashboard();
   if(t==='timer'){refreshTimerCourses();refreshSwCourses();renderStandards();}
+  if(t==='planner'){renderPlannerTab();}
+  if(t==='flashcards'){renderFlashcards();}
   if(t==='gradecalc')initGC();
   if(t==='exams')renderExams();
   if(t==='schedule')renderSchedule();
@@ -2874,7 +2980,7 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='body')setTimeout(()=>renderBody(),50);
   if(t==='gym'){renderGymLog();renderGymExercises();renderGymCharts();fillGymExSelect();}
   if(t==='jobs')renderJobs();
-  if(t==='settings'){renderBgOptions();}
+  if(t==='settings'){renderBgOptions();renderNotifSettings();}
   if(t==='calendar'){renderCalendar();}
   if(t==='budget'){renderBudget();updateEmployerDatalist();}
 
@@ -4297,6 +4403,10 @@ function renderFocusIQ(){
   if(top.length){
     side+=top.map(s=>`<div class="fiq-slot"><div><b>${FIQ_DAYS_FULL[s.d]} ${FIQ_BLOCKS[s.b].label}</b><div class="fs-sub">${FIQ_BLOCKS[s.b].rng} · ${s.mins}m studied</div></div><div style="text-align:right"><div class="fs-score" style="color:${fiqColor(100).replace(/[\d.]+\)$/,'1)')}">${s.score}</div>${fiqConfBadge(s.conf)}</div></div>`).join('');
   }else side+='<p style="font-size:.82rem;color:var(--gray)">Not enough data yet — early estimates will appear after a few sessions.</p>';
+  const profs=fiqCourseProfiles();
+  if(profs.length){
+    side+='<h4 style="margin-top:14px">📚 Per-course sweet spots</h4>'+profs.map(p=>`<div class="fiq-slot"><div><b>${esc(p.label)}</b><div class="fs-sub">best in ${p.group}</div></div><div class="fs-score">${p.score}</div></div>`).join('');
+  }
   // best remaining window today
   const nowD=new Date(),day=nowD.getDay(),hr=nowD.getHours();
   const rem=FIQ_BLOCKS.map((bl,b)=>({b,...R.grid[day][b]})).filter(x=>FIQ_BLOCK_END[x.b]>hr||x.b===6).sort((a,b)=>b.score-a.score);
@@ -4312,11 +4422,406 @@ function renderFocusIQ(){
   if(worst&&top.length&&worst.score<top[0].score-8)ins.push(`⚠️ Avoid scheduling deep work on <b>${FIQ_DAYS_FULL[worst.d]} ${FIQ_BLOCKS[worst.b].label}</b> (score ${worst.score})`);
   if(R.trend!==null&&Math.abs(R.trend)>=3)ins.push(R.trend>0?`📈 Focus quality is up ${R.trend} pts over the last 30 days`:`📉 Focus quality is down ${-R.trend} pts over the last 30 days`);
   if(R.rated/R.total<.5)ins.push(`✍️ Only ${R.rated}/${R.total} sessions rated — rating takes one tap and sharpens these predictions`);
+  try{fiqCorrelations().forEach(x=>ins.push(x));}catch(e){}
   if(ins.length)side+='<ul class="fiq-insights">'+ins.map(i=>`<li>${i}</li>`).join('')+'</ul>';
   side+='</div>';
   body.innerHTML=g+side+'</div>';
   // timer-tab hint
   if(hint){if(todayLine){hint.style.display='block';hint.innerHTML=todayLine;}else hint.style.display='none';}
+}
+
+// ── Per-course focus profiles: where does each course go best? ──
+const FIQ_GROUPS=['the morning','midday/afternoon','the evening','late at night'];
+function fiqGroupOfBlock(b){return b<=1?0:b<=3?1:b===4?2:3;}
+function fiqCourseProfiles(){
+  const now=Date.now(),agg={};
+  D.studyLog.forEach(s=>{
+    if(s.courseId==null)return;const dur=s.duration||0;if(dur<=0)return;
+    const q=fiqQuality(s);
+    const end=s.end?new Date(s.end):new Date(s.date);if(isNaN(end))return;
+    let start=s.start?new Date(s.start):new Date(end.getTime()-dur*60000);
+    if(isNaN(start)||start>=end)start=new Date(end.getTime()-dur*60000);
+    const decay=Math.pow(.5,Math.max(0,(now-end.getTime())/864e5)/28);
+    let cur=new Date(start),guard=0;
+    while(cur<end&&guard++<200){
+      const nh=new Date(cur);nh.setMinutes(60,0,0);
+      const se=Math.min(+nh,+end),m=(se-cur)/60000;
+      const gi=fiqGroupOfBlock(FIQ_H2B[cur.getHours()]);
+      const key=String(s.courseId);
+      agg[key]=agg[key]||[{w:0,wq:0},{w:0,wq:0},{w:0,wq:0},{w:0,wq:0}];
+      agg[key][gi].w+=m*decay;agg[key][gi].wq+=m*decay*q;
+      cur=new Date(se);
+    }
+  });
+  const out=[];
+  Object.keys(agg).forEach(cid=>{
+    const rows=agg[cid].map((g,i)=>({i,w:g.w,s:g.w>0?g.wq/g.w:0}));
+    if(rows.reduce((a,r)=>a+r.w,0)<90)return;         // need ≥1.5h weighted evidence
+    const best=rows.filter(r=>r.w>=30).sort((a,b)=>b.s-a.s)[0];
+    if(!best)return;
+    const co=D.courses.find(c=>String(c.id)===cid);if(!co)return;
+    out.push({courseId:co.id,label:co.code||co.name,gi:best.i,group:FIQ_GROUPS[best.i],score:Math.round(best.s*100)});
+  });
+  return out.sort((a,b)=>b.score-a.score).slice(0,4);
+}
+
+// ── Cross-domain correlations: gym days & late nights vs focus quality ──
+function fiqCorrelations(){
+  const out=[],dayQ={};
+  D.studyLog.forEach(s=>{const dur=s.duration||0;if(dur<=0)return;const ds=(s.date||'').split('T')[0];if(!ds)return;dayQ[ds]=dayQ[ds]||{w:0,wq:0};dayQ[ds].w+=dur;dayQ[ds].wq+=dur*fiqQuality(s);});
+  const days=Object.keys(dayQ);
+  if(days.length<10)return out;
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+  const gymDays=new Set((D.gymWorkouts||[]).map(w=>String(w.date||'').split('T')[0]));
+  if(gymDays.size){
+    const a=[],b=[];days.forEach(d=>(gymDays.has(d)?a:b).push(dayQ[d].wq/dayQ[d].w));
+    if(a.length>=5&&b.length>=5){const diff=Math.round((mean(a)-mean(b))*100);
+      if(Math.abs(diff)>=5)out.push(diff>0?`💪 Your focus is ~${diff} pts better on gym days`:`💪 Your focus is ~${-diff} pts better on rest days`);}
+  }
+  const lateDays=new Set();
+  D.studyLog.forEach(s=>{const st=s.start?new Date(s.start):new Date(s.date);if(isNaN(st))return;const h=st.getHours();if(h>=22||h<5)lateDays.add((s.date||'').split('T')[0]);});
+  if(lateDays.size){
+    const nd=[],od=[];
+    days.forEach(d=>{const prev=new Date(d+'T12:00:00');prev.setDate(prev.getDate()-1);(lateDays.has(prev.toISOString().split('T')[0])?nd:od).push(dayQ[d].wq/dayQ[d].w);});
+    if(nd.length>=5&&od.length>=5){const diff=Math.round((mean(od)-mean(nd))*100);
+      if(diff>=5)out.push(`🌙 The day after late-night study, your focus drops ~${diff} pts`);}
+  }
+  return out;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SMART STUDY PLANNER — free gaps × Focus IQ × course need
+// ══════════════════════════════════════════════════════════════════
+const PLAN_DAYKEYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+function toMin(t){if(!t)return null;const p=String(t).split(':');const h=parseInt(p[0]),m=parseInt(p[1]||0);return isNaN(h)?null:h*60+(isNaN(m)?0:m);}
+function fmtMin(m){m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mm=m%60,ap=h>=12?'pm':'am';let hh=h%12;if(hh===0)hh=12;return hh+(mm?':'+String(mm).padStart(2,'0'):'')+ap;}
+function minToHM(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+
+// Candidate study chunks over the next 7 days, scored by Focus IQ
+function plannerChunks(R){
+  const chunks=[],now=new Date();
+  for(let off=0;off<7;off++){
+    const d=new Date(now);d.setDate(d.getDate()+off);
+    const dow=d.getDay(),dateStr=d.toISOString().split('T')[0];
+    let dayStart=8*60;const dayEnd=22*60+30;
+    if(off===0){dayStart=Math.max(dayStart,Math.ceil((now.getHours()*60+now.getMinutes()+30)/30)*30);if(dayStart>=dayEnd)continue;}
+    const busy=D.schedule.filter(s=>s.day===PLAN_DAYKEYS[dow]&&!s.planner&&toMin(s.startTime)!==null)
+      .map(s=>[toMin(s.startTime),Math.max(toMin(s.endTime)||0,toMin(s.startTime)+30)]).sort((a,b)=>a[0]-b[0]);
+    const merged=[];busy.forEach(b=>{if(merged.length&&b[0]<=merged[merged.length-1][1])merged[merged.length-1][1]=Math.max(merged[merged.length-1][1],b[1]);else merged.push([...b]);});
+    const gaps=[];let cur=dayStart;
+    merged.forEach(b=>{if(b[0]>cur)gaps.push([cur,Math.min(b[0],dayEnd)]);cur=Math.max(cur,b[1]);});
+    if(cur<dayEnd)gaps.push([cur,dayEnd]);
+    gaps.forEach(g=>{
+      let s=g[0];
+      while(g[1]-s>=60){
+        const e=Math.min(s+90,g[1]);
+        let w=0,ws=0;
+        for(let m=s;m<e;m+=30){const c=R?R.grid[dow][FIQ_H2B[Math.floor(m/60)%24]]:null;w+=30;ws+=30*(c?c.score:60);}
+        chunks.push({off,dow,dateStr,start:s,end:e,score:Math.round(ws/w),block:FIQ_H2B[Math.floor(((s+e)/2)/60)%24]});
+        s=e;
+      }
+    });
+  }
+  return chunks.sort((a,b)=>b.score-a.score||a.off-b.off);
+}
+
+// How much does each course need this week? (weekly target, exams, assignments)
+function plannerNeeds(){
+  const now=new Date(),wa=new Date(now);wa.setDate(wa.getDate()-7);
+  const needs=[];
+  D.courses.filter(c=>!c.archived).forEach(c=>{
+    const target=(parseFloat(c.credits)||3)*2.5;
+    const done=D.studyLog.filter(l=>String(l.courseId)===String(c.id)&&new Date(l.date)>=wa).reduce((s,l)=>s+l.duration,0)/60;
+    let need=Math.max(0,target-done);const why=[];
+    if(need>0)why.push(done>0?`${done.toFixed(1)}h of ${target}h/wk target`:`target ${target}h/wk`);
+    D.exams.forEach(x=>{if(String(x.courseId)!==String(c.id)||!x.date)return;const dl=Math.ceil((new Date(x.date)-now)/864e5);if(dl>=0&&dl<=21){need+=Math.max(1,(21-dl)/21*5);why.unshift(`exam in ${dl}d`);}});
+    const pend=D.assignments.filter(a=>!a.completed&&String(a.courseId)===String(c.id)&&a.dueDate&&(new Date(a.dueDate)-now)/864e5<=10&&(new Date(a.dueDate)-now)/864e5>=-1).length;
+    if(pend){need+=Math.min(pend*1.5,4.5);why.push(`${pend} assignment${pend>1?'s':''} due soon`);}
+    if(need>0.5)needs.push({courseId:c.id,label:c.code||c.name,need,why:why.join(' · ')});
+  });
+  return needs.sort((a,b)=>b.need-a.need);
+}
+
+let plannerLast=[];
+function generatePlan(){
+  const R=fiqCompute();
+  const chunks=plannerChunks(R);
+  const needs=plannerNeeds();
+  const box=el('plannerResult');
+  renderExamCrunch(chunks);
+  if(!needs.length){box.innerHTML='<div class="empty"><div class="ei">🎉</div><p>No study demand detected — add courses (with credit points), exams or assignments, or you are fully on target this week.</p></div>';return;}
+  if(!chunks.length){box.innerHTML='<div class="empty"><div class="ei">😬</div><p>No free gaps found in the next 7 days (8am–10:30pm). Check your timetable.</p></div>';return;}
+  const profs={};fiqCourseProfiles().forEach(p=>profs[String(p.courseId)]=p);
+  const weeklyGoal=(D.standards&&D.standards.weekly)?D.standards.weekly:Math.min(needs.reduce((s,n)=>s+n.need,0),18);
+  let capacity=Math.max(3,Math.min(weeklyGoal,24));
+  const perDay={},perDayCap=4*60,plan=[];
+  for(const ch of chunks){
+    if(capacity<=0.6)break;
+    const used=perDay[ch.dateStr]||0,len=ch.end-ch.start;
+    if(used+len>perDayCap)continue;
+    let best=null,bs=-1;
+    needs.forEach(n=>{
+      if(n.need<=0.4)return;
+      const p=profs[String(n.courseId)];
+      const bonus=(p&&p.gi===fiqGroupOfBlock(ch.block))?1.5:0;   // prefer each course's sweet spot
+      if(n.need+bonus>bs){bs=n.need+bonus;best=n;}
+    });
+    if(!best)break;
+    best.need-=len/60;capacity-=len/60;perDay[ch.dateStr]=used+len;
+    plan.push({dateStr:ch.dateStr,dow:ch.dow,dayKey:PLAN_DAYKEYS[ch.dow],start:ch.start,end:ch.end,courseId:best.courseId,label:best.label,score:ch.score,why:best.why});
+  }
+  plan.sort((a,b)=>a.dateStr.localeCompare(b.dateStr)||a.start-b.start);
+  plannerLast=plan;
+  if(!plan.length){box.innerHTML='<div class="empty"><p>Could not place any blocks — your free time and study demand did not line up.</p></div>';return;}
+  const tot=plan.reduce((s,p)=>s+(p.end-p.start),0)/60;
+  const byDay={};plan.forEach(p=>{(byDay[p.dateStr]=byDay[p.dateStr]||[]).push(p);});
+  let html=`<div class="plan-summary"><span><b>${plan.length}</b> blocks</span><span><b>${tot.toFixed(1)}h</b> planned</span><span>avg focus score <b>${Math.round(plan.reduce((s,p)=>s+p.score,0)/plan.length)}</b></span></div>`;
+  html+=`<button class="btn btn-success btn-sm" style="margin-bottom:14px" onclick="addPlanToTimetable()">➕ Add all to timetable</button>`;
+  Object.keys(byDay).sort().forEach(ds=>{
+    const d=new Date(ds+'T12:00:00');
+    html+=`<div class="plan-day"><h4>${FIQ_DAYS_FULL[d.getDay()]} · ${d.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</h4>`;
+    html+=byDay[ds].map(p=>`<div class="plan-slot"><span class="ps-time">${fmtMin(p.start)}–${fmtMin(p.end)}</span><span class="ps-course">📖 <b>${esc(p.label)}</b><div class="ps-why">${esc(p.why||'')}</div></span><span class="ps-score" title="Focus IQ score for this window">${p.score}</span></div>`).join('');
+    html+='</div>';
+  });
+  box.innerHTML=html;
+}
+function addPlanToTimetable(){
+  if(!plannerLast.length){alert('Generate a plan first.');return;}
+  D.schedule=D.schedule.filter(s=>!s.planner);
+  const seen=new Set();
+  plannerLast.forEach(p=>{
+    const key=p.dayKey+'-'+p.start;if(seen.has(key))return;seen.add(key);
+    D.schedule.push({id:uid(),label:'📖 '+p.label+' study',type:'study',courseId:p.courseId!=null?String(p.courseId):null,day:p.dayKey,startTime:minToHM(p.start),endTime:minToHM(p.end),location:'',planner:true});
+  });
+  save();try{if(typeof renderSchedule==='function')renderSchedule();}catch(e){}
+  alert('✅ Added '+seen.size+' weekly study blocks to your timetable. Regenerate + re-add anytime to replace them.');
+}
+function clearPlannedBlocks(){
+  const n=D.schedule.filter(s=>s.planner).length;
+  if(!n){alert('No planner-created blocks to remove.');return;}
+  if(!confirm('Remove '+n+' planner-created study blocks from your timetable?'))return;
+  D.schedule=D.schedule.filter(s=>!s.planner);save();
+  try{if(typeof renderSchedule==='function')renderSchedule();}catch(e){}
+}
+function renderPlannerTab(){if(!plannerLast.length)renderExamCrunch(null);}
+
+function renderExamCrunch(chunks){
+  const box=el('examCrunch');if(!box)return;
+  const now=new Date();
+  const exams=D.exams.filter(x=>x.date).map(x=>({...x,dl:Math.ceil((new Date(x.date)-now)/864e5)})).filter(x=>x.dl>=0&&x.dl<=21).sort((a,b)=>a.dl-b.dl);
+  if(!exams.length){box.innerHTML='<div class="empty" style="padding:14px"><p>No exams in the next 3 weeks 🎉</p></div>';return;}
+  chunks=chunks||plannerChunks(fiqCompute());
+  const wa=new Date(now);wa.setDate(wa.getDate()-14);
+  box.innerHTML=exams.map(x=>{
+    const co=D.courses.find(c=>String(c.id)===String(x.courseId));
+    const done=co?D.studyLog.filter(l=>String(l.courseId)===String(co.id)&&new Date(l.date)>=wa).reduce((s,l)=>s+l.duration,0)/60:0;
+    const suggested=Math.min(20,Math.max(4,(co?(parseFloat(co.credits)||3):3)*2));
+    const pct=Math.min(100,Math.round(done/suggested*100));
+    const wins=chunks.filter(c=>c.dateStr<x.date).slice(0,4)
+      .map(c=>{const d=new Date(c.dateStr+'T12:00:00');return `${FIQ_DAYS[d.getDay()]} ${fmtMin(c.start)}–${fmtMin(c.end)} <b>(${c.score})</b>`;}).join(' &nbsp;·&nbsp; ');
+    return `<div class="crunch-item">
+      <h4>📚 ${esc(x.name)}${co?' — '+esc(co.code||co.name):''} <span style="font-weight:600;color:${x.dl<=3?'#dc2626':'var(--gray)'};font-size:.8rem">· in ${x.dl} day${x.dl!==1?'s':''}</span></h4>
+      <div style="font-size:.8rem;color:var(--gray)">Prep logged (last 14d): <b>${done.toFixed(1)}h</b> of ~${suggested}h suggested${done<suggested?' — <b>'+(suggested-done).toFixed(1)+'h to go</b>':' ✅ on track'}</div>
+      <div class="crunch-bar"><div style="width:${pct}%"></div></div>
+      ${wins?`<div class="crunch-windows">⭐ Best focus windows before the exam: ${wins}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NOTIFICATIONS — deadlines, classes, and peak focus windows
+// ══════════════════════════════════════════════════════════════════
+function notify(tag,title,body){
+  if(!D.notifySettings||!D.notifySettings.enabled)return;
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  let seen={};try{seen=JSON.parse(localStorage.getItem('UT7notified')||'{}');}catch(e){}
+  const today=new Date().toISOString().split('T')[0];
+  if(seen[tag]===today)return;
+  Object.keys(seen).forEach(k=>{if(seen[k]!==today)delete seen[k];});
+  seen[tag]=today;
+  localStorage.setItem('UT7notified',JSON.stringify(seen));
+  const opts={body,icon:'icon-192.png',badge:'icon-192.png',tag};
+  const fallback=()=>{try{new Notification(title,opts);}catch(e){}};
+  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(r=>{if(r&&r.showNotification)r.showNotification(title,opts);else fallback();}).catch(fallback);
+  }else fallback();
+}
+function notifToggle(on){
+  if(!on){D.notifySettings.enabled=false;save();renderNotifSettings();return;}
+  if(typeof Notification==='undefined'){alert('This browser does not support notifications.');renderNotifSettings();return;}
+  Notification.requestPermission().then(p=>{
+    D.notifySettings.enabled=(p==='granted');
+    if(p!=='granted')alert('Notifications are blocked by the browser. Allow them in site settings, then try again.');
+    save();renderNotifSettings();
+    if(p==='granted')notify('welcome','🔔 Notifications on','UniTracker will remind you about deadlines, classes and your best focus windows.');
+  });
+}
+function notifPref(k,v){D.notifySettings[k]=v;save();}
+function renderNotifSettings(){
+  const en=el('ntEnable');if(!en)return;
+  const s=D.notifySettings||{};
+  en.checked=!!s.enabled;
+  el('ntDeadlines').checked=s.deadlines!==false;
+  el('ntClasses').checked=s.classes!==false;
+  el('ntWindows').checked=s.windows!==false;
+  const badge=el('notifPermBadge');
+  if(badge)badge.textContent=(typeof Notification==='undefined')?'Not supported':s.enabled&&Notification.permission==='granted'?'✅ Active':Notification.permission==='denied'?'🚫 Blocked in browser':'Off';
+}
+function checkNotifications(){
+  if(!D.notifySettings||!D.notifySettings.enabled)return;
+  const now=new Date(),mins=now.getHours()*60+now.getMinutes();
+  const dk=PLAN_DAYKEYS[now.getDay()];
+  if(D.notifySettings.classes!==false){
+    D.schedule.forEach(s=>{
+      if(s.day!==dk)return;const st=toMin(s.startTime);if(st===null)return;
+      const lead=st-mins;
+      if(s.type==='study'){if(lead>0&&lead<=15)notify('stu-'+s.id,'📖 Study block at '+fmtMin(st),(s.label||'Study session')+' starts in '+lead+' min');}
+      else if(lead>0&&lead<=30)notify('cls-'+s.id,'⏰ '+(s.label||'Class')+' at '+fmtMin(st),(s.location?'At '+s.location+' · ':'')+'starts in '+lead+' min');
+    });
+  }
+  if(D.notifySettings.deadlines!==false&&now.getHours()>=8){
+    D.assignments.filter(a=>!a.completed&&a.dueDate&&a.dueDate!=='null').forEach(a=>{
+      const diff=Math.ceil((new Date(a.dueDate)-now)/864e5);
+      if(diff===0)notify('due0-'+a.id,'🔴 Due today: '+a.title,'Get it submitted!');
+      else if(diff===1)notify('due1-'+a.id,'🟠 Due tomorrow: '+a.title,'One day left.');
+    });
+    D.exams.filter(x=>x.date).forEach(x=>{
+      const diff=Math.ceil((new Date(x.date)-now)/864e5);
+      if(diff>=0&&diff<=3)notify('exam-'+x.id,'📚 Exam '+(diff===0?'TODAY':'in '+diff+' day'+(diff>1?'s':''))+': '+x.name,(x.time?'At '+x.time+'. ':'')+'Check Exam Crunch in the Planner for prep windows.');
+    });
+  }
+  if(D.notifySettings.windows!==false){
+    try{
+      const R=fiqCompute();
+      if(R){
+        const blockStart=[5*60,8*60,11*60,14*60,17*60,20*60,23*60];
+        const best=FIQ_BLOCKS.map((b,i)=>({i,...R.grid[now.getDay()][i]})).filter(c=>c.conf!=='lo').sort((a,b)=>b.score-a.score)[0];
+        if(best){const lead=blockStart[best.i]-mins;
+          if(lead>0&&lead<=15)notify('fiq-'+best.i,'🧠 Peak focus window in '+lead+' min',FIQ_BLOCKS[best.i].label+' ('+FIQ_BLOCKS[best.i].rng+') is your best study window today — score '+best.score+'.');}
+      }
+    }catch(e){}
+  }
+}
+setInterval(checkNotifications,60000);
+setTimeout(()=>{checkNotifications();renderNotifSettings();},4000);
+
+// ══════════════════════════════════════════════════════════════════
+// FLASHCARDS — spaced repetition (SM-2 lite)
+// ══════════════════════════════════════════════════════════════════
+function fcToday(){return new Date().toISOString().split('T')[0];}
+function fcDueCards(list){const t=fcToday();return (list||D.flashcards).filter(c=>(c.due||t)<=t);}
+let fcQueue=[],fcShowBack=false;
+function fcCourseLabel(cid){if(cid==null||cid==='')return 'General';const co=D.courses.find(c=>String(c.id)===String(cid));return co?(co.code||co.name):'General';}
+function fcFillCourseSelects(){
+  ['fcCourse'].forEach(id=>{const s=el(id);if(!s)return;const v=s.value;s.innerHTML='<option value="">General</option>'+D.courses.filter(c=>!c.archived).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');if(v)s.value=v;});
+}
+function fcOpenAdd(){el('fcEditId').value='';el('fcFront').value='';el('fcBack').value='';fcFillCourseSelects();el('fcModalTitle').textContent='New Flashcard';openModal('fcModal');}
+function fcEdit(id){const c=D.flashcards.find(x=>String(x.id)===String(id));if(!c)return;el('fcEditId').value=c.id;el('fcFront').value=c.front;el('fcBack').value=c.back;fcFillCourseSelects();el('fcCourse').value=c.courseId!=null?c.courseId:'';el('fcModalTitle').textContent='Edit Flashcard';openModal('fcModal');}
+function fcSave(){
+  const front=el('fcFront').value.trim(),back=el('fcBack').value.trim();
+  if(!front||!back){alert('Both sides are required.');return;}
+  const cid=el('fcCourse').value?parseInt(el('fcCourse').value):null;
+  const eid=el('fcEditId').value;
+  if(eid){const c=D.flashcards.find(x=>String(x.id)===String(eid));if(c){c.front=front;c.back=back;c.courseId=cid;}}
+  else D.flashcards.push({id:uid(),front,back,courseId:cid,ease:2.5,interval:0,reps:0,due:fcToday(),created:new Date().toISOString()});
+  save();closeModal('fcModal');fcQueue=[];renderFlashcards();
+}
+function fcDelete(id){if(!confirm('Delete this card?'))return;D.flashcards=D.flashcards.filter(c=>String(c.id)!==String(id));fcQueue=fcQueue.filter(c=>String(c.id)!==String(id));save();renderFlashcards();}
+// SM-2 lite: g=0 again, 3 hard, 4 good, 5 easy
+function fcGrade(g){
+  const c=fcQueue[0];if(!c)return;
+  if(g<3){c.reps=0;c.interval=0;c.due=fcToday();fcQueue.push(fcQueue.shift());}   // see again this session
+  else{
+    c.reps=(c.reps||0)+1;
+    c.interval=c.reps===1?1:c.reps===2?3:Math.max(1,Math.round((c.interval||1)*(c.ease||2.5)));
+    c.ease=Math.max(1.3,(c.ease||2.5)+(0.1-(5-g)*(0.08+(5-g)*0.02)));
+    const d=new Date();d.setDate(d.getDate()+c.interval);c.due=d.toISOString().split('T')[0];
+    fcQueue.shift();
+  }
+  save();fcShowBack=false;renderFlashcards();
+}
+function fcReveal(){fcShowBack=true;renderFcReview();}
+function fcStartDeck(cid){fcQueue=fcDueCards(D.flashcards.filter(c=>String(c.courseId??'')===String(cid??''))).sort(()=>Math.random()-.5);fcShowBack=false;renderFcReview();el('fcReviewCard').scrollIntoView({behavior:'smooth'});}
+function renderFcReview(){
+  const box=el('fcReview');if(!box)return;
+  const badge=el('fcDueBadge');
+  const dueAll=fcDueCards().length;
+  if(badge)badge.textContent=dueAll?`${dueAll} due today`:'All caught up';
+  if(!D.flashcards.length){box.innerHTML='<div class="empty"><div class="ei">▤</div><p>No cards yet — add one or generate from a note.</p></div>';return;}
+  if(!fcQueue.length){
+    const next=D.flashcards.map(c=>c.due||fcToday()).sort()[0];
+    box.innerHTML=dueAll
+      ?`<div class="empty" style="padding:16px"><p>${dueAll} card${dueAll>1?'s':''} due — pick a deck above or</p><button class="btn btn-primary btn-sm" onclick="fcStartAll()">▶ Review all due</button></div>`
+      :`<div class="empty" style="padding:16px"><div class="ei">🎉</div><p>Nothing due. Next review: <b>${next}</b></p></div>`;
+    return;
+  }
+  const c=fcQueue[0];
+  let html=`<div class="fc-card"><div class="fc-meta">${esc(fcCourseLabel(c.courseId))} · ${fcQueue.length} left · rep ${c.reps||0}</div>`;
+  html+=`<div class="fc-face">${esc(c.front)}</div>`;
+  if(fcShowBack){
+    html+=`<div class="fc-face fc-back">${esc(c.back)}</div>`;
+    html+=`<div class="fc-grade-btns">
+      <button class="g-again" onclick="fcGrade(0)">Again<small>&lt;10 min</small></button>
+      <button class="g-hard" onclick="fcGrade(3)">Hard<small>1 day</small></button>
+      <button class="g-good" onclick="fcGrade(4)">Good<small>${c.reps===0?'1':c.reps===1?'3':Math.max(1,Math.round((c.interval||1)*(c.ease||2.5)))} day${(c.reps>=1&&Math.round((c.interval||1)*(c.ease||2.5))>1)||c.reps===1?'s':''}</small></button>
+      <button class="g-easy" onclick="fcGrade(5)">Easy<small>boost</small></button>
+    </div>`;
+  }else html+=`<button class="btn btn-primary" onclick="fcReveal()">Show answer</button>`;
+  html+=`<div style="margin-top:12px;font-size:.75rem"><a href="#" onclick="event.preventDefault();fcEdit('${c.id}')" style="color:var(--gray)">edit</a> · <a href="#" onclick="event.preventDefault();fcDelete('${c.id}')" style="color:var(--gray)">delete</a></div></div>`;
+  box.innerHTML=html;
+}
+function fcStartAll(){fcQueue=fcDueCards().sort(()=>Math.random()-.5);fcShowBack=false;renderFcReview();}
+function renderFlashcards(){
+  const decks=el('fcDecks');if(!decks)return;
+  if(!D.flashcards.length){decks.innerHTML='<div class="empty"><div class="ei">▤</div><p>No flashcards yet. Create cards manually or generate them from your notes with AI.</p></div>';}
+  else{
+    const byDeck={};
+    D.flashcards.forEach(c=>{const k=c.courseId!=null?String(c.courseId):'';(byDeck[k]=byDeck[k]||[]).push(c);});
+    decks.innerHTML=Object.keys(byDeck).map(k=>{
+      const cards=byDeck[k],due=fcDueCards(cards).length;
+      return `<div class="fc-deck"><div><b>${esc(fcCourseLabel(k||null))}</b><div class="fd-meta">${cards.length} card${cards.length!==1?'s':''}</div></div>
+        <div style="display:flex;gap:9px;align-items:center">${due?`<span class="fc-due">${due} due</span>`:''}<button class="btn btn-primary btn-sm" onclick="fcStartDeck('${k}')" ${due?'':'disabled style="opacity:.5"'}>▶ Review</button></div></div>`;
+    }).join('');
+  }
+  renderFcReview();
+}
+function fcOpenAI(){
+  if(!D.notes.length){alert('You have no notes yet — write a note first, then generate cards from it.');return;}
+  const sel=el('fcAINote');
+  sel.innerHTML=D.notes.map(n=>`<option value="${n.id}">${esc(n.title||'Untitled note')}</option>`).join('');
+  el('fcAIStatus').textContent='';
+  openModal('fcAIModal');
+}
+async function fcGenerateFromNote(){
+  const key=localStorage.getItem('anthropicKey');
+  const status=el('fcAIStatus');
+  if(!key){status.innerHTML='⚠️ No API key set — add one in <b>Settings → AI Assistant</b> first.';return;}
+  const note=D.notes.find(n=>String(n.id)===String(el('fcAINote').value));
+  if(!note){status.textContent='Note not found.';return;}
+  const text=new DOMParser().parseFromString(note.body||'','text/html').body.textContent.trim().slice(0,12000);
+  if(text.length<40){status.textContent='That note is too short to generate cards from.';return;}
+  const count=parseInt(el('fcAICount').value)||8;
+  const btn=el('fcAIGo');btn.disabled=true;status.textContent='✨ Generating…';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2000,
+        system:'You create study flashcards. Respond ONLY with a JSON array of objects with "front" (a question) and "back" (a concise answer). No markdown fences, no preamble.',
+        messages:[{role:'user',content:'Create '+count+' flashcards from these notes titled "'+(note.title||'')+'":\n\n'+text}]})
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    const raw=(data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    const cards=JSON.parse(raw);
+    if(!Array.isArray(cards))throw new Error('Unexpected response format');
+    let added=0;
+    cards.forEach(c=>{if(c&&c.front&&c.back){D.flashcards.push({id:uid(),front:String(c.front).slice(0,500),back:String(c.back).slice(0,1000),courseId:note.courseId!=null&&note.courseId!==''?parseInt(note.courseId)||null:null,ease:2.5,interval:0,reps:0,due:fcToday(),created:new Date().toISOString(),fromNote:note.id});added++;}});
+    save();fcQueue=[];renderFlashcards();
+    status.textContent='✅ Added '+added+' cards.';
+    setTimeout(()=>closeModal('fcAIModal'),900);
+  }catch(e){status.textContent='❌ '+(e.message||'Generation failed');}
+  btn.disabled=false;
 }
 
 // ══ STUDY STANDARDS ══
@@ -4843,7 +5348,8 @@ async function clearAllData(){
     dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
     standards:{daily:0,weekly:0,credits:0,reminderDays:2},
     studyHistory:{},
-    bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
+    bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],flashcards:[],
+    notifySettings:{enabled:false,classes:true,deadlines:true,windows:true},
     semSettings:null,bgTheme:null,topics:{},attendance:{},darkMode:false
   };
   Object.assign(window.D, empty);
@@ -5123,6 +5629,16 @@ function renderWeeklyReview(){
   const graded=D.courses.filter(c=>c.grade);let tp=0,tc=0;graded.forEach(c=>{tp+=parseFloat(c.grade)*c.credits;tc+=c.credits;});const gpa=tc>0?(tp/tc).toFixed(2):'N/A';
   // Sessions
   const sessCount=D.studyLog.filter(l=>new Date(l.date)>=wkMs).length;
+  // Focus IQ + habits
+  let fiqR=null,fiqBest='';
+  try{
+    fiqR=fiqCompute();
+    if(fiqR){const sl=[];fiqR.grid.forEach((row,d)=>row.forEach((c,b)=>sl.push({d,b,...c})));
+      const t=sl.filter(s=>s.w>=20).sort((a,b)=>b.score-a.score)[0];
+      if(t)fiqBest=FIQ_DAYS[t.d]+' '+FIQ_BLOCKS[t.b].label;}
+  }catch(e){}
+  const wkGym=(D.gymWorkouts||[]).filter(w=>{const d=new Date(String(w.date||'')+'T12:00:00');return !isNaN(d)&&d>=wkMs;}).length;
+  const fcDueN=(typeof fcDueCards==='function')?fcDueCards().length:0;
   wrap.innerHTML=`<div class="card" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:2px solid #bae6fd;margin-bottom:18px">
     <div class="card-header"><h2 style="color:#0369a1">📋 Weekly Review</h2><span style="font-size:.82rem;color:#0369a1;font-weight:500">Week of ${monday.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}</span></div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
@@ -5149,6 +5665,13 @@ function renderWeeklyReview(){
         <div class="review-stat"><span class="rs-label">Income</span><span class="rs-val" style="color:#10b981">$${wkInc.toFixed(2)}</span></div>
         <div class="review-stat"><span class="rs-label">Expenses</span><span class="rs-val" style="color:#ef4444">$${wkExp.toFixed(2)}</span></div>
         <div class="review-stat"><span class="rs-label">Net</span><span class="rs-val" style="color:${wkInc-wkExp>=0?'#10b981':'#ef4444'}">$${(wkInc-wkExp).toFixed(2)}</span></div>
+      </div>
+      <div class="review-section">
+        <h4>🧠 Focus &amp; Habits</h4>
+        <div class="review-stat"><span class="rs-label">Focus trend (30d)</span><span class="rs-val" style="color:${fiqR&&fiqR.trend>0?'#10b981':fiqR&&fiqR.trend<0?'#ef4444':'#64748b'}">${fiqR&&fiqR.trend!==null?(fiqR.trend>0?'+':'')+fiqR.trend+' pts':'—'}</span></div>
+        <div class="review-stat"><span class="rs-label">Best window</span><span class="rs-val" style="font-size:.82rem">${fiqBest||'—'}</span></div>
+        <div class="review-stat"><span class="rs-label">Gym sessions</span><span class="rs-val" style="color:#6366f1">${wkGym}</span></div>
+        <div class="review-stat"><span class="rs-label">Flashcards due</span><span class="rs-val" style="color:${fcDueN>0?'#f59e0b':'#10b981'}">${fcDueN}</span></div>
       </div>
     </div>
   </div>`;
@@ -6161,6 +6684,24 @@ function getUniTrackerContext(){
     lines.push("COURSE PDF CONTENT (use to answer questions, summarise, quiz student):");
     lines.push(pdfSections.join("\n\n").slice(0,30000));
   }
+
+  // Focus IQ: learned best study times, per-course profiles, planner
+  try{
+    const R=fiqCompute();
+    if(R){
+      lines.push("");
+      lines.push("FOCUS IQ (learned from "+R.total+" study sessions; score /100):");
+      const slots=[];R.grid.forEach((row,d)=>row.forEach((c,b)=>slots.push({d,b,...c})));
+      slots.filter(s=>s.w>=20).sort((a,b)=>b.score-a.score).slice(0,3)
+        .forEach(s=>lines.push("- Best window: "+FIQ_DAYS_FULL[s.d]+" "+FIQ_BLOCKS[s.b].label+" ("+FIQ_BLOCKS[s.b].rng+") — "+s.score+" ["+(s.conf==='hi'?'high':s.conf==='md'?'medium':'low')+" confidence]"));
+      if(R.trend!==null)lines.push("- 30-day focus trend: "+(R.trend>0?"+":"")+R.trend+" pts");
+      const profs=fiqCourseProfiles();
+      if(profs.length){lines.push("PER-COURSE FOCUS PROFILES:");profs.forEach(p=>lines.push("- "+p.label+": studies best in "+p.group+" (score "+p.score+")"));}
+      const planned=D.schedule.filter(s=>s.planner);
+      if(planned.length)lines.push("PLANNED STUDY BLOCKS (weekly): "+planned.map(s=>s.day+" "+s.startTime+"-"+s.endTime+" "+(s.label||"")).join("; "));
+      lines.push("When asked what or when to study, use these learned windows and per-course profiles, and reference the Study Planner tab.");
+    }
+  }catch(e){}
 
   return lines.join("\n");
 }
@@ -7979,18 +8520,41 @@ function openQuickSwitch(){
   const inp=el('qsInput'); inp.value=''; renderQsList(''); inp.focus();
 }
 function closeQuickSwitch(){ el('quickSwitch')?.classList.remove('active'); }
+let qsResults=[];
+function qsNav(tab){document.querySelector(`nav .nav-btn[data-tab="${tab}"]`)?.click();}
+function qsStrip(h){try{return new DOMParser().parseFromString(h||'','text/html').body.textContent||'';}catch(e){return '';}}
+function qsContent(q){
+  const out=[],Q=q.toLowerCase();
+  const add=(icon,label,group,run)=>out.push({icon,label,group,run});
+  D.assignments.filter(a=>(a.title||'').toLowerCase().includes(Q)).slice(0,4)
+    .forEach(a=>add('📝',a.title+(a.completed?' ✓':''),'Assignment'+(a.dueDate&&a.dueDate!=='null'?' · due '+a.dueDate:''),()=>qsNav('assignments')));
+  D.exams.filter(x=>(x.name||'').toLowerCase().includes(Q)).slice(0,3)
+    .forEach(x=>add('📚',x.name,'Exam'+(x.date?' · '+x.date:''),()=>qsNav('exams')));
+  D.courses.filter(c=>((c.name||'')+' '+(c.code||'')).toLowerCase().includes(Q)).slice(0,3)
+    .forEach(c=>add('🎓',(c.code?c.code+' — ':'')+c.name,'Course',()=>qsNav('courses')));
+  D.notes.filter(n=>(n.title||'').toLowerCase().includes(Q)||qsStrip(n.body).toLowerCase().includes(Q)).slice(0,4)
+    .forEach(n=>add('🗒️',n.title||'Untitled note','Note',()=>{qsNav('notes');const s=el('noteSearch');if(s){s.value=q;if(typeof renderNotes==='function')renderNotes();}}));
+  D.expenses.filter(x=>(x.desc||'').toLowerCase().includes(Q)).slice(0,3)
+    .forEach(x=>add('💸',x.desc,'$'+(x.amount||0).toFixed(2)+(x.date?' · '+x.date:''),()=>qsNav('budget')));
+  (D.flashcards||[]).filter(c=>(c.front||'').toLowerCase().includes(Q)).slice(0,3)
+    .forEach(c=>add('▤',c.front.slice(0,60),'Flashcard · '+fcCourseLabel(c.courseId),()=>qsNav('flashcards')));
+  return out;
+}
 function renderQsList(q){
   const list=el('qsList'); if(!list) return;
-  const items=qsTabs().filter(t=>t.label.toLowerCase().includes(q.toLowerCase()));
-  qsIndex=Math.min(qsIndex, Math.max(0,items.length-1));
-  list.innerHTML = items.length
-    ? items.map((t,i)=>`<div class="qs-item${i===qsIndex?' sel':''}" data-tab="${t.tab}">${esc(t.label)}<span class="qs-group">${esc(t.group)}</span></div>`).join('')
-    : '<div class="qs-item" style="color:var(--ink-soft);cursor:default">No matching section</div>';
-  list.querySelectorAll('.qs-item[data-tab]').forEach((elm,i)=>{
-    elm.addEventListener('mouseenter',()=>{qsIndex=i;renderQsList(el('qsInput').value);});
-    elm.addEventListener('click',()=>qsGo(elm.dataset.tab));
+  const tabs=qsTabs().filter(t=>t.label.toLowerCase().includes(q.toLowerCase()))
+    .map(t=>({icon:'',label:t.label,group:t.group,run:()=>qsGo(t.tab)}));
+  qsResults=q.trim().length>=2?[...tabs,...qsContent(q.trim())]:tabs;
+  qsIndex=Math.min(qsIndex, Math.max(0,qsResults.length-1));
+  list.innerHTML = qsResults.length
+    ? qsResults.map((t,i)=>`<div class="qs-item${i===qsIndex?' sel':''}" data-i="${i}">${t.icon?`<span class="qs-icon">${t.icon}</span>`:''}${esc(t.label)}<span class="qs-group">${esc(t.group)}</span></div>`).join('')
+    : '<div class="qs-item" style="color:var(--ink-soft);cursor:default">No matches — try a section name, assignment, note, exam or expense</div>';
+  list.querySelectorAll('.qs-item[data-i]').forEach((elm)=>{
+    elm.addEventListener('mouseenter',()=>{qsIndex=parseInt(elm.dataset.i);renderQsList(el('qsInput').value);});
+    elm.addEventListener('click',()=>qsRun(parseInt(elm.dataset.i)));
   });
 }
+function qsRun(i){const r=qsResults[i];if(!r)return;closeQuickSwitch();r.run();}
 function qsGo(tab){
   closeQuickSwitch();
   document.querySelector(`nav .nav-btn[data-tab="${tab}"]`)?.click();
@@ -8002,11 +8566,10 @@ document.addEventListener('keydown', e=>{
   }
   const o=el('quickSwitch');
   if(!o || !o.classList.contains('active')) return;
-  const items=[...document.querySelectorAll('.qs-item[data-tab]')];
   if(e.key==='Escape'){ closeQuickSwitch(); }
-  else if(e.key==='ArrowDown'){ e.preventDefault(); qsIndex=Math.min(qsIndex+1,items.length-1); renderQsList(el('qsInput').value); }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); qsIndex=Math.min(qsIndex+1,qsResults.length-1); renderQsList(el('qsInput').value); }
   else if(e.key==='ArrowUp'){ e.preventDefault(); qsIndex=Math.max(qsIndex-1,0); renderQsList(el('qsInput').value); }
-  else if(e.key==='Enter' && items[qsIndex]){ qsGo(items[qsIndex].dataset.tab); }
+  else if(e.key==='Enter' && qsResults[qsIndex]){ qsRun(qsIndex); }
 });
 el('qsInput')?.addEventListener('input', e=>{ qsIndex=0; renderQsList(e.target.value); });
 el('quickSwitch')?.addEventListener('click', e=>{ if(e.target.id==='quickSwitch') closeQuickSwitch(); });
