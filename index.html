@@ -1352,6 +1352,40 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;}
 }
+/* ══ FOCUS IQ — best study times ══ */
+.fiq-learn{font-size:.72rem;font-weight:600;color:var(--gray);background:var(--paper,#f8fafc);border:1px solid var(--line,#e2e8f0);border-radius:20px;padding:3px 10px;cursor:default;}
+.fiq-wrap{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px;align-items:start;}
+.fiq-grid{display:grid;grid-template-columns:auto repeat(7,minmax(0,1fr));gap:3px;font-size:.68rem;}
+.fiq-gh{font-weight:700;color:var(--gray);text-align:center;padding:2px 0;}
+.fiq-rl{font-weight:600;color:var(--gray);padding-right:7px;white-space:nowrap;align-self:center;text-align:right;}
+.fiq-cell{border-radius:5px;height:27px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.66rem;color:var(--dark);cursor:default;border:1.5px solid transparent;}
+.fiq-cell.fiq-lo{opacity:.35;}
+.fiq-cell.fiq-best{border-color:var(--dark);}
+.fiq-legend{display:flex;gap:8px;align-items:center;margin-top:9px;font-size:.68rem;color:var(--gray);flex-wrap:wrap;}
+.fiq-legend .lg{width:15px;height:10px;border-radius:3px;display:inline-block;}
+.fiq-side h4{font-size:.8rem;font-weight:700;margin:0 0 8px;}
+.fiq-slot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line,#e2e8f0);border-radius:9px;margin-bottom:7px;background:var(--paper,#f8fafc);}
+.fiq-slot b{font-size:.85rem;}
+.fiq-slot .fs-sub{font-size:.72rem;color:var(--gray);}
+.fiq-slot .fs-score{font-weight:800;font-size:1.1rem;}
+.fiq-conf{font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;}
+.fiq-conf.c-hi{background:rgba(16,185,129,.15);color:#059669;}
+.fiq-conf.c-md{background:rgba(217,158,32,.18);color:#a06a00;}
+.fiq-conf.c-lo{background:var(--paper,#f8fafc);color:var(--gray);border:1px solid var(--line,#e2e8f0);}
+.fiq-today{margin-top:6px;padding:10px 13px;border-radius:9px;background:var(--marker,#ffe66d);font-size:.83rem;font-weight:600;color:#1D2433;}
+.fiq-insights{margin:12px 0 0;padding-left:18px;font-size:.82rem;color:var(--gray);line-height:1.55;}
+.fiq-insights li{margin-bottom:4px;}
+.fiq-empty{text-align:center;color:var(--gray);font-size:.88rem;padding:20px 10px;line-height:1.6;}
+#fiqTimerHint{margin:15px auto 0;max-width:460px;padding:9px 13px;border-radius:9px;background:var(--paper,#f8fafc);border:1.5px dashed var(--line,#cbd5e1);font-size:.82rem;text-align:center;}
+.fiq-rate-btns{display:flex;gap:8px;justify-content:center;margin:16px 0 8px;}
+.fiq-rate-btns button{flex:1;max-width:74px;font-size:1.4rem;padding:10px 0 6px;border:1.5px solid var(--line,#e2e8f0);border-radius:11px;background:var(--card-bg,#fff);cursor:pointer;transition:transform .08s,border-color .12s;}
+.fiq-rate-btns button:hover{transform:translateY(-2px);border-color:var(--primary,#2b59c3);}
+.fiq-rate-btns button small{display:block;font-size:.58rem;font-weight:700;color:var(--gray);margin-top:3px;letter-spacing:.03em;}
+body.dark-mode .fiq-slot,body.dark-mode #fiqTimerHint,body.dark-mode .fiq-learn,body.dark-mode .fiq-conf.c-lo{background:#0f172a;border-color:#334155;}
+body.dark-mode .fiq-rate-btns button{background:#1e293b;border-color:#334155;}
+body.dark-mode .fiq-cell{color:#e2e8f0;}
+body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
+@media(max-width:768px){.fiq-wrap{grid-template-columns:1fr;gap:16px;}.fiq-cell{height:23px;font-size:.58rem;}.fiq-rl{font-size:.62rem;}}
 </style>
 </head>
 <body>
@@ -1506,6 +1540,14 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
       <div style="margin-top:10px"><div class="bar-chart" id="heatmapGraph" style="height:85px;border:none;"></div></div>
       <p style="font-size:.72rem;color:var(--gray);text-align:center;margin-top:4px">Avg minutes per day of week</p>
     </div>
+  </div>
+  <!-- FOCUS IQ — adaptive best study times -->
+  <div class="card" id="fiqCard">
+    <div class="card-header">
+      <h2>🎯 Best Study Times</h2>
+      <span class="fiq-learn" id="fiqLearnBadge" title="Focus IQ learns from every session and rating — accuracy improves over time">Learning…</span>
+    </div>
+    <div id="fiqBody"></div>
   </div>
   <div class="charts-grid">
     <div class="card"><div class="card-header"><h2>📈 Weekly Study Hours</h2></div><div id="weeklyChart"></div></div>
@@ -1740,6 +1782,7 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
         <div class="form-group"><label>Studying:</label><input type="text" id="studySubject" placeholder="Topic…"></div>
         <div class="form-group"><label>Course:</label><select id="timerCourse"><option value="">General</option></select></div>
       </div>
+      <div id="fiqTimerHint" style="display:none"></div>
     </div>
   </div>
   <div class="card" style="margin-top:18px">
@@ -2315,6 +2358,22 @@ body.dark-mode .login-card{background:var(--card);color:var(--ink);}
     <p style="color:var(--gray);font-size:.87rem;margin-bottom:14px">Tell UniTracker how each day is used so it can recommend study times.</p>
     <div id="dayTypeInputs"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="saveDayTypes()">Save Day Types</button>
+  </div>
+</div>
+
+<div class="modal" id="fiqRateModal">
+  <div class="modal-content" style="max-width:430px">
+    <div class="modal-header"><h2>🧠 How focused were you?</h2><button class="close-btn" onclick="fiqSkipRate()">&times;</button></div>
+    <p style="color:var(--gray);font-size:.86rem;margin-bottom:3px;font-weight:600" id="fiqRateSub"></p>
+    <p style="color:var(--gray);font-size:.8rem;margin-bottom:4px">One tap — your rating teaches UniTracker when you study best.</p>
+    <div class="fiq-rate-btns">
+      <button onclick="fiqRate(1)">😵<small>Fried</small></button>
+      <button onclick="fiqRate(2)">😕<small>Meh</small></button>
+      <button onclick="fiqRate(3)">🙂<small>OK</small></button>
+      <button onclick="fiqRate(4)">😃<small>Good</small></button>
+      <button onclick="fiqRate(5)">🔥<small>Locked in</small></button>
+    </div>
+    <div style="text-align:center;margin-top:4px"><button class="btn btn-secondary btn-sm" onclick="fiqSkipRate()">Skip</button></div>
   </div>
 </div>
 
@@ -4067,27 +4126,198 @@ function openGCForCourse(cid){
 }
 
 // ══ TIMER ══
-let tSecs=25*60,tInit=25*60,tRunning=false,tInterval=null;
+let tSecs=25*60,tInit=25*60,tRunning=false,tInterval=null,tStartedAt=null,tPauses=0;
 function showTimer(){const h=Math.floor(tSecs/3600),m=Math.floor((tSecs%3600)/60),s=tSecs%60;el('timerDisplay').textContent=h>0?`${h}:${pad(m)}:${pad(s)}`:`${pad(m)}:${pad(s)}`;}
 document.querySelectorAll('.preset-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.preset-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   if(b.dataset.min==='custom'){el('customRow').style.display='flex';}
-  else{el('customRow').style.display='none';tSecs=parseInt(b.dataset.min)*60;tInit=tSecs;showTimer();if(tRunning){clearInterval(tInterval);tRunning=false;}}
+  else{el('customRow').style.display='none';tSecs=parseInt(b.dataset.min)*60;tInit=tSecs;tStartedAt=null;tPauses=0;showTimer();if(tRunning){clearInterval(tInterval);tRunning=false;}}
 }));
-el('setCustom').addEventListener('click',()=>{const h=parseInt(el('cHours').value)||0,m=parseInt(el('cMins').value)||0,s=parseInt(el('cSecs').value)||0;tSecs=h*3600+m*60+s;tInit=tSecs;if(tSecs<=0){alert('Enter a valid time');return;}showTimer();if(tRunning){clearInterval(tInterval);tRunning=false;}});
-el('btnStart').addEventListener('click',()=>{if(!tRunning&&tSecs>0){tRunning=true;tInterval=setInterval(()=>{if(tSecs>0){tSecs--;showTimer();}else{clearInterval(tInterval);tRunning=false;saveSession();beep();alert('⏰ Session complete!');}},1000);}});
-el('btnPause').addEventListener('click',()=>{if(tRunning){clearInterval(tInterval);tRunning=false;}});
-el('btnReset').addEventListener('click',()=>{clearInterval(tInterval);tRunning=false;tSecs=tInit;showTimer();});
-function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(d=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,a.currentTime+d);g.gain.exponentialRampToValueAtTime(.01,a.currentTime+d+.3);o.start(a.currentTime+d);o.stop(a.currentTime+d+.3);});}catch(e){}}
-function saveSession(){
-  const dur=Math.round(tInit/60);const dateStr=new Date().toISOString().split('T')[0];
-  D.studyLog.push({id:uid(),subject:el('studySubject').value||'General Study',duration:dur,courseId:el('timerCourse').value?parseInt(el('timerCourse').value):null,date:new Date().toISOString()});
-  if(!D.studyHistory[dateStr])D.studyHistory[dateStr]=0;D.studyHistory[dateStr]+=dur;
-  save();renderLog();renderStandards();checkReminders();tSecs=tInit;showTimer();
+el('setCustom').addEventListener('click',()=>{const h=parseInt(el('cHours').value)||0,m=parseInt(el('cMins').value)||0,s=parseInt(el('cSecs').value)||0;tSecs=h*3600+m*60+s;tInit=tSecs;if(tSecs<=0){alert('Enter a valid time');return;}tStartedAt=null;tPauses=0;showTimer();if(tRunning){clearInterval(tInterval);tRunning=false;}});
+el('btnStart').addEventListener('click',()=>{if(!tRunning&&tSecs>0){if(!tStartedAt){tStartedAt=new Date().toISOString();tPauses=0;}tRunning=true;tInterval=setInterval(()=>{if(tSecs>0){tSecs--;showTimer();}else{clearInterval(tInterval);tRunning=false;const r=finishTimerSession(true);beep();if(!r||!r.prompted)alert('⏰ Session complete!');}},1000);}});
+el('btnPause').addEventListener('click',()=>{if(tRunning){clearInterval(tInterval);tRunning=false;if(tStartedAt&&tSecs>0)tPauses++;}});
+el('btnReset').addEventListener('click',()=>{clearInterval(tInterval);tRunning=false;finishTimerSession(false);});
+function finishTimerSession(completed){
+  const elapsedMin=Math.round((tInit-tSecs)/60);
+  const plannedMin=Math.max(1,Math.round(tInit/60));
+  const st=tStartedAt,p=tPauses;
+  tStartedAt=null;tPauses=0;tSecs=tInit;showTimer();
+  if(elapsedMin<1)return null;              // nothing meaningful ran
+  if(!completed&&elapsedMin<5)return null;  // ignore tiny abandoned runs
+  return logStudySession({
+    subject:el('studySubject').value||'General Study',
+    courseId:el('timerCourse').value?parseInt(el('timerCourse').value):null,
+    actual:elapsedMin,planned:plannedMin,
+    completed,src:'timer',pauses:p,start:st,
+    askRating:plannedMin>5                  // don't ask "how focused" after a 5-min break
+  });
 }
+function beep(){try{const a=new(window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(d=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,a.currentTime+d);g.gain.exponentialRampToValueAtTime(.01,a.currentTime+d+.3);o.start(a.currentTime+d);o.stop(a.currentTime+d+.3);});}catch(e){}}
+// Enriched session logger — single entry point for timer, stopwatch and future sources.
+// Records real start/end, actual vs planned minutes, pauses and completion so Focus IQ can learn.
+let fiqPendingId=null;
+function logStudySession(o){
+  const end=new Date();
+  const actual=Math.max(1,Math.round(o.actual));
+  const entry={
+    id:uid(),subject:o.subject||'General Study',courseId:(o.courseId??null),
+    duration:actual,                                   // kept as ACTUAL minutes (backwards compatible field)
+    date:end.toISOString(),
+    start:o.start||new Date(end.getTime()-actual*60000).toISOString(),
+    end:end.toISOString(),
+    planned:o.planned||null,pauses:o.pauses||0,
+    completed:o.completed!==false,focus:null,src:o.src||'timer'
+  };
+  D.studyLog.push(entry);
+  const ds=entry.date.split('T')[0];
+  if(!D.studyHistory[ds])D.studyHistory[ds]=0;D.studyHistory[ds]+=actual;
+  save();renderLog();
+  if(typeof renderStandards==='function')renderStandards();
+  if(typeof checkReminders==='function')checkReminders();
+  if(typeof renderFocusIQ==='function')renderFocusIQ();
+  const prompted=(o.askRating!==false)&&entry.completed&&actual>=5;
+  if(prompted){fiqPendingId=entry.id;const sub=el('fiqRateSub');if(sub)sub.textContent=`${actual} min · ${entry.subject}`;openModal('fiqRateModal');}
+  return {entry,prompted};
+}
+function fiqRate(n){
+  const s=D.studyLog.find(x=>x.id===fiqPendingId);
+  if(s){s.focus=n;save();}
+  fiqPendingId=null;closeModal('fiqRateModal');
+  if(typeof renderFocusIQ==='function')renderFocusIQ();
+  if(typeof renderProductivity==='function')renderProductivity();
+}
+function fiqSkipRate(){fiqPendingId=null;closeModal('fiqRateModal');}
 function renderLog(){const c=el('studyLog');if(!D.studyLog.length){c.innerHTML='<div class="empty"><div class="ei">📖</div><p>No sessions yet</p></div>';return;}c.innerHTML=D.studyLog.slice(-20).reverse().map(l=>{const co=l.courseId?D.courses.find(x=>x.id===l.courseId):null;return`<div class="log-item"><span>📚 ${esc(l.subject)}${co?' ('+co.code+')':''}</span><span style="color:var(--gray)">${l.duration}m • ${new Date(l.date).toLocaleDateString()}</span></div>`;}).join('');}
-function clearLog(){if(confirm('Clear all study logs?')){D.studyLog=[];save();renderLog();renderDashboard();}}
+function clearLog(){if(confirm('Clear all study logs?')){D.studyLog=[];save();renderLog();renderDashboard();if(typeof renderFocusIQ==='function')renderFocusIQ();}}
 function refreshTimerCourses(){const s=el('timerCourse');const v=s.value;s.innerHTML='<option value="">General</option>'+D.courses.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');if(v)s.value=v;}
+
+// ══════════════════════════════════════════════════════════════════
+// FOCUS IQ — adaptive "best time to study" engine.
+// Learns from every session: distributes actual study minutes into a
+// 7-day × 7-time-block grid, scores each session's quality (focus
+// rating + completion + interruptions), weights evidence by recency
+// (28-day half-life) and shrinks low-evidence cells toward your
+// overall mean so recommendations sharpen as data accumulates.
+// ══════════════════════════════════════════════════════════════════
+const FIQ_BLOCKS=[
+  {label:'Early',rng:'5–8am'},
+  {label:'Morning',rng:'8–11am'},
+  {label:'Midday',rng:'11am–2pm'},
+  {label:'Afternoon',rng:'2–5pm'},
+  {label:'Evening',rng:'5–8pm'},
+  {label:'Night',rng:'8–11pm'},
+  {label:'Late night',rng:'11pm–5am'}
+];
+const FIQ_H2B=(()=>{const m=[];for(let h=0;h<24;h++)m[h]=h<5?6:h<8?0:h<11?1:h<14?2:h<17?3:h<20?4:h<23?5:6;return m;})();
+const FIQ_BLOCK_END=[8,11,14,17,20,23,29];
+const FIQ_DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const FIQ_DAYS_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Per-session quality in [0,1]. Components are re-weighted when data is missing,
+// so legacy sessions (duration only) still contribute a weak signal.
+function fiqQuality(s){
+  const comps=[],ws=[];
+  if(s.focus){comps.push((s.focus-1)/4);ws.push(.5);}                                   // explicit rating (strongest)
+  if(s.planned){comps.push(Math.min((s.duration||0)/s.planned,1)*(s.completed===false?.8:1));ws.push(.3);} // completion ratio
+  else{comps.push((s.completed===false?.6:1)*(.4+.5*Math.min((s.duration||0)/90,1)));ws.push(.3);}         // legacy: session length as weak proxy
+  const per30=(s.pauses||0)/Math.max((s.duration||30)/30,1);                             // interruptions per 30 min
+  comps.push(Math.max(0,1-per30*.3));ws.push(.2);
+  const tw=ws.reduce((a,b)=>a+b,0);
+  return comps.reduce((a,c,i)=>a+c*ws[i],0)/tw;
+}
+
+function fiqCompute(){
+  if(!D.studyLog||!D.studyLog.length)return null;
+  const now=Date.now(),HALF=28,K=90; // K = shrinkage prior (~1.5h of evidence)
+  const cells=Array.from({length:7},()=>Array.from({length:7},()=>({w:0,wq:0,mins:0})));
+  let rated=0,total=0,wAll=0,wqAll=0,recW=0,recQ=0,oldW=0,oldQ=0;
+  D.studyLog.forEach(s=>{
+    const dur=s.duration||0;if(dur<=0)return;
+    total++;if(s.focus)rated++;
+    const q=fiqQuality(s);
+    const end=s.end?new Date(s.end):new Date(s.date);
+    if(isNaN(end))return;
+    let start=s.start?new Date(s.start):new Date(end.getTime()-dur*60000);
+    if(isNaN(start)||start>=end)start=new Date(end.getTime()-dur*60000);
+    const ageD=Math.max(0,(now-end.getTime())/86400000);
+    const decay=Math.pow(.5,ageD/HALF);
+    // distribute the session's minutes across the hours it actually spanned
+    let cur=new Date(start),guard=0;
+    while(cur<end&&guard++<200){
+      const nh=new Date(cur);nh.setMinutes(60,0,0);
+      const sliceEnd=Math.min(+nh,+end);
+      const m=(sliceEnd-cur)/60000;
+      const c=cells[cur.getDay()][FIQ_H2B[cur.getHours()]];
+      c.w+=m*decay;c.wq+=m*decay*q;c.mins+=m;
+      wAll+=m*decay;wqAll+=m*decay*q;
+      cur=new Date(sliceEnd);
+    }
+    if(ageD<=30){recW+=dur;recQ+=dur*q;}else if(ageD<=90){oldW+=dur;oldQ+=dur*q;}
+  });
+  if(!wAll)return null;
+  const gMean=wqAll/wAll;
+  const grid=cells.map(row=>row.map(c=>({
+    score:Math.round(((c.w*(c.w?c.wq/c.w:gMean)+K*gMean)/(c.w+K))*100),
+    conf:c.w>=150?'hi':c.w>=45?'md':'lo',
+    w:c.w,mins:Math.round(c.mins)
+  })));
+  return{grid,total,rated,trend:(recW>=60&&oldW>=60)?Math.round((recQ/recW-oldQ/oldW)*100):null};
+}
+
+function fiqColor(s){const h=s<50?25+s*.9:70+(s-50)*1.5;return`hsla(${Math.round(h)},70%,45%,${(.15+.6*s/100).toFixed(2)})`;}
+function fiqConfBadge(c){return`<span class="fiq-conf c-${c}">${c==='hi'?'high conf.':c==='md'?'medium':'low data'}</span>`;}
+
+function renderFocusIQ(){
+  const body=el('fiqBody'),badge=el('fiqLearnBadge'),hint=el('fiqTimerHint');
+  if(!body)return;
+  const R=fiqCompute();
+  if(!R){
+    body.innerHTML='<div class="fiq-empty">🧠 Run study sessions with the <b>Timer</b> and rate your focus afterwards.<br>UniTracker will learn which days and times you study best — and keep getting sharper with every session.</div>';
+    if(badge)badge.textContent='No data yet';
+    if(hint)hint.style.display='none';
+    return;
+  }
+  if(badge)badge.textContent=`Learning · ${R.total} session${R.total!==1?'s':''} (${R.rated} rated)`;
+  // rank all slots with meaningful evidence
+  const slots=[];R.grid.forEach((row,d)=>row.forEach((c,b)=>slots.push({d,b,...c})));
+  const evid=slots.filter(s=>s.w>=20).sort((a,b)=>b.score-a.score||b.w-a.w);
+  const top=evid.slice(0,3);
+  const worst=evid.length>4?evid[evid.length-1]:null;
+  const bestKey=top.length?top[0].d+'-'+top[0].b:'';
+  // heatmap grid
+  let g='<div class="fiq-wrap"><div><div class="fiq-grid"><div></div>'+FIQ_DAYS.map(n=>`<div class="fiq-gh">${n}</div>`).join('');
+  FIQ_BLOCKS.forEach((bl,b)=>{
+    g+=`<div class="fiq-rl">${bl.label}</div>`;
+    for(let d=0;d<7;d++){const c=R.grid[d][b];
+      g+=`<div class="fiq-cell${c.conf==='lo'?' fiq-lo':''}${(d+'-'+b)===bestKey?' fiq-best':''}" style="background:${fiqColor(c.score)}" title="${FIQ_DAYS_FULL[d]} ${bl.label} (${bl.rng}) — focus score ${c.score}/100 · ${c.mins}m studied · ${c.conf==='hi'?'high':c.conf==='md'?'medium':'low'} confidence">${c.mins>0?c.score:''}</div>`;}
+  });
+  g+=`</div><div class="fiq-legend"><span class="lg" style="background:${fiqColor(15)}"></span>weaker<span class="lg" style="background:${fiqColor(55)}"></span><span class="lg" style="background:${fiqColor(92)}"></span>stronger&nbsp;·&nbsp;faded = not enough data yet</div></div>`;
+  // side panel: top windows, today, insights
+  let side='<div class="fiq-side"><h4>⭐ Your top focus windows</h4>';
+  if(top.length){
+    side+=top.map(s=>`<div class="fiq-slot"><div><b>${FIQ_DAYS_FULL[s.d]} ${FIQ_BLOCKS[s.b].label}</b><div class="fs-sub">${FIQ_BLOCKS[s.b].rng} · ${s.mins}m studied</div></div><div style="text-align:right"><div class="fs-score" style="color:${fiqColor(100).replace(/[\d.]+\)$/,'1)')}">${s.score}</div>${fiqConfBadge(s.conf)}</div></div>`).join('');
+  }else side+='<p style="font-size:.82rem;color:var(--gray)">Not enough data yet — early estimates will appear after a few sessions.</p>';
+  // best remaining window today
+  const nowD=new Date(),day=nowD.getDay(),hr=nowD.getHours();
+  const rem=FIQ_BLOCKS.map((bl,b)=>({b,...R.grid[day][b]})).filter(x=>FIQ_BLOCK_END[x.b]>hr||x.b===6).sort((a,b)=>b.score-a.score);
+  let todayLine='';
+  if(rem.length){const r=rem[0];todayLine=`💡 Best window left today (${FIQ_DAYS_FULL[day]}): <b>${FIQ_BLOCKS[r.b].label} ${FIQ_BLOCKS[r.b].rng}</b> — score ${r.score}${r.conf==='lo'?' (early estimate)':''}`;side+=`<div class="fiq-today">${todayLine}</div>`;}
+  // insights
+  const ins=[];
+  const bw=(bs)=>{let w=0,wq=0;for(let d=0;d<7;d++)bs.forEach(b=>{const c=R.grid[d][b];w+=c.w;wq+=c.w*c.score;});return w>0?{s:wq/w,w}:null;};
+  const am=bw([0,1,2]),pm=bw([4,5,6]);
+  if(am&&pm&&am.w>=30&&pm.w>=30){const diff=Math.round(am.s-pm.s);if(Math.abs(diff)>=5)ins.push(diff>0?`🌅 You focus ~${diff} pts better in the morning than at night`:`🌙 You focus ~${-diff} pts better in the evening/night than in the morning`);}
+  const dayScores=R.grid.map((row,d)=>{let w=0,wq=0;row.forEach(c=>{w+=c.w;wq+=c.w*c.score;});return{d,w,s:w>0?wq/w:0};}).filter(x=>x.w>=30).sort((a,b)=>b.s-a.s);
+  if(dayScores.length>=2)ins.push(`📅 Strongest day: <b>${FIQ_DAYS_FULL[dayScores[0].d]}</b> · weakest: ${FIQ_DAYS_FULL[dayScores[dayScores.length-1].d]}`);
+  if(worst&&top.length&&worst.score<top[0].score-8)ins.push(`⚠️ Avoid scheduling deep work on <b>${FIQ_DAYS_FULL[worst.d]} ${FIQ_BLOCKS[worst.b].label}</b> (score ${worst.score})`);
+  if(R.trend!==null&&Math.abs(R.trend)>=3)ins.push(R.trend>0?`📈 Focus quality is up ${R.trend} pts over the last 30 days`:`📉 Focus quality is down ${-R.trend} pts over the last 30 days`);
+  if(R.rated/R.total<.5)ins.push(`✍️ Only ${R.rated}/${R.total} sessions rated — rating takes one tap and sharpens these predictions`);
+  if(ins.length)side+='<ul class="fiq-insights">'+ins.map(i=>`<li>${i}</li>`).join('')+'</ul>';
+  side+='</div>';
+  body.innerHTML=g+side+'</div>';
+  // timer-tab hint
+  if(hint){if(todayLine){hint.style.display='block';hint.innerHTML=todayLine;}else hint.style.display='none';}
+}
 
 // ══ STUDY STANDARDS ══
 el('stdCredits').addEventListener('input',()=>{
@@ -4492,7 +4722,7 @@ function renderGradeChart(){
   c.innerHTML=`<div class="bar-chart">${graded.map((co,i)=>{const gp=parseFloat(co.grade);return`<div class="bar-group"><div class="bar" style="height:${gp/4*100}%;background:${COLORS[i%COLORS.length]}"><span class="bv">${gradeLetter(gp)}</span></div><div class="bar-label">${co.code}</div></div>`;}).join('')}</div>`;
 }
 function renderProductivity(){
-  if(!D.studyLog.length){el('prodScore').textContent='0';el('prodScoreLabel').textContent='Start studying to build your score';el('prodScoreBar').style.width='0%';el('prodInsights').innerHTML='<p style="color:var(--gray);font-size:.85rem;text-align:center">Log study sessions to see insights.</p>';renderHeatmap([]);renderStreak();renderYearHeatmap();return;}
+  if(!D.studyLog.length){el('prodScore').textContent='0';el('prodScoreLabel').textContent='Start studying to build your score';el('prodScoreBar').style.width='0%';el('prodInsights').innerHTML='<p style="color:var(--gray);font-size:.85rem;text-align:center">Log study sessions to see insights.</p>';renderHeatmap([]);renderStreak();renderYearHeatmap();renderFocusIQ();return;}
   const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const dayT=Array(7).fill(0),dayC=Array(7).fill(0);
   D.studyLog.forEach(l=>{const d=new Date(l.date).getDay();dayT[d]+=l.duration;dayC[d]++;});
@@ -4521,7 +4751,7 @@ function renderProductivity(){
     ...(gap.length?[{icon:'💡',label:'Study Gap Days',value:gap.join(', ')}]:[]),
     {icon:'📚',label:'Total Study Time',value:`${Math.floor(totalMins/60)}h ${totalMins%60}m`}
   ].map(i=>`<div class="prod-insight"><div class="pi-icon">${i.icon}</div><div><div class="pi-label">${i.label}</div><div class="pi-value">${i.value}</div></div></div>`).join('');
-  renderHeatmap(dayAvg);renderStreak();renderYearHeatmap();
+  renderHeatmap(dayAvg);renderStreak();renderYearHeatmap();renderFocusIQ();
 }
 function renderHeatmap(dayAvg){
   const hEl=el('dayHeatmap'),gEl=el('heatmapGraph');const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -4636,11 +4866,11 @@ async function clearAllData(){
 }
 
 // ══ STOPWATCH ══
-let swMs=0,swRunning=false,swInterval=null,swLaps=[],swLastLap=0;
+let swMs=0,swRunning=false,swInterval=null,swLaps=[],swLastLap=0,swStartedAt=null,swPauses=0;
 function swFmt(ms){const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000),ds=Math.floor((ms%1000)/100);return(h>0?pad(h)+':':'')+pad(m)+':'+pad(s)+'.'+ds;}
 el('swStart').addEventListener('click',()=>{
-  if(swRunning){clearInterval(swInterval);swRunning=false;el('swStart').textContent='▶ Resume';el('swStart').className='btn btn-success';}
-  else{const t0=Date.now()-swMs;swInterval=setInterval(()=>{swMs=Date.now()-t0;el('swDisplay').textContent=swFmt(swMs);},50);swRunning=true;el('swStart').textContent='⏸ Pause';el('swStart').className='btn btn-warning';}
+  if(swRunning){clearInterval(swInterval);swRunning=false;if(swMs>0)swPauses++;el('swStart').textContent='▶ Resume';el('swStart').className='btn btn-success';}
+  else{if(swMs===0){swStartedAt=new Date().toISOString();swPauses=0;}const t0=Date.now()-swMs;swInterval=setInterval(()=>{swMs=Date.now()-t0;el('swDisplay').textContent=swFmt(swMs);},50);swRunning=true;el('swStart').textContent='⏸ Pause';el('swStart').className='btn btn-warning';}
 });
 el('swLap').addEventListener('click',()=>{
   if(!swRunning&&swMs===0)return;
@@ -4648,19 +4878,19 @@ el('swLap').addEventListener('click',()=>{
   el('swLaps').innerHTML=swLaps.slice().reverse().map(l=>`<div class="lap-item"><span class="lap-num">Lap ${l.num}</span><span style="color:var(--gray);font-size:.78rem">${swFmt(l.lap)}</span><span class="lap-time">${swFmt(l.total)}</span></div>`).join('');
 });
 el('swReset').addEventListener('click',()=>{
-  clearInterval(swInterval);swRunning=false;swMs=0;swLaps=[];swLastLap=0;
+  clearInterval(swInterval);swRunning=false;swMs=0;swLaps=[];swLastLap=0;swStartedAt=null;swPauses=0;
   el('swDisplay').textContent='00:00.0';el('swLaps').innerHTML='';el('swStart').textContent='▶ Start';el('swStart').className='btn btn-success';
 });
 el('swSave').addEventListener('click',()=>{
   if(swMs<1000){alert('Run the stopwatch first!');return;}
   const dur=Math.max(1,Math.round(swMs/60000));
-  const dateStr=new Date().toISOString().split('T')[0];
-  const sub=el('swSubject').value||'Stopwatch Session';
-  const cid=el('swCourse').value?parseInt(el('swCourse').value):null;
-  D.studyLog.push({id:uid(),subject:sub,duration:dur,courseId:cid,date:new Date().toISOString()});
-  if(!D.studyHistory[dateStr])D.studyHistory[dateStr]=0;D.studyHistory[dateStr]+=dur;
-  save();renderLog();renderStandards();checkReminders();
-  alert(`✅ Saved ${dur} minutes to study log!`);
+  const r=logStudySession({
+    subject:el('swSubject').value||'Stopwatch Session',
+    courseId:el('swCourse').value?parseInt(el('swCourse').value):null,
+    actual:dur,planned:null,completed:true,src:'stopwatch',
+    pauses:swPauses,start:swStartedAt
+  });
+  if(!r.prompted)alert(`✅ Saved ${dur} minutes to study log!`);
 });
 function refreshSwCourses(){
   const s=el('swCourse');if(!s)return;const v=s.value;
