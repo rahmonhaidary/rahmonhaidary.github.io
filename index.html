@@ -1417,6 +1417,34 @@ body.dark-mode .fiq-cell.fiq-best{border-color:#e2e8f0;}
 .qs-icon{margin-right:8px;}
 body.dark-mode .plan-slot,body.dark-mode .crunch-item,body.dark-mode .fc-deck,body.dark-mode .fc-face.fc-back{background:#0f172a;border-color:#334155;}
 body.dark-mode .fc-face,body.dark-mode .fc-grade-btns button{background:#1e293b;border-color:#334155;}
+/* ══ LIFE — habits & patterns ══ */
+.life-narrative{font-size:.93rem;line-height:1.75;}
+.life-narrative p{margin:0 0 12px;}
+.life-narrative b{background:linear-gradient(transparent 62%,rgba(255,230,109,.75) 62%);padding:0 2px;}
+body.dark-mode .life-narrative b{background:linear-gradient(transparent 62%,rgba(212,168,20,.45) 62%);}
+.life-rhythm{display:grid;grid-template-columns:96px repeat(7,minmax(0,1fr));gap:4px;font-size:.7rem;}
+.life-rhythm .lr-h{font-weight:700;color:var(--gray);text-align:center;}
+.life-rhythm .lr-dom{font-weight:600;color:var(--gray);align-self:center;text-align:right;padding-right:8px;white-space:nowrap;}
+.life-rhythm .lr-cell{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.64rem;color:var(--dark);}
+body.dark-mode .life-rhythm .lr-cell{color:#e2e8f0;}
+.life-strip{display:grid;grid-template-columns:96px repeat(28,minmax(0,1fr));gap:2px;align-items:center;margin-bottom:4px;}
+.life-strip .ls-dom{font-size:.7rem;font-weight:600;color:var(--gray);text-align:right;padding-right:8px;white-space:nowrap;}
+.life-strip .ls-d{height:13px;border-radius:3px;background:var(--line,#e2e8f0);}
+body.dark-mode .life-strip .ls-d{background:#1e293b;}
+.life-habit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
+.life-habit{border:1px solid var(--line,#e2e8f0);border-radius:11px;padding:13px 15px;background:var(--paper,#f8fafc);}
+.life-habit .lh-title{font-weight:700;font-size:.9rem;margin-bottom:4px;}
+.life-habit .lh-sub{font-size:.76rem;color:var(--gray);line-height:1.5;}
+.life-habit .lh-bar{height:6px;border-radius:4px;background:var(--line,#e2e8f0);margin-top:9px;overflow:hidden;}
+.life-habit .lh-bar>div{height:100%;border-radius:4px;background:linear-gradient(90deg,#6366f1,#8b5cf6);}
+.life-trend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.life-trend{border:1px solid var(--line,#e2e8f0);border-radius:11px;padding:12px 15px;background:var(--paper,#f8fafc);}
+.life-trend .lt-label{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gray);}
+.life-trend .lt-val{font-size:1.35rem;font-weight:800;margin:2px 0;}
+.life-trend .lt-delta{font-size:.74rem;font-weight:700;}
+.life-trend svg{display:block;margin-top:6px;width:100%;height:34px;}
+body.dark-mode .life-habit,body.dark-mode .life-trend{background:#0f172a;border-color:#334155;}
+@media(max-width:768px){.life-rhythm{grid-template-columns:72px repeat(7,minmax(0,1fr));}.life-strip{grid-template-columns:72px repeat(28,minmax(0,1fr));}}
 </style>
 </head>
 <body>
@@ -1505,6 +1533,7 @@ body.dark-mode .fc-face,body.dark-mode .fc-grade-btns button{background:#1e293b;
   </button>
   <div class="nav-group">
     <button class="nav-btn active" data-tab="dashboard"><span class="ni">◫</span>Dashboard</button>
+    <button class="nav-btn" data-tab="life"><span class="ni">✳</span>Life</button>
     <button class="nav-btn" data-tab="calendar"><span class="ni">▤</span>Calendar</button>
   </div>
   <div class="nav-group">
@@ -1845,6 +1874,35 @@ body.dark-mode .fc-face,body.dark-mode .fc-grade-btns button{background:#1e293b;
   <div class="card" style="margin-top:18px">
     <div class="card-header"><h2>📋 Study Log</h2><button class="btn btn-secondary btn-sm" onclick="clearLog()">Clear</button></div>
     <div id="studyLog"><div class="empty"><div class="ei">📖</div><p>No sessions yet</p></div></div>
+  </div>
+</div>
+
+<!-- LIFE — learned habits & patterns -->
+<div id="life" class="tab-content">
+  <div class="card">
+    <div class="card-header"><h2>✳ Your Life</h2><span class="fiq-learn" id="lifeBadge">Learning…</span></div>
+    <p style="color:var(--gray);font-size:.86rem;margin:0">UniTracker quietly learns from everything you log — study, gym, money, body, deadlines — and reports back what it sees. The more you track, the sharper this gets.</p>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>📝 What I've learned about you</h2><button class="btn btn-secondary btn-sm" id="lifeAIBtn" onclick="lifeAIRewrite()">✨ Retell with AI</button></div>
+    <div id="lifeNarrative" class="life-narrative"></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>🔁 Your weekly rhythm</h2></div>
+    <p style="color:var(--gray);font-size:.8rem;margin-bottom:12px">How often each part of your life happens on each weekday (last 8 weeks). Darker = more consistent.</p>
+    <div id="lifeRhythm"></div>
+    <div style="margin-top:18px">
+      <p style="color:var(--gray);font-size:.8rem;margin-bottom:8px">Last 28 days, day by day:</p>
+      <div id="lifeStrip"></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>🧬 Detected habits</h2></div>
+    <div id="lifeHabits" class="life-habit-grid"></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <div class="card-header"><h2>📈 Trends</h2></div>
+    <div id="lifeTrends" class="life-trend-grid"></div>
   </div>
 </div>
 
@@ -2972,6 +3030,7 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
   if(t==='timer'){refreshTimerCourses();refreshSwCourses();renderStandards();}
   if(t==='planner'){renderPlannerTab();}
   if(t==='flashcards'){renderFlashcards();}
+  if(t==='life'){renderLife();}
   if(t==='gradecalc')initGC();
   if(t==='exams')renderExams();
   if(t==='schedule')renderSchedule();
@@ -4822,6 +4881,245 @@ async function fcGenerateFromNote(){
     setTimeout(()=>closeModal('fcAIModal'),900);
   }catch(e){status.textContent='❌ '+(e.message||'Generation failed');}
   btn.disabled=false;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// LIFE — cross-domain habit intelligence.
+// Mines study, gym, spending and body logs for weekday rhythms,
+// streaks, trends and anomalies, then reports back visually and in
+// written English. Improves automatically as more data accumulates.
+// ══════════════════════════════════════════════════════════════════
+const LIFE_WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function lifeWeekStart(dsOrDate){const x=new Date(dsOrDate);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x.toISOString().split('T')[0];}
+function lifeCompute(){
+  const now=new Date();now.setHours(12,0,0,0);
+  const dayISO=i=>{const x=new Date(now);x.setDate(x.getDate()-i);return x.toISOString().split('T')[0];};
+  const last56=[];for(let i=55;i>=0;i--)last56.push(dayISO(i));
+  // activity indices
+  const set={study:new Set(),gym:new Set(),spend:new Set(),body:new Set()};
+  const studyByDay={},spendByDay={},catByDay={};
+  Object.keys(D.studyHistory||{}).forEach(ds=>{if(D.studyHistory[ds]>0){set.study.add(ds);studyByDay[ds]=D.studyHistory[ds];}});
+  (D.gymWorkouts||[]).forEach(w=>{const ds=String(w.date||'').split('T')[0];if(ds)set.gym.add(ds);});
+  (D.expenses||[]).forEach(e=>{const ds=String(e.date||'').split('T')[0];if(!ds)return;set.spend.add(ds);spendByDay[ds]=(spendByDay[ds]||0)+(e.amount||0);if(ds>=last56[28]){const c=e.category||'other';catByDay[c]=(catByDay[c]||0)+(e.amount||0);}});
+  (D.bodyLog||[]).forEach(b=>{const ds=String(b.date||'').split('T')[0];if(ds)set.body.add(ds);});
+  const firstOf=s=>{let f=null;s.forEach(d=>{if(!f||d<f)f=d;});return f;};
+  const domains=[
+    {k:'study',label:'Study',icon:'📖',color:'99,102,241'},
+    {k:'gym',label:'Gym',icon:'🏋️',color:'16,185,129'},
+    {k:'spend',label:'Spending',icon:'💸',color:'239,68,68'},
+    {k:'body',label:'Body log',icon:'⚖️',color:'245,158,11'}
+  ];
+  let totalActive=0;
+  domains.forEach(dm=>{
+    dm.first=firstOf(set[dm.k]);
+    dm.wd=Array.from({length:7},()=>({hit:0,tot:0}));
+    dm.strip=last56.slice(28).map(ds=>set[dm.k].has(ds));
+    dm.stripDates=last56.slice(28);
+    dm.activeDays=0;
+    if(dm.first){
+      last56.forEach(ds=>{if(ds<dm.first)return;const wd=(new Date(ds+'T12:00:00').getDay()+6)%7;dm.wd[wd].tot++;if(set[dm.k].has(ds)){dm.wd[wd].hit++;dm.activeDays++;}});
+      dm.weeksObs=Math.min(8,Math.max(1,Math.ceil((now-new Date(dm.first+'T12:00:00'))/(7*864e5))));
+    }
+    totalActive+=dm.activeDays;
+  });
+  // weekly buckets (8 weeks, Monday start)
+  const wkKeys=[];for(let i=7;i>=0;i--){const x=new Date(now);x.setDate(x.getDate()-i*7);wkKeys.push(lifeWeekStart(x));}
+  const wkIdx={};wkKeys.forEach((k,i)=>wkIdx[k]=i);
+  const wk={study:wkKeys.map(()=>0),spend:wkKeys.map(()=>0),gym:wkKeys.map(()=>0),weight:wkKeys.map(()=>null)};
+  Object.keys(studyByDay).forEach(ds=>{const i=wkIdx[lifeWeekStart(ds+'T12:00:00')];if(i!==undefined)wk.study[i]+=studyByDay[ds]/60;});
+  Object.keys(spendByDay).forEach(ds=>{const i=wkIdx[lifeWeekStart(ds+'T12:00:00')];if(i!==undefined)wk.spend[i]+=spendByDay[ds];});
+  set.gym.forEach(ds=>{const i=wkIdx[lifeWeekStart(ds+'T12:00:00')];if(i!==undefined)wk.gym[i]++;});
+  (D.bodyLog||[]).forEach(b=>{const ds=String(b.date||'').split('T')[0];const i=wkIdx[lifeWeekStart(ds+'T12:00:00')];if(i!==undefined&&b.weight)wk.weight[i]=b.weight;});
+  // deadline-week spending
+  const dueWeeks=new Set();(D.assignments||[]).forEach(a=>{if(a.dueDate&&a.dueDate!=='null')dueWeeks.add(lifeWeekStart(a.dueDate+'T12:00:00'));});
+  const dlSpend=[],nmSpend=[];
+  wkKeys.forEach((k,i)=>{if(i===wkKeys.length-1)return;(dueWeeks.has(k)?dlSpend:nmSpend).push(wk.spend[i]);});
+  const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+  const dlRatio=(dlSpend.length>=2&&nmSpend.length>=2&&mean(nmSpend)>10)?mean(dlSpend)/mean(nmSpend):null;
+  // streaks
+  function dayStreak(s){let cur=0,i=s.has(dayISO(0))?0:1;for(;;i++){if(s.has(dayISO(i)))cur++;else break;}return cur;}
+  function bestStreak(s){const ds=[...s].sort();let best=0,cur=0,prev=null;ds.forEach(d=>{if(prev){const diff=(new Date(d+'T12:00:00')-new Date(prev+'T12:00:00'))/864e5;cur=diff===1?cur+1:1;}else cur=1;best=Math.max(best,cur);prev=d;});return best;}
+  function weekStreak(arr){let c=0;for(let i=arr.length-1;i>=0;i--){if(arr[i]>0)c++;else break;}return c;}
+  // spending shape
+  let wkndSpend=0,totSpend=0;
+  Object.keys(spendByDay).forEach(ds=>{if(ds<last56[0])return;const wd=(new Date(ds+'T12:00:00').getDay()+6)%7;totSpend+=spendByDay[ds];if(wd>=5)wkndSpend+=spendByDay[ds];});
+  const noSpend28=last56.slice(28).filter(ds=>!set.spend.has(ds)).length;
+  const topCat=Object.keys(catByDay).sort((a,b)=>catByDay[b]-catByDay[a])[0]||null;
+  // trends: last 4 full-ish weeks vs prior 4
+  const delta=(arr)=>{const a=mean(arr.slice(4)),b=mean(arr.slice(0,4));return b>0?Math.round((a-b)/b*100):null;};
+  const weights=wk.weight.filter(x=>x!=null);
+  return{
+    domains,set,wk,wkKeys,totalActive,
+    streaks:{studyCur:dayStreak(set.study),studyBest:bestStreak(set.study),gymWk:weekStreak(wk.gym)},
+    money:{weekendShare:totSpend>0?Math.round(wkndSpend/totSpend*100):null,noSpend28,topCat,topCatAmt:topCat?catByDay[topCat]:0,dlRatio,avgWk:mean(wk.spend.slice(4))},
+    trends:{study:delta(wk.study),spend:delta(wk.spend),gym:delta(wk.gym),
+      weightDelta:weights.length>=2?+(weights[weights.length-1]-weights[0]).toFixed(1):null,lastWeight:weights.length?weights[weights.length-1]:null},
+    counts:{sessions:D.studyLog.length,expenses:(D.expenses||[]).length,workouts:(D.gymWorkouts||[]).length,notes:(D.notes||[]).length,cards:(D.flashcards||[]).length}
+  };
+}
+
+function lifeHabits(L){
+  const H=[];
+  L.domains.forEach(dm=>{
+    if(!dm.first||dm.k==='spend')return;
+    const strong=dm.wd.map((c,i)=>({i,f:c.tot>=3?c.hit/c.tot:0})).filter(x=>x.f>=0.6).sort((a,b)=>b.f-a.f).slice(0,3);
+    if(strong.length){
+      const pct=Math.round(mean_(strong.map(x=>x.f))*100);
+      H.push({icon:dm.icon,title:dm.label+' on '+strong.map(x=>LIFE_WD[x.i]).join(' & '),sub:pct+'% consistent over '+dm.weeksObs+' week'+(dm.weeksObs>1?'s':''),pct});
+    }
+  });
+  // chronotype from Focus IQ
+  try{
+    const R=fiqCompute();
+    if(R){
+      const sum=bs=>{let w=0,wq=0;for(let d=0;d<7;d++)bs.forEach(b=>{const c=R.grid[d][b];w+=c.w;wq+=c.w*c.score;});return{w,s:w>0?wq/w:0};};
+      const am=sum([0,1]),pm=sum([4,5,6]),all=sum([0,1,2,3,4,5,6]);
+      if(all.w>=120){
+        const amShare=am.w/all.w,pmShare=pm.w/all.w;
+        if(amShare>=.55)H.push({icon:'🌅',title:'Morning person',sub:Math.round(amShare*100)+'% of your study happens before 11am',pct:Math.round(amShare*100)});
+        else if(pmShare>=.55)H.push({icon:'🌙',title:'Evening person',sub:Math.round(pmShare*100)+'% of your study happens after 5pm',pct:Math.round(pmShare*100)});
+        else if(am.w>=30&&pm.w>=30&&Math.abs(am.s-pm.s)>=5)H.push({icon:am.s>pm.s?'🌅':'🌙',title:am.s>pm.s?'Morning person':'Evening person',sub:'Focus is '+Math.round(Math.abs(am.s-pm.s))+' pts stronger '+(am.s>pm.s?'before 11am':'after 5pm'),pct:Math.round(Math.max(am.s,pm.s))});
+      }
+    }
+  }catch(e){}
+  if(L.streaks.studyCur>=2)H.push({icon:'🔥',title:L.streaks.studyCur+'-day study streak',sub:'Personal best: '+L.streaks.studyBest+' days',pct:Math.min(100,Math.round(L.streaks.studyCur/Math.max(L.streaks.studyBest,7)*100))});
+  if(L.streaks.gymWk>=2)H.push({icon:'💪',title:L.streaks.gymWk+'-week gym streak',sub:'At least one workout every week',pct:Math.min(100,L.streaks.gymWk*12)});
+  if(L.money.weekendShare!=null&&L.money.weekendShare>=45)H.push({icon:'🛍️',title:'Weekend spender',sub:L.money.weekendShare+'% of spending lands on Sat–Sun',pct:L.money.weekendShare});
+  if(L.money.noSpend28>=6)H.push({icon:'🧊',title:L.money.noSpend28+' no-spend days',sub:'In the last 28 days',pct:Math.min(100,Math.round(L.money.noSpend28/28*100))});
+  if(L.money.dlRatio&&L.money.dlRatio>=1.3)H.push({icon:'😅',title:'Deadline-week spender',sub:'You spend '+L.money.dlRatio.toFixed(1)+'× more in weeks with assignments due',pct:Math.min(100,Math.round(L.money.dlRatio*40))});
+  if(L.trends.weightDelta!=null)H.push({icon:'⚖️',title:(L.trends.weightDelta>0?'+':'')+L.trends.weightDelta+' kg over 8 weeks',sub:'Latest: '+L.trends.lastWeight+' kg',pct:50});
+  return H;
+}
+function mean_(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0;}
+
+function lifeNarrative(L){
+  const P=[];
+  const c=L.counts;
+  P.push(`Over the last 8 weeks I've watched <b>${c.sessions} study sessions</b>, <b>${c.expenses} expenses</b>, <b>${c.workouts} workouts</b>${c.cards?`, <b>${c.cards} flashcards</b>`:''} and ${c.notes} notes go by. Here's what I see.`);
+  // rhythm
+  const rl=[];
+  L.domains.forEach(dm=>{
+    if(!dm.first)return;
+    const strong=dm.wd.map((x,i)=>({i,f:x.tot>=3?x.hit/x.tot:0})).filter(x=>x.f>=0.6).sort((a,b)=>b.f-a.f).slice(0,3);
+    if(strong.length&&dm.k!=='spend')rl.push(`${dm.label.toLowerCase()} reliably happens on <b>${strong.map(x=>LIFE_WD[x.i]).join(' and ')}</b>`);
+  });
+  try{const R=fiqCompute();if(R){const sl=[];R.grid.forEach((row,d)=>row.forEach((cc,b)=>sl.push({d,b,...cc})));const t=sl.filter(s=>s.w>=20).sort((a,b)=>b.score-a.score)[0];if(t)rl.push(`your sharpest focus window is <b>${FIQ_DAYS_FULL[t.d]} ${FIQ_BLOCKS[t.b].label.toLowerCase()}</b> (${t.score}/100)`);}}catch(e){}
+  if(rl.length)P.push('Your week has a shape: '+rl.join('; ')+'.');
+  // money
+  if(L.money.avgWk>0){
+    let m=`Money-wise you're averaging <b>$${L.money.avgWk.toFixed(0)}/week</b>`;
+    if(L.money.topCat)m+=`, with <b>${esc(L.money.topCat)}</b> your biggest category this month ($${L.money.topCatAmt.toFixed(0)})`;
+    if(L.money.weekendShare!=null&&L.money.weekendShare>=45)m+=`. ${L.money.weekendShare}% of it goes out on weekends`;
+    if(L.money.dlRatio&&L.money.dlRatio>=1.3)m+=`, and spending jumps <b>${L.money.dlRatio.toFixed(1)}×</b> in weeks an assignment is due — stress spending is a real pattern for you`;
+    P.push(m+'.');
+  }
+  // wins
+  const wins=[];
+  if(L.streaks.studyCur>=3)wins.push(`a <b>${L.streaks.studyCur}-day study streak</b> going right now`);
+  if(L.streaks.gymWk>=2)wins.push(`<b>${L.streaks.gymWk} straight weeks</b> with at least one workout`);
+  if(L.trends.study!=null&&L.trends.study>=10)wins.push(`study time up <b>${L.trends.study}%</b> vs the previous month`);
+  if(L.trends.spend!=null&&L.trends.spend<=-10)wins.push(`spending down <b>${-L.trends.spend}%</b>`);
+  try{const R=fiqCompute();if(R&&R.trend>=3)wins.push(`focus quality up <b>${R.trend} pts</b> in 30 days`);}catch(e){}
+  if(wins.length)P.push('Wins worth noticing: '+wins.join(', ')+'.');
+  // watch-outs
+  const wo=[];
+  if(L.trends.study!=null&&L.trends.study<=-15)wo.push(`study time has slipped <b>${-L.trends.study}%</b> vs the previous month`);
+  if(L.trends.spend!=null&&L.trends.spend>=20)wo.push(`spending is up <b>${L.trends.spend}%</b>`);
+  if(L.trends.gym!=null&&L.trends.gym<=-25)wo.push(`gym frequency has dropped`);
+  try{fiqCorrelations().forEach(x=>wo.push(x.replace(/^[^\s]+\s/,'').toLowerCase()));}catch(e){}
+  if(wo.length)P.push('Worth keeping an eye on: '+wo.join('; ')+'.');
+  // suggestion
+  let sug=null;
+  if(L.money.dlRatio&&L.money.dlRatio>=1.5)sug='Try prepping meals before deadline weeks — that is where your budget leaks.';
+  else if(L.trends.study!=null&&L.trends.study<=-15)sug='Open the Study Planner and lock in two blocks in your best focus windows this week to reverse the slide.';
+  else if(L.streaks.gymWk===0&&L.counts.workouts>0)sug='Your gym habit has paused — one session this week restarts the streak, and your focus data says gym days help.';
+  else if(c.sessions>=10){try{const R=fiqCompute();if(R&&R.rated/R.total<.5)sug='Rate more study sessions (one tap after the timer) — it directly sharpens everything on this page.';}catch(e){}}
+  if(!sug)sug='Keep logging — every entry makes these patterns sharper and this report smarter.';
+  P.push('<b>One suggestion:</b> '+sug);
+  return P;
+}
+
+function lifeSpark(vals,color){
+  const nums=vals.filter(x=>x!=null);
+  if(nums.length<2)return '';
+  const min=Math.min(...nums),max=Math.max(...nums),rng=(max-min)||1;
+  const pts=vals.map((x,i)=>x==null?null:[(i/(vals.length-1))*100,30-((x-min)/rng)*26+2]).filter(Boolean);
+  return `<svg viewBox="0 0 100 34" preserveAspectRatio="none"><polyline fill="none" stroke="rgb(${color})" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}"/></svg>`;
+}
+
+let lifeLast=null;
+function renderLife(){
+  const nar=el('lifeNarrative');if(!nar)return;
+  const L=lifeCompute();lifeLast=L;
+  const badge=el('lifeBadge');
+  if(badge)badge.textContent=`Learning · ${L.totalActive} active days tracked`;
+  if(L.totalActive<5){
+    nar.innerHTML='<p style="color:var(--gray)">Not much to learn from yet — log a few study sessions, expenses or workouts and I\'ll start finding your patterns. This page rewrites itself as your data grows.</p>';
+    el('lifeRhythm').innerHTML='';el('lifeStrip').innerHTML='';
+    el('lifeHabits').innerHTML='<div class="empty" style="grid-column:1/-1;padding:14px"><p>No habits detected yet.</p></div>';
+    el('lifeTrends').innerHTML='';
+    return;
+  }
+  nar.innerHTML=lifeNarrative(L).map(p=>`<p>${p}</p>`).join('');
+  // rhythm grid
+  let rg='<div class="life-rhythm"><div></div>'+LIFE_WD.map(d=>`<div class="lr-h">${d}</div>`).join('');
+  L.domains.forEach(dm=>{
+    if(!dm.first)return;
+    rg+=`<div class="lr-dom">${dm.icon} ${dm.label}</div>`;
+    dm.wd.forEach((c,i)=>{
+      const f=c.tot>=2?c.hit/c.tot:0;
+      rg+=`<div class="lr-cell" style="background:rgba(${dm.color},${(0.08+f*0.72).toFixed(2)})" title="${dm.label} on ${LIFE_WD[i]}: ${c.hit} of ${c.tot} weeks">${c.tot>=2&&f>0?Math.round(f*100)+'%':''}</div>`;
+    });
+  });
+  el('lifeRhythm').innerHTML=rg+'</div>';
+  // 28-day strip
+  let st='';
+  L.domains.forEach(dm=>{
+    if(!dm.first)return;
+    st+='<div class="life-strip"><div class="ls-dom">'+dm.icon+' '+dm.label+'</div>'+dm.strip.map((on,i)=>`<div class="ls-d" style="${on?`background:rgba(${dm.color},.85)`:''}" title="${dm.stripDates[i]}${on?' ✓':''}"></div>`).join('')+'</div>';
+  });
+  el('lifeStrip').innerHTML=st;
+  // habits
+  const H=lifeHabits(L);
+  el('lifeHabits').innerHTML=H.length
+    ?H.map(h=>`<div class="life-habit"><div class="lh-title">${h.icon} ${esc(h.title)}</div><div class="lh-sub">${esc(h.sub)}</div><div class="lh-bar"><div style="width:${Math.min(100,h.pct)}%"></div></div></div>`).join('')
+    :'<div class="empty" style="grid-column:1/-1;padding:14px"><p>No strong habits yet — patterns appear after ~3 weeks of consistent logging.</p></div>';
+  // trends
+  const T=[
+    {label:'Study h/wk',vals:L.wk.study,color:'99,102,241',val:mean_(L.wk.study.slice(4)).toFixed(1)+'h',d:L.trends.study,goodUp:true},
+    {label:'Spend $/wk',vals:L.wk.spend,color:'239,68,68',val:'$'+mean_(L.wk.spend.slice(4)).toFixed(0),d:L.trends.spend,goodUp:false},
+    {label:'Gym /wk',vals:L.wk.gym,color:'16,185,129',val:mean_(L.wk.gym.slice(4)).toFixed(1),d:L.trends.gym,goodUp:true},
+  ];
+  if(L.trends.lastWeight!=null)T.push({label:'Weight kg',vals:L.wk.weight,color:'245,158,11',val:String(L.trends.lastWeight),d:null,delta:L.trends.weightDelta});
+  el('lifeTrends').innerHTML=T.map(t=>{
+    let dh='';
+    if(t.d!=null){const good=(t.d>=0)===t.goodUp;dh=`<span class="lt-delta" style="color:${good?'#059669':'#dc2626'}">${t.d>0?'▲':'▼'} ${Math.abs(t.d)}% vs prior 4 wks</span>`;}
+    else if(t.delta!=null)dh=`<span class="lt-delta" style="color:var(--gray)">${t.delta>0?'+':''}${t.delta} kg over period</span>`;
+    return `<div class="life-trend"><div class="lt-label">${t.label}</div><div class="lt-val">${t.val}</div>${dh}${lifeSpark(t.vals,t.color)}</div>`;
+  }).join('');
+}
+
+async function lifeAIRewrite(){
+  const key=localStorage.getItem('anthropicKey');
+  const nar=el('lifeNarrative');
+  if(!key){alert('Add your API key in Settings → AI Assistant to use this.');return;}
+  if(!lifeLast||lifeLast.totalActive<5){alert('Not enough data yet.');return;}
+  const facts=new DOMParser().parseFromString(lifeNarrative(lifeLast).join('\n'),'text/html').body.textContent;
+  const btn=el('lifeAIBtn');btn.disabled=true;btn.textContent='✨ Writing…';
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:800,
+        system:'You are the voice of a personal life-tracking app writing a short, warm, honest weekly reflection to its user based ONLY on the facts given. Second person. No invented numbers. 3-4 short paragraphs, plain text.',
+        messages:[{role:'user',content:'Facts learned from my data:\n'+facts+'\n\nWrite my reflection.'}]})
+    });
+    const data=await resp.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=(data.content||[]).map(b=>b.text||'').join('').trim();
+    if(text)nar.innerHTML=text.split(/\n\n+/).map(p=>`<p>${esc(p)}</p>`).join('')+`<p style="font-size:.75rem;color:var(--gray)">✨ AI retelling — <a href="#" onclick="event.preventDefault();renderLife()" style="color:var(--gray)">back to the data version</a></p>`;
+  }catch(e){alert('❌ '+(e.message||'Failed'));}
+  btn.disabled=false;btn.textContent='✨ Retell with AI';
 }
 
 // ══ STUDY STANDARDS ══
