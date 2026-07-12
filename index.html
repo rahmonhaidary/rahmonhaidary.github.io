@@ -1445,6 +1445,20 @@ body.dark-mode .life-strip .ls-d{background:#1e293b;}
 .life-trend svg{display:block;margin-top:6px;width:100%;height:34px;}
 body.dark-mode .life-habit,body.dark-mode .life-trend{background:#0f172a;border-color:#334155;}
 @media(max-width:768px){.life-rhythm{grid-template-columns:72px repeat(7,minmax(0,1fr));}.life-strip{grid-template-columns:72px repeat(28,minmax(0,1fr));}}
+.life-tl svg{width:100%;height:150px;display:block;}
+.life-tl-legend{display:flex;gap:14px;font-size:.7rem;color:var(--gray);margin-top:4px;flex-wrap:wrap;}
+.life-tl-legend .lg{width:14px;height:4px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle;}
+.life-records{display:flex;gap:10px;flex-wrap:wrap;}
+.life-record{border:1px dashed var(--line,#cbd5e1);border-radius:9px;padding:7px 12px;font-size:.78rem;background:var(--paper,#f8fafc);}
+.life-record b{font-size:.86rem;}
+.life-chapter{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:10px 0;border-bottom:1px dashed var(--line,#e2e8f0);align-items:baseline;}
+.life-chapter:last-child{border-bottom:none;}
+.life-chapter .lc-m{font-weight:800;font-size:.9rem;}
+.life-chapter .lc-sum{font-size:.82rem;color:var(--gray);line-height:1.55;}
+.life-chapter .lc-sum b{color:var(--dark);}
+body.dark-mode .life-chapter .lc-sum b{color:#e2e8f0;}
+body.dark-mode .life-record{background:#0f172a;border-color:#334155;}
+@media(max-width:768px){.life-chapter{grid-template-columns:86px 1fr;}}
 </style>
 </head>
 <body>
@@ -1903,6 +1917,13 @@ body.dark-mode .life-habit,body.dark-mode .life-trend{background:#0f172a;border-
   <div class="card" style="margin-top:18px">
     <div class="card-header"><h2>📈 Trends</h2></div>
     <div id="lifeTrends" class="life-trend-grid"></div>
+  </div>
+  <div class="card" style="margin-top:18px" id="lifeLongCard">
+    <div class="card-header"><h2>📖 The long view</h2><span class="fiq-learn" id="lifeLongBadge"></span></div>
+    <p style="color:var(--gray);font-size:.8rem;margin-bottom:12px">UniTracker keeps a compact weekly snapshot of your life forever — study, money, gym, weight — so it can compare you with your past self, not just last month.</p>
+    <div id="lifeTimeline"></div>
+    <div id="lifeRecords" style="margin-top:14px"></div>
+    <div id="lifeChapters" style="margin-top:16px"></div>
   </div>
 </div>
 
@@ -2849,7 +2870,7 @@ onAuthStateChanged(auth, async (user) => {
         if(!window.D.bodyLog)window.D.bodyLog=[];if(!window.D.gymExercises)window.D.gymExercises=[];if(!window.D.gymWorkouts)window.D.gymWorkouts=[];
         if(!window.D.jobs)window.D.jobs=[];if(!window.D.semSettings)window.D.semSettings=null;if(!window.D.bgTheme)window.D.bgTheme=null;
         if(!window.D.weekNotes)window.D.weekNotes={};if(!window.D.paychecks)window.D.paychecks=[];if(!window.D.gcData)window.D.gcData={};
-        if(!window.D.exams)window.D.exams=[];if(!window.D.notes)window.D.notes=[];if(!window.D.studyHistory)window.D.studyHistory={};if(!window.D.flashcards)window.D.flashcards=[];if(!window.D.notifySettings)window.D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};
+        if(!window.D.exams)window.D.exams=[];if(!window.D.notes)window.D.notes=[];if(!window.D.studyHistory)window.D.studyHistory={};if(!window.D.flashcards)window.D.flashcards=[];if(!window.D.notifySettings)window.D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};if(!window.D.lifeSnapshots)window.D.lifeSnapshots=[];
       } else {
         // First time — migrate localStorage data to cloud
         const local = localStorage.getItem('UT7');
@@ -2963,7 +2984,7 @@ let D={
   studyHistory:{},
   bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],
   flashcards:[],notifySettings:{enabled:false,classes:true,deadlines:true,windows:true},
-  semSettings:null,bgTheme:null
+  lifeSnapshots:[],semSettings:null,bgTheme:null
 };
 // Expose D and render functions to window so Firebase module can access them
 window.D = D;
@@ -3010,7 +3031,7 @@ function load(){
     if(!D.exams)D.exams=[];if(!D.notes)D.notes=[];if(!D.studyHistory)D.studyHistory={};
     if(!D.dayTypes)D.dayTypes={monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'};
     if(!D.standards)D.standards={daily:0,weekly:0,credits:0,reminderDays:2};
-    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;if(!D.topics)D.topics={};if(!D.attendance)D.attendance={};if(D.darkMode===undefined)D.darkMode=false;if(!D.flashcards)D.flashcards=[];if(!D.notifySettings)D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};
+    if(!D.bodyLog)D.bodyLog=[];if(!D.gymExercises)D.gymExercises=[];if(!D.gymWorkouts)D.gymWorkouts=[];if(!D.jobs)D.jobs=[];if(!D.semSettings)D.semSettings=null;if(!D.bgTheme)D.bgTheme=null;if(!D.topics)D.topics={};if(!D.attendance)D.attendance={};if(D.darkMode===undefined)D.darkMode=false;if(!D.flashcards)D.flashcards=[];if(!D.notifySettings)D.notifySettings={enabled:false,classes:true,deadlines:true,windows:true};if(!D.lifeSnapshots)D.lifeSnapshots=[];
     el('studentName').value=D.student.name||'';el('semester').value=D.student.semester||'';el('budgetInput').value=D.budget||'';
   }
 }
@@ -5028,6 +5049,24 @@ function lifeNarrative(L){
   if(L.trends.gym!=null&&L.trends.gym<=-25)wo.push(`gym frequency has dropped`);
   try{fiqCorrelations().forEach(x=>wo.push(x.replace(/^[^\s]+\s/,'').toLowerCase()));}catch(e){}
   if(wo.length)P.push('Worth keeping an eye on: '+wo.join('; ')+'.');
+  // long view: compare with your past self (3 months back)
+  try{
+    const S=D.lifeSnapshots||[];
+    if(S.length>=13){
+      const recent=S.slice(-4),past=S.slice(-17,-13);
+      if(past.length===4){
+        const m=(a,g)=>a.reduce((s,x)=>s+g(x),0)/a.length;
+        const dSh=m(past,x=>x.sh)>0?Math.round((m(recent,x=>x.sh)-m(past,x=>x.sh))/m(past,x=>x.sh)*100):null;
+        const dSp=m(past,x=>x.sp)>0?Math.round((m(recent,x=>x.sp)-m(past,x=>x.sp))/m(past,x=>x.sp)*100):null;
+        const dGy=m(recent,x=>x.gy)-m(past,x=>x.gy);
+        const bits=[];
+        if(dSh!=null&&Math.abs(dSh)>=10)bits.push(`studying <b>${Math.abs(dSh)}% ${dSh>0?'more':'less'}</b>`);
+        if(dSp!=null&&Math.abs(dSp)>=10)bits.push(`spending <b>${Math.abs(dSp)}% ${dSp>0?'more':'less'}</b>`);
+        if(Math.abs(dGy)>=0.7)bits.push(`training <b>${Math.abs(dGy).toFixed(1)} ${dGy>0?'more':'fewer'} times a week</b>`);
+        if(bits.length)P.push(`The long view (<b>${S.length} weeks</b> archived): compared with your three-months-ago self, you're ${bits.join(', ')}.`);
+      }
+    }
+  }catch(e){}
   // suggestion
   let sug=null;
   if(L.money.dlRatio&&L.money.dlRatio>=1.5)sug='Try prepping meals before deadline weeks — that is where your budget leaks.';
@@ -5050,7 +5089,9 @@ function lifeSpark(vals,color){
 let lifeLast=null;
 function renderLife(){
   const nar=el('lifeNarrative');if(!nar)return;
+  try{lifeSnapshotBackfill();}catch(e){}
   const L=lifeCompute();lifeLast=L;
+  try{renderLifeLong();}catch(e){}
   const badge=el('lifeBadge');
   if(badge)badge.textContent=`Learning · ${L.totalActive} active days tracked`;
   if(L.totalActive<5){
@@ -5120,6 +5161,100 @@ async function lifeAIRewrite(){
     if(text)nar.innerHTML=text.split(/\n\n+/).map(p=>`<p>${esc(p)}</p>`).join('')+`<p style="font-size:.75rem;color:var(--gray)">✨ AI retelling — <a href="#" onclick="event.preventDefault();renderLife()" style="color:var(--gray)">back to the data version</a></p>`;
   }catch(e){alert('❌ '+(e.message||'Failed'));}
   btn.disabled=false;btn.textContent='✨ Retell with AI';
+}
+
+// ── LONG-TERM MEMORY: weekly life snapshots, archived forever ──
+// Backfills history from raw data, then keeps itself current. The two
+// most recent completed weeks are recomputed each time so late entries land.
+function lifeSnapshotBackfill(){
+  if(!D.lifeSnapshots)D.lifeSnapshots=[];
+  const curW=lifeWeekStart(new Date());
+  // earliest data point across domains
+  let firstDs=null;const consider=ds=>{if(ds&&/^\d{4}-\d{2}-\d{2}/.test(ds)&&(!firstDs||ds<firstDs))firstDs=ds;};
+  Object.keys(D.studyHistory||{}).forEach(consider);
+  (D.expenses||[]).forEach(e=>consider(String(e.date||'').split('T')[0]));
+  (D.gymWorkouts||[]).forEach(g=>consider(String(g.date||'').split('T')[0]));
+  (D.bodyLog||[]).forEach(b=>consider(String(b.date||'').split('T')[0]));
+  (D.paychecks||[]).forEach(p=>consider(String(p.payDate||'').split('T')[0]));
+  if(!firstDs)return;
+  let startW=lifeWeekStart(firstDs+'T12:00:00');
+  const minW=(()=>{const x=new Date();x.setDate(x.getDate()-156*7);return lifeWeekStart(x);})();
+  if(startW<minW)startW=minW;
+  // one-pass week buckets
+  const buck={};const B=wk=>buck[wk]=buck[wk]||{sh:0,sc:0,fqW:0,fqQ:0,sp:0,inc:0,wt:null,spDays:new Set()};
+  Object.keys(D.studyHistory||{}).forEach(ds=>{B(lifeWeekStart(ds+'T12:00:00')).sh+=(D.studyHistory[ds]||0)/60;});
+  (D.studyLog||[]).forEach(s=>{const ds=String(s.date||'').split('T')[0];if(!ds)return;const b=B(lifeWeekStart(ds+'T12:00:00'));b.sc++;const q=fiqQuality(s);b.fqW+=(s.duration||0);b.fqQ+=(s.duration||0)*q;});
+  (D.expenses||[]).forEach(e=>{const ds=String(e.date||'').split('T')[0];if(!ds)return;const b=B(lifeWeekStart(ds+'T12:00:00'));b.sp+=(e.amount||0);b.spDays.add(ds);});
+  const gyDays={};(D.gymWorkouts||[]).forEach(g=>{const ds=String(g.date||'').split('T')[0];if(!ds)return;const wk=lifeWeekStart(ds+'T12:00:00');(gyDays[wk]=gyDays[wk]||new Set()).add(ds);});
+  (D.paychecks||[]).forEach(p=>{const ds=String(p.payDate||'').split('T')[0];if(!ds)return;B(lifeWeekStart(ds+'T12:00:00')).inc+=(p.net||0);});
+  (D.bodyLog||[]).forEach(b2=>{const ds=String(b2.date||'').split('T')[0];if(!ds||!b2.weight)return;B(lifeWeekStart(ds+'T12:00:00')).wt=b2.weight;});
+  const mk=wk=>{
+    const b=buck[wk]||{sh:0,sc:0,fqW:0,fqQ:0,sp:0,inc:0,wt:null,spDays:new Set()};
+    return{w:wk,sh:+b.sh.toFixed(1),sc:b.sc,fq:b.fqW>0?Math.round(b.fqQ/b.fqW*100):null,
+      gy:gyDays[wk]?gyDays[wk].size:0,sp:Math.round(b.sp),inc:Math.round(b.inc),wt:b.wt,ns:7-Math.min(7,b.spDays.size)};
+  };
+  const idx={};D.lifeSnapshots.forEach((s,i)=>idx[s.w]=i);
+  let changed=false;
+  const twoAgo=(()=>{const x=new Date(curW+'T12:00:00');x.setDate(x.getDate()-14);return x.toISOString().split('T')[0];})();
+  for(let x=new Date(startW+'T12:00:00');;x.setDate(x.getDate()+7)){
+    const wk=x.toISOString().split('T')[0];
+    if(wk>=curW)break;
+    const fresh=mk(wk);
+    if(idx[wk]===undefined){D.lifeSnapshots.push(fresh);changed=true;}
+    else if(wk>=twoAgo&&JSON.stringify(D.lifeSnapshots[idx[wk]])!==JSON.stringify(fresh)){D.lifeSnapshots[idx[wk]]=fresh;changed=true;}
+  }
+  if(changed){D.lifeSnapshots.sort((a,b)=>a.w.localeCompare(b.w));save();}
+}
+
+function renderLifeLong(){
+  const tl=el('lifeTimeline');if(!tl)return;
+  const S=D.lifeSnapshots||[];
+  const badge=el('lifeLongBadge');
+  if(badge)badge.textContent=S.length?`${S.length} weeks of memory`:'Building…';
+  if(S.length<6){
+    tl.innerHTML='<p style="font-size:.84rem;color:var(--gray)">The long view unlocks after ~6 weeks of history. '+(S.length?S.length+' week'+(S.length>1?'s':'')+' archived so far':'Archiving starts this week')+' — it grows automatically and survives forever, even if you clear old logs.</p>';
+    el('lifeRecords').innerHTML='';el('lifeChapters').innerHTML='';return;
+  }
+  // timeline: study line + spend line (own scale) + gym dots + month gridlines
+  const W=600,H=150,padL=6,padR=6,top=10,bot=26,n=S.length;
+  const X=i=>padL+(n===1?0:(i/(n-1))*(W-padL-padR));
+  const maxSh=Math.max(1,...S.map(s=>s.sh)),maxSp=Math.max(1,...S.map(s=>s.sp));
+  const Ysh=v=>top+(1-v/maxSh)*(H-top-bot),Ysp=v=>top+(1-v/maxSp)*(H-top-bot);
+  const line=(get,Y)=>S.map((s,i)=>X(i).toFixed(1)+','+Y(get(s)).toFixed(1)).join(' ');
+  let months='',lastM=null;
+  S.forEach((s,i)=>{const d=new Date(s.w+'T12:00:00');const m=d.toLocaleDateString('en-AU',{month:'short'});
+    if(m!==lastM){lastM=m;months+=`<line x1="${X(i).toFixed(1)}" y1="${top}" x2="${X(i).toFixed(1)}" y2="${H-bot}" stroke="currentColor" stroke-opacity=".12"/><text x="${(X(i)+2).toFixed(1)}" y="${H-10}" font-size="9" fill="currentColor" fill-opacity=".55">${m}${d.getMonth()===0?' '+String(d.getFullYear()).slice(2):''}</text>`;}});
+  const gymDots=S.map((s,i)=>s.gy>0?`<circle cx="${X(i).toFixed(1)}" cy="${H-bot+7}" r="${Math.min(3.5,1.2+s.gy*.7).toFixed(1)}" fill="rgb(16,185,129)" fill-opacity=".8"><title>w/c ${s.w}: ${s.gy} workout${s.gy>1?'s':''}</title></circle>`:'').join('');
+  tl.innerHTML=`<div class="life-tl"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="color:var(--gray)">${months}
+    <polyline fill="none" stroke="rgb(239,68,68)" stroke-opacity=".5" stroke-width="1.6" points="${line(s=>s.sp,Ysp)}"/>
+    <polyline fill="none" stroke="rgb(99,102,241)" stroke-width="2.4" stroke-linejoin="round" points="${line(s=>s.sh,Ysh)}"/>
+    ${gymDots}</svg>
+    <div class="life-tl-legend"><span><span class="lg" style="background:rgb(99,102,241)"></span>Study h/wk (peak ${maxSh.toFixed(1)}h)</span><span><span class="lg" style="background:rgba(239,68,68,.6)"></span>Spend $/wk (peak $${maxSp})</span><span><span class="lg" style="background:rgb(16,185,129);height:8px;width:8px;border-radius:50%"></span>Gym weeks</span></div></div>`;
+  // records
+  const fmtW=w=>{const d=new Date(w+'T12:00:00');return 'w/c '+d.toLocaleDateString('en-AU',{day:'numeric',month:'short'});};
+  const by=get=>S.reduce((a,b)=>get(b)>get(a)?b:a);
+  const recs=[];
+  const bs=by(s=>s.sh);if(bs.sh>0)recs.push(`📖 Biggest study week: <b>${bs.sh}h</b> · ${fmtW(bs.w)}`);
+  const bg=by(s=>s.gy);if(bg.gy>0)recs.push(`🏋️ Most workouts: <b>${bg.gy}</b> · ${fmtW(bg.w)}`);
+  const spendWks=S.filter(s=>s.sp>0);
+  if(spendWks.length)recs.push(`🧊 Leanest week: <b>$${spendWks.reduce((a,b)=>b.sp<a.sp?b:a).sp}</b> · ${fmtW(spendWks.reduce((a,b)=>b.sp<a.sp?b:a).w)}`);
+  const fqWks=S.filter(s=>s.fq!=null);
+  if(fqWks.length)recs.push(`🧠 Sharpest focus: <b>${fqWks.reduce((a,b)=>b.fq>a.fq?b:a).fq}/100</b> · ${fmtW(fqWks.reduce((a,b)=>b.fq>a.fq?b:a).w)}`);
+  el('lifeRecords').innerHTML=recs.length?'<div class="life-records">'+recs.map(r=>`<div class="life-record">${r}</div>`).join('')+'</div>':'';
+  // chapters (last 6 months)
+  const byM={};S.forEach(s=>{const d=new Date(s.w+'T12:00:00');const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');(byM[k]=byM[k]||[]).push(s);});
+  const mAgg=k=>{const a=byM[k];const f=a.filter(x=>x.fq!=null);
+    return{sh:a.reduce((s,x)=>s+x.sh,0),sp:a.reduce((s,x)=>s+x.sp,0),gy:a.reduce((s,x)=>s+x.gy,0),fq:f.length?Math.round(f.reduce((s,x)=>s+x.fq,0)/f.length):null};};
+  const allKeys=Object.keys(byM).sort();
+  const aggs={};allKeys.forEach(k=>aggs[k]=mAgg(k));
+  const maxShM=Math.max(...allKeys.map(k=>aggs[k].sh)),maxGyM=Math.max(...allKeys.map(k=>aggs[k].gy));
+  el('lifeChapters').innerHTML=allKeys.slice(-6).reverse().map(k=>{
+    const a=aggs[k],d=new Date(k+'-15T12:00:00');
+    const tags=[];
+    if(allKeys.length>1&&a.sh>0&&a.sh===maxShM)tags.push('your strongest study month yet');
+    if(allKeys.length>1&&a.gy>0&&a.gy===maxGyM)tags.push('most active in the gym');
+    return `<div class="life-chapter"><div class="lc-m">${d.toLocaleDateString('en-AU',{month:'long',year:'numeric'})}</div><div class="lc-sum"><b>${a.sh.toFixed(0)}h</b> study · <b>$${Math.round(a.sp)}</b> spent · <b>${a.gy}</b> workouts${a.fq!=null?` · focus <b>${a.fq}</b>/100`:''}${tags.length?' — '+tags.join(', '):''}</div></div>`;
+  }).join('');
 }
 
 // ══ STUDY STANDARDS ══
@@ -5646,7 +5781,7 @@ async function clearAllData(){
     dayTypes:{monday:'free',tuesday:'free',wednesday:'free',thursday:'free',friday:'free',saturday:'free',sunday:'free'},
     standards:{daily:0,weekly:0,credits:0,reminderDays:2},
     studyHistory:{},
-    bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],flashcards:[],
+    bodyLog:[],gymExercises:[],gymWorkouts:[],jobs:[],flashcards:[],lifeSnapshots:[],
     notifySettings:{enabled:false,classes:true,deadlines:true,windows:true},
     semSettings:null,bgTheme:null,topics:{},attendance:{},darkMode:false
   };
