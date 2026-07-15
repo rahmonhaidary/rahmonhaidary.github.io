@@ -276,7 +276,31 @@ nav{background:var(--card-bg);border-radius:0;padding:0;margin-bottom:0;box-shad
 .bc-exp{background:linear-gradient(135deg,var(--danger),#dc2626);}
 .bc-rem{background:linear-gradient(135deg,var(--primary),#4f46e5);}
 .bc-bud{background:linear-gradient(135deg,var(--warning),#d97706);}
-.exp-item{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:9px;margin-bottom:8px;}
+.exp-item{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:9px;margin-bottom:8px;cursor:pointer;transition:background .15s;}
+.exp-item:hover{background:#eef2f7;}
+.exp-quick{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:10px;margin-bottom:12px;}
+.exp-quick input{padding:9px 11px;border:2px solid #e2e8f0;border-radius:8px;font-size:.9rem;}
+.exp-quick input:focus{outline:none;border-color:var(--primary);}
+.exp-quick .eq-amt{width:110px;font-weight:600;}
+.exp-quick .eq-desc{flex:1;min-width:150px;}
+.exp-cat-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.cat-chip{border:1.5px solid #e2e8f0;background:#fff;border-radius:999px;padding:6px 10px;font-size:.78rem;cursor:pointer;transition:all .15s;white-space:nowrap;color:#334155;}
+.cat-chip:hover{border-color:#c7d2fe;}
+.cat-chip.active{border-color:var(--cc,#6366f1);background:color-mix(in srgb,var(--cc,#6366f1) 12%,#fff);font-weight:600;}
+.exp-repeats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.rep-chip{border:1.5px solid #e2e8f0;background:#fff;border-radius:999px;padding:6px 12px;font-size:.78rem;cursor:pointer;transition:all .15s;color:#334155;}
+.rep-chip:hover{border-color:var(--primary);background:#eef2ff;}
+.rep-chip b{color:var(--danger);}
+.exp-summary{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.exp-sum-chip{border:1.5px solid transparent;border-radius:10px;padding:7px 11px;font-size:.76rem;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:1px;min-width:74px;}
+.exp-sum-chip b{font-size:.88rem;}
+.exp-sum-chip.dim{opacity:.4;}
+.exp-group-hdr{display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;padding-bottom:5px;border-bottom:2px solid #f1f5f9;}
+.exp-group-hdr h4{font-size:.82rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em;}
+.exp-group-hdr span{font-size:.85rem;font-weight:700;color:var(--danger);}
+.exp-toggle{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;gap:2px;}
+.exp-toggle button{border:none;background:transparent;padding:5px 12px;border-radius:6px;font-size:.78rem;cursor:pointer;color:#64748b;}
+.exp-toggle button.active{background:#fff;color:var(--dark);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1);}
 .exp-cat{display:flex;align-items:center;gap:9px;}
 .exp-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
 /* GRADE CALC */
@@ -2055,7 +2079,21 @@ body.dark-mode .life-record{background:#0f172a;border-color:#334155;}
     <div class="card-header"><h2>📝 Expenses</h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input type="number" id="budgetLimitInput" placeholder="Monthly budget $" style="padding:8px;border:2px solid #e2e8f0;border-radius:8px;font-size:.85rem;width:165px" onchange="setBudget()">
-        <button class="btn btn-primary" onclick="openModal('expenseModal')">+ Expense</button>
+        <button class="btn btn-primary" onclick="openExpenseModal()" title="Full form (pick a date)">+ Expense</button>
+      </div>
+    </div>
+    <div class="exp-quick">
+      <input type="number" class="eq-amt" id="qeAmount" min="0" step="0.01" placeholder="$0.00" inputmode="decimal">
+      <input type="text" class="eq-desc" id="qeDesc" placeholder="What was it? (e.g. Coles, opal top-up…)" autocomplete="off">
+      <div class="exp-cat-chips" id="qeCats"></div>
+      <button class="btn btn-primary" onclick="quickAddExpense()" style="padding:9px 18px">Add</button>
+    </div>
+    <div class="exp-repeats" id="expRepeats"></div>
+    <div class="exp-summary" id="expSummary"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px">
+      <div class="exp-toggle">
+        <button id="egDate" class="active" onclick="setExpGroup('date')">By month</button>
+        <button id="egCat" onclick="setExpGroup('category')">By category</button>
       </div>
     </div>
     <div id="expenseList"><div class="empty"><div class="ei">💸</div><p>No expenses yet</p></div></div>
@@ -2662,7 +2700,7 @@ body.dark-mode .life-record{background:#0f172a;border-color:#334155;}
 
 <div class="modal" id="expenseModal">
   <div class="modal-content">
-    <div class="modal-header"><h2>Add Expense</h2><button class="close-btn" onclick="closeModal('expenseModal')">&times;</button></div>
+    <div class="modal-header"><h2 id="expModalTitle">Add Expense</h2><button class="close-btn" onclick="closeModal('expenseModal')">&times;</button></div>
     <form id="expenseForm">
       <div class="form-group"><label>Description</label><input type="text" id="eDesc" required placeholder="Textbooks…"></div>
       <div class="form-row">
@@ -2670,7 +2708,7 @@ body.dark-mode .life-record{background:#0f172a;border-color:#334155;}
         <div class="form-group"><label>Category</label><select id="eCat"><option value="food">🍔 Food</option><option value="books">📚 Books</option><option value="transport">🚗 Transport</option><option value="entertainment">🎮 Entertainment</option><option value="supplies">✏️ Supplies</option><option value="rent">🏠 Rent</option><option value="other">📦 Other</option></select></div>
       </div>
       <div class="form-group"><label>Date</label><input type="date" id="eDate" required></div>
-      <button type="submit" class="btn btn-primary" style="width:100%">Add Expense</button>
+      <button type="submit" class="btn btn-primary" style="width:100%" id="expModalBtn">Add Expense</button>
     </form>
   </div>
 </div>
@@ -5399,7 +5437,13 @@ el('paycheckForm').addEventListener('submit',e=>{
   el('payslipPreview').style.display='none';
   updateEmployerDatalist();
 });
-el('expenseForm').addEventListener('submit',e=>{e.preventDefault();D.expenses.push({id:uid(),desc:el('eDesc').value,amount:parseFloat(el('eAmount').value),category:el('eCat').value,date:el('eDate').value});save();renderExpenses();updateBudgetDisplay();closeModal('expenseModal');e.target.reset();});
+let expEditId=null;
+function openExpenseModal(){expEditId=null;el('expenseForm').reset();el('eDate').valueAsDate=new Date();el('expModalTitle').textContent='Add Expense';el('expModalBtn').textContent='Add Expense';openModal('expenseModal');}
+function editExp(id){const x=D.expenses.find(e=>e.id===id);if(!x)return;expEditId=id;el('eDesc').value=x.desc;el('eAmount').value=x.amount;el('eCat').value=x.category||'other';el('eDate').value=String(x.date||'').split('T')[0];el('expModalTitle').textContent='Edit Expense';el('expModalBtn').textContent='Save Changes';openModal('expenseModal');}
+el('expenseForm').addEventListener('submit',e=>{e.preventDefault();const rec={desc:el('eDesc').value,amount:parseFloat(el('eAmount').value),category:el('eCat').value,date:el('eDate').value};
+  if(expEditId!=null){const x=D.expenses.find(v=>v.id===expEditId);if(x)Object.assign(x,rec);expEditId=null;}
+  else D.expenses.push({id:uid(),...rec});
+  save();renderExpenses();updateBudgetDisplay();closeModal('expenseModal');e.target.reset();el('eDate').valueAsDate=new Date();});
 function setBudget(){D.budget=parseFloat(el('budgetInput').value)||0;save();updateBudgetDisplay();}
 function updateBudgetDisplay(){
   renderBudget();
@@ -5446,7 +5490,51 @@ function renderPaychecks(){
 }
 
 function delPC(id){D.paychecks=D.paychecks.filter(p=>p.id!==id);save();renderPaychecks();updateBudgetDisplay();}
-function renderExpenses(){const c=el('expenseList');if(!D.expenses.length){c.innerHTML='<div class="empty"><div class="ei">💸</div><p>No expenses yet</p></div>';return;}const icons={food:'🍔',books:'📚',transport:'🚗',entertainment:'🎮',supplies:'✏️',rent:'🏠',other:'📦'};const clrs={food:'#f59e0b',books:'#8b5cf6',transport:'#3b82f6',entertainment:'#ec4899',supplies:'#10b981',rent:'#ef4444',other:'#6b7280'};c.innerHTML=D.expenses.slice().reverse().map(e=>`<div class="exp-item"><div class="exp-cat"><div class="exp-icon" style="background:${clrs[e.category]}20;color:${clrs[e.category]}">${icons[e.category]}</div><div><div style="font-weight:600">${esc(e.desc)}</div><div style="font-size:.75rem;color:var(--gray)">${new Date(e.date).toLocaleDateString()} • ${e.category}</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;color:var(--danger)">-$${e.amount.toFixed(2)}</span><button class="btn btn-danger btn-sm" onclick="delExp(${e.id})">🗑️</button></div></div>`).join('');}
+const EXPM={food:{i:'🍔',c:'#f59e0b',l:'Food'},books:{i:'📚',c:'#8b5cf6',l:'Books'},transport:{i:'🚗',c:'#3b82f6',l:'Transport'},entertainment:{i:'🎮',c:'#ec4899',l:'Fun'},supplies:{i:'✏️',c:'#10b981',l:'Supplies'},rent:{i:'🏠',c:'#ef4444',l:'Rent'},other:{i:'📦',c:'#6b7280',l:'Other'}};
+const EXP_KEYWORDS={food:['coles','woolworths','woolies','aldi','iga','maccas','mcdonald','kfc','hungry jack','guzman','subway','sushi','kebab','cafe','coffee','lunch','dinner','breakfast','brunch','groceries','grocery','uber eats','ubereats','doordash','menulog','pizza','ramen','bubble tea','boba','snack','restaurant','takeaway','bakery','chemist warehouse food'],transport:['opal','uber','didi','ola','taxi','train','bus','ferry','fuel','petrol','servo','parking','toll','rego','myki','flight','lime','beam'],entertainment:['netflix','spotify','disney','stan','binge','youtube','steam','ps5','playstation','xbox','nintendo','movie','cinema','hoyts','event','concert','gig','game','bar','pub','drinks','club'],books:['textbook','book','coursepack','ebook','kindle'],supplies:['officeworks','stationery','pens','notebook','paper','printer','ink','usb','calculator','lab coat'],rent:['rent','lease','bond','landlord']};
+function guessExpCat(s){s=(s||'').toLowerCase();for(const[cat,words]of Object.entries(EXP_KEYWORDS)){if(words.some(w=>s.includes(w)))return cat;}
+  const prev=D.expenses.slice().reverse().find(e=>(e.desc||'').toLowerCase()===s&&s);return prev?prev.category:null;}
+let qeCat='food',qeCatManual=false,expFilter=null,expGroup='date';
+function renderQeCats(){const c=el('qeCats');if(!c)return;c.innerHTML=Object.entries(EXPM).map(([k,m])=>`<button type="button" class="cat-chip${k===qeCat?' active':''}" style="--cc:${m.c}" onclick="pickQeCat('${k}')">${m.i} ${m.l}</button>`).join('');}
+function pickQeCat(k){qeCat=k;qeCatManual=true;renderQeCats();}
+function quickAddExpense(){const amt=parseFloat(el('qeAmount').value);const desc=el('qeDesc').value.trim();
+  if(!amt||amt<=0){el('qeAmount').focus();return;}if(!desc){el('qeDesc').focus();return;}
+  const today=new Date().toLocaleDateString('en-CA');
+  D.expenses.push({id:uid(),desc,amount:amt,category:qeCat,date:today});
+  save();renderExpenses();updateBudgetDisplay();
+  el('qeAmount').value='';el('qeDesc').value='';qeCatManual=false;qeCat='food';renderQeCats();el('qeAmount').focus();}
+function repExp(id){const x=D.expenses.find(e=>e.id===id);if(!x)return;
+  D.expenses.push({id:uid(),desc:x.desc,amount:x.amount,category:x.category,date:new Date().toLocaleDateString('en-CA')});
+  save();renderExpenses();updateBudgetDisplay();}
+function renderExpRepeats(){const c=el('expRepeats');if(!c)return;const cutoff=Date.now()-90*864e5;const map={};
+  D.expenses.forEach(e=>{const d=new Date(e.date).getTime();if(!(d>=cutoff))return;const k=(e.desc||'').toLowerCase().trim()+'|'+e.category;if(!k.startsWith('|')){(map[k]=map[k]||[]).push(e);}});
+  const freq=Object.values(map).filter(a=>a.length>=2).sort((a,b)=>b.length-a.length).slice(0,4);
+  c.innerHTML=freq.length?freq.map(a=>{const last=a.slice().sort((x,y)=>new Date(y.date)-new Date(x.date))[0];const m=EXPM[last.category]||EXPM.other;
+    return`<button type="button" class="rep-chip" onclick="repExp(${last.id})" title="Add again for today">${m.i} ${esc(last.desc)} <b>$${last.amount.toFixed(2)}</b> ↻</button>`;}).join(''):'';}
+function setExpFilter(cat){expFilter=expFilter===cat?null:cat;renderExpenses();}
+function setExpGroup(g){expGroup=g;el('egDate').classList.toggle('active',g==='date');el('egCat').classList.toggle('active',g==='category');renderExpenses();}
+function renderExpSummary(){const c=el('expSummary');if(!c)return;const now=new Date();const mKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const tot={};let all=0;D.expenses.forEach(e=>{const ds=String(e.date||'');if(ds.startsWith(mKey)){tot[e.category||'other']=(tot[e.category||'other']||0)+(e.amount||0);all+=(e.amount||0);}});
+  const cats=Object.entries(tot).sort((a,b)=>b[1]-a[1]);
+  c.innerHTML=cats.length?cats.map(([k,v])=>{const m=EXPM[k]||EXPM.other;const dim=expFilter&&expFilter!==k;
+    return`<div class="exp-sum-chip${dim?' dim':''}" style="background:${m.c}14;border-color:${expFilter===k?m.c:'transparent'}" onclick="setExpFilter('${k}')"><span style="color:${m.c};font-weight:600">${m.i} ${m.l}</span><b style="color:${m.c}">$${v.toFixed(0)}</b></div>`;}).join('')
+    +`<div class="exp-sum-chip" style="background:#f1f5f9" onclick="expFilter=null;renderExpenses()"><span style="color:#475569;font-weight:600">Σ ${now.toLocaleDateString('en-AU',{month:'short'})} total</span><b style="color:#0f172a">$${all.toFixed(2)}</b></div>`:'';}
+function expRow(e){const m=EXPM[e.category]||EXPM.other;
+  return`<div class="exp-item" onclick="editExp(${e.id})" title="Click to edit"><div class="exp-cat"><div class="exp-icon" style="background:${m.c}20;color:${m.c}">${m.i}</div><div><div style="font-weight:600">${esc(e.desc)}</div><div style="font-size:.75rem;color:var(--gray)">${new Date(e.date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})} • ${m.l}</div></div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:600;color:var(--danger)">-$${(e.amount||0).toFixed(2)}</span><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delExp(${e.id})">🗑️</button></div></div>`;}
+function renderExpenses(){renderQeCats();renderExpRepeats();renderExpSummary();
+  const c=el('expenseList');if(!D.expenses.length){c.innerHTML='<div class="empty"><div class="ei">💸</div><p>No expenses yet — type an amount above and hit Add</p></div>';return;}
+  let list=D.expenses.slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(expFilter)list=list.filter(e=>(e.category||'other')===expFilter);
+  if(!list.length){c.innerHTML='<div class="empty"><div class="ei">🔍</div><p>Nothing in this category — tap the chip again to clear the filter</p></div>';return;}
+  let html='';
+  if(expGroup==='category'){const groups={};list.forEach(e=>{const k=e.category||'other';(groups[k]=groups[k]||[]).push(e);});
+    Object.entries(groups).map(([k,arr])=>[k,arr,arr.reduce((s,e)=>s+(e.amount||0),0)]).sort((a,b)=>b[2]-a[2])
+      .forEach(([k,arr,tot])=>{const m=EXPM[k]||EXPM.other;html+=`<div class="exp-group-hdr"><h4>${m.i} ${m.l} · ${arr.length}</h4><span>-$${tot.toFixed(2)}</span></div>`+arr.map(expRow).join('');});
+  }else{const groups={};list.forEach(e=>{const k=String(e.date||'').slice(0,7)||'????-??';(groups[k]=groups[k]||[]).push(e);});
+    Object.keys(groups).sort().reverse().forEach(k=>{const arr=groups[k];const tot=arr.reduce((s,e)=>s+(e.amount||0),0);
+      const lbl=new Date(k+'-15').toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+      html+=`<div class="exp-group-hdr"><h4>${lbl} · ${arr.length}</h4><span>-$${tot.toFixed(2)}</span></div>`+arr.map(expRow).join('');});}
+  c.innerHTML=html;}
 function delExp(id){D.expenses=D.expenses.filter(e=>e.id!==id);save();renderExpenses();updateBudgetDisplay();}
 
 // ══ DASHBOARD ══
@@ -9048,6 +9136,9 @@ el('studentName').addEventListener('change',save);
 el('semester').addEventListener('change',save);
 el('eDate').valueAsDate=new Date();
 el('pcDate').valueAsDate=new Date();
+// Quick-add expense: Enter submits, description auto-detects category
+['qeAmount','qeDesc'].forEach(id=>{const n=el(id);if(!n)return;n.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();quickAddExpense();}});});
+if(el('qeDesc'))el('qeDesc').addEventListener('input',ev=>{if(qeCatManual)return;const g=guessExpCat(ev.target.value);if(g&&g!==qeCat){qeCat=g;renderQeCats();}});
 if(el('bmDate'))el('bmDate').valueAsDate=new Date();
 if(el('glDate'))el('glDate').valueAsDate=new Date();
 </script>
